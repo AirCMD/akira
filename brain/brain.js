@@ -1744,6 +1744,10 @@ getKyivHour() {
     return parseInt(time.split(":")[0], 10);
 }
 
+getCurrentWeather() {
+    return this.state?.world?.weather || null;
+}
+
 getDayPeriod() {
     const hour = this.getKyivHour();
 

@@ -408,6 +408,14 @@ class AkiraDialogue {
             return "ask_activity";
         }
 
+        const askFutureActivityPatterns = [
+            /^(ти\s+)?(ще\s+)?будеш\s+.*(велосипед|покат|катат|гулят|прогулян)/iu,
+            /^(ти\s+)?(плануєш|збираєшся|хочеш)\s+.*(велосипед|покат|катат|гулят|прогулян)/iu
+        ];
+        if (askFutureActivityPatterns.some(pattern => pattern.test(normalized))) {
+            return "ask_future_activity";
+        }
+
         const topicData =
             this.brain.data?.topics?.intentPatterns ||
             this.brain.data?.topics?.intents ||
@@ -1144,6 +1152,38 @@ class AkiraDialogue {
     }
 
 
+    composeFutureActivityAnswer(profile) {
+        const text = String(profile.input || "").toLowerCase();
+        const asksCycle = /(велосипед|покат|катат)/u.test(text);
+        const asksWalk = /(гулят|прогулян)/u.test(text);
+        const hour = Number(this.brain.getKyivHour?.());
+        const isNight = Number.isFinite(hour) ? (hour >= 22 || hour < 6) : Boolean(this.brain.isNightInKyiv?.());
+        const weather = this.brain.state?.world?.weather || {};
+        const condition = String(weather.condition || "");
+        const energy = Number(this.brain.state?.needs?.energy ?? this.brain.state?.energy ?? 50);
+
+        if (isNight) {
+            if (asksCycle) return "Зараз уже ні. Надворі ніч, тож кататися на велосипеді в такий час я не планую. Краще вже вдень.";
+            if (asksWalk) return "Зараз уже ні. Для прогулянки запізно, краще залишу це на день.";
+        }
+
+        if (["thunderstorm", "hail", "heavyRain", "heavySnow"].includes(condition)) {
+            return asksCycle
+                ? "За такої погоди я б зараз на велосипеді не їхав. Краще дочекаюся нормальніших умов."
+                : "За такої погоди гуляти особливо не тягне. Краще перечекаю.";
+        }
+
+        if (energy < 30) {
+            return asksCycle
+                ? "Навряд чи зараз. Енергії малувато для велосипеда, спершу краще відпочити."
+                : "Може пізніше. Зараз я трохи виснажений для прогулянки.";
+        }
+
+        if (asksCycle) return "Можливо. Якщо погода й самопочуття не зіпсуються, вдень я цілком можу покататися.";
+        if (asksWalk) return "Можливо. Якщо нічого не завадить, вдень можна буде прогулятися.";
+        return "Поки не вирішив. Подивлюся на час, погоду й свій стан.";
+    }
+
     composeActivityAnswer(profile) {
         const action = profile.state?.action;
         const id = action?.actionId || "";
@@ -1260,6 +1300,17 @@ class AkiraDialogue {
 
         if (profile.analysis.intent === "ask_activity") {
             return [this.composeActivityAnswer(profile)];
+        }
+
+        if (profile.analysis.intent === "ask_future_activity") {
+            return [this.composeFutureActivityAnswer(profile)];
+        }
+
+        // Питання про думку лише читає накопичене ставлення. Воно не повинно
+        // саме по собі вважатися новою подією й повторно змінювати attitude.
+        if (this.brain.opinions?.isOpinionQuestion?.(profile.input)) {
+            const opinionReply = this.brain.opinions.describeOpinion?.(profile.input);
+            if (opinionReply) return [opinionReply];
         }
 
         // Побутові суспільні/економічні події оцінюються через власні

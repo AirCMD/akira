@@ -60,26 +60,60 @@ class AkiraOpinions {
         return { topic, kind, attitude: newAttitude, change, record };
     }
 
+    inferTopic(text = "") {
+        const t = String(text).toLowerCase().replace(/[’`ʼ]/g, "'");
+
+        // Специфічні теми перевіряємо раніше за загальні.
+        // Інакше «доставка їжі» помилково стає просто food_prices.
+        if (/(доставк|кур'єр)/u.test(t)) return "delivery_prices";
+        if (/(транспорт|проїзд|метро|автобус|трамва|тролейб)/u.test(t)) return "transport_prices";
+        if (/(комунал|електроенерг|опален|тариф.*вод|вод.*тариф)/u.test(t)) return "utilities_prices";
+        if (/(їж|продукт|харч|магазин)/u.test(t)) return "food_prices";
+        if (/(влад|уряд|мері|міськ|рішенн)/u.test(t)) return "government_decisions";
+        if (/(цін|вартіст|подорожч|здешев|дорожч|дешевш)/u.test(t)) return "cost_of_living";
+        return null;
+    }
+
     inferEvent(text = "") {
         const t = String(text).toLowerCase().replace(/[’`ʼ]/g, "'");
-        let topic = null;
-        if (/(транспорт|проїзд|метро|автобус|трамва|тролейб)/u.test(t)) topic = "transport_prices";
-        else if (/(їж|продукт|харч|магазин)/u.test(t)) topic = "food_prices";
-        else if (/(доставк|кур'єр)/u.test(t)) topic = "delivery_prices";
-        else if (/(комунал|електроенерг|вода|опален)/u.test(t)) topic = "utilities_prices";
-        else if (/(цін|вартіст|подорожч|здешев)/u.test(t)) topic = "cost_of_living";
-        else if (/(влад|уряд|мері|міськ|рішенн)/u.test(t)) topic = "government_decisions";
+        const topic = this.inferTopic(t);
         if (!topic) return null;
 
         let kind = null;
-        if (/(підвищ|подорожч|зросл|дорожч)/u.test(t)) kind = "priceIncrease";
-        else if (/(зниз|здешев|дешевш)/u.test(t)) kind = "priceDecrease";
+        if (/(підвищ|піднял|подорожч|зросл|виросл|дорожч|стала\s+дорож|стало\s+дорож|стали\s+дорож)/u.test(t)) kind = "priceIncrease";
+        else if (/(зниз|зменш|здешев|подешев|дешевш|стала\s+дешев|стало\s+дешев|стали\s+дешев)/u.test(t)) kind = "priceDecrease";
         else if (/(погірш|скасув|закрил)/u.test(t)) kind = "serviceWorsening";
         else if (/(покращ|зручніш|відкрили|додали)/u.test(t)) kind = "serviceImprovement";
         if (!kind) return null;
 
         const personalImpact = ["food_prices", "transport_prices", "utilities_prices"].includes(topic) ? 0.8 : 0.55;
         return { topic, kind, personalImpact, description: String(text), source: "conversation" };
+    }
+
+    isOpinionQuestion(text = "") {
+        const t = String(text).toLowerCase().replace(/[’`ʼ]/g, "'").trim();
+        return /(що\s+(ти\s+)?думаєш|як\s+ти\s+ставишся|твоя\s+думка|що\s+скажеш)/u.test(t);
+    }
+
+    describeOpinion(text = "") {
+        const topic = this.inferTopic(text);
+        if (!topic) return null;
+        const info = this.getTopic(topic);
+        const attitude = Number(info.attitude || 0);
+        const names = {
+            transport_prices: "ціни на транспорт і проїзд",
+            food_prices: "ціни на їжу та продукти",
+            delivery_prices: "вартість доставки",
+            utilities_prices: "вартість комунальних послуг",
+            cost_of_living: "зростання повсякденних витрат",
+            government_decisions: "такі рішення влади"
+        };
+        const subject = names[topic] || "це";
+        if (attitude <= -45) return `Я до цього ставлюся негативно. ${subject[0].toUpperCase() + subject.slice(1)} вже не раз мене дратували своїм впливом на звичайні витрати.`;
+        if (attitude <= -10) return `Скоріше негативно. Мені не подобається, коли ${subject} роблять повсякденне життя дорожчим або менш зручним.`;
+        if (attitude >= 45) return `Скоріше позитивно. Якщо ${subject} реально полегшують повсякденне життя, я це підтримую.`;
+        if (attitude >= 10) return `Загалом позитивно, але дивився б на конкретні наслідки. Для мене важливо, як ${subject} позначаються на звичайному житті.`;
+        return `Поки ставлюся нейтрально. Про ${subject} я б судив за конкретними наслідками, а не лише за формулюванням.`;
     }
 
     reactToText(text) {
