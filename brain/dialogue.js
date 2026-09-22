@@ -376,6 +376,14 @@ class AkiraDialogue {
         ];
         if (askHolidayPatterns.some(pattern => pattern.test(normalized))) return "ask_holiday";
 
+        const askWeatherPatterns = [
+            /^(яка|що\s+за)\s+(сьогодні\s+|зараз\s+)?погода[\s?!.,]*$/iu,
+            /^що\s+(там\s+)?(зараз\s+)?(надворі|на\s+вулиці)[\s?!.,]*$/iu,
+            /^(зараз\s+)?(дощить|сніжить)[\s?!.,]*$/iu,
+            /^яка\s+(зараз\s+)?температура[\s?!.,]*$/iu
+        ];
+        if (askWeatherPatterns.some(pattern => pattern.test(normalized))) return "ask_weather";
+
         const askWellbeingPatterns = [
             /^(ну\s+)?як\s+ти[\s?!.,]*$/iu,
             /^(ну\s+)?як\s+(твої|у\s+тебе)\s+справи[\s?!.,]*$/iu,
@@ -1176,6 +1184,18 @@ class AkiraDialogue {
     }
 
 
+    composeWeatherAnswer() {
+        const weather = this.brain.state?.world?.weather;
+        if (!weather) return "Я щось не звернув уваги на погоду.";
+        const noticed = this.brain.state?.weatherPerception?.noticed;
+        // Пряме питання змушує Акіру подивитися/уточнити поточний стан світу,
+        // але сама погода від питання не генерується.
+        if (!noticed) {
+            this.brain.state.weatherPerception = {type:"weatherChecked", time:Date.now(), condition:weather.condition, temperature:weather.temperature, noticed:true};
+        }
+        return this.brain.weather?.describe?.(weather) || `Зараз близько ${weather.temperature} °C.`;
+    }
+
     composeDateAnswer() {
         const info = this.brain.calendar?.sync?.() || this.brain.state?.calendar || {};
         const now = new Date();
@@ -1228,6 +1248,10 @@ class AkiraDialogue {
 
         if (profile.analysis.intent === "ask_holiday") {
             return [this.composeHolidayAnswer(profile)];
+        }
+
+        if (profile.analysis.intent === "ask_weather") {
+            return [this.composeWeatherAnswer(profile)];
         }
 
         if (profile.analysis.intent === "ask_state") {

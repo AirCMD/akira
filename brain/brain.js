@@ -650,7 +650,8 @@ class AkiraBrain {
             ["perception", "AkiraPerception"],
             ["activities", "AkiraActivities"],
             ["social", "AkiraSocial"],
-            ["calendar", "AkiraCalendar"]
+            ["calendar", "AkiraCalendar"],
+            ["weather", "AkiraWeather"]
         ];
         for (const [property, globalName] of modules) {
             const Ctor = window[globalName];
@@ -807,6 +808,7 @@ class AkiraBrain {
         }
 
         this.calendar?.sync?.();
+        this.weather?.update?.(minutes);
 
         world.time =
             `${String(
