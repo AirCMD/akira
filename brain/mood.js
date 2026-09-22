@@ -20,6 +20,8 @@
  *      ↓
  * effects — тимчасові впливи
  *      ↓
+ * effective emotions
+ *      ↓
  * behaviorModifiers — вплив емоцій на поведінку
  *
  * Емоція ≠ дія.
@@ -49,26 +51,12 @@ class AkiraMood {
             min: 0,
             max: 100,
 
-            /*
-             * Наскільки швидко поточна емоція
-             * повертається до baseline.
-             */
             naturalReturnPerHour: 4,
 
-            /*
-             * Наскільки швидко згасають тимчасові ефекти.
-             */
             effectDecayPerHour: 12,
 
-            /*
-             * Мінімальна сила ефекту, після якої
-             * його можна видалити.
-             */
             effectThreshold: 0.5,
 
-            /*
-             * Скільки історії тримати.
-             */
             maxHistory: 100
         };
     }
@@ -157,7 +145,29 @@ class AkiraMood {
             return;
         }
 
-        for (const [emotion, value] of Object.entries(source)) {
+        const ignoredKeys = new Set([
+            "system",
+            "settings",
+            "rules",
+            "groups",
+            "decay",
+            "triggers",
+            "expression",
+            "baseline",
+            "current",
+            "initial",
+            "state",
+            "effects"
+        ]);
+
+        for (
+            const [emotion, value]
+            of Object.entries(source)
+        ) {
+
+            if (ignoredKeys.has(emotion)) {
+                continue;
+            }
 
             const normalized =
                 this.extractEmotionValue(value);
@@ -165,9 +175,7 @@ class AkiraMood {
             if (normalized !== null) {
 
                 this.baseline[emotion] =
-                    this.clamp(
-                        normalized
-                    );
+                    this.clamp(normalized);
             }
         }
     }
@@ -178,11 +186,12 @@ class AkiraMood {
         this.current = {};
 
         /*
-         * Спочатку baseline.
+         * Починаємо з baseline.
          */
-        for (const [emotion, value] of Object.entries(
-            this.baseline
-        )) {
+        for (
+            const [emotion, value]
+            of Object.entries(this.baseline)
+        ) {
 
             this.current[emotion] =
                 value;
@@ -190,8 +199,8 @@ class AkiraMood {
 
 
         /*
-         * Якщо з emotions.json є початковий
-         * поточний стан — він має перевагу.
+         * Якщо JSON має окремий
+         * початковий current — він має перевагу.
          */
         const source =
             data.current ||
@@ -215,9 +224,7 @@ class AkiraMood {
                 if (normalized !== null) {
 
                     this.current[emotion] =
-                        this.clamp(
-                            normalized
-                        );
+                        this.clamp(normalized);
                 }
             }
         }
@@ -366,15 +373,21 @@ class AkiraMood {
             return null;
         }
 
-        /*
-         * Важливо:
-         *
-         * effect НЕ додається до current одразу
-         * назавжди.
-         *
-         * Він живе окремо, а current обчислюється
-         * з урахуванням активних ефектів.
-         */
+        const normalizedAmount =
+            Number(amount) || 0;
+
+        const normalizedDuration =
+            Math.max(
+                0,
+                Number(duration) || 0
+            );
+
+        if (
+            Math.abs(normalizedAmount) <
+            this.settings.effectThreshold
+        ) {
+            return null;
+        }
 
         const effect = {
 
@@ -384,19 +397,14 @@ class AkiraMood {
 
             emotion,
 
-            amount,
+            amount:
+                normalizedAmount,
 
             remaining:
-                Math.max(
-                    0,
-                    Number(duration) || 0
-                ),
+                normalizedDuration,
 
             originalDuration:
-                Math.max(
-                    0,
-                    Number(duration) || 0
-                ),
+                normalizedDuration,
 
             source,
 
@@ -412,13 +420,14 @@ class AkiraMood {
 
         this.effects.push(effect);
 
-        this.recordChange(
-            emotion,
-            this.get(emotion),
-            this.getEffectiveValue(emotion),
-            `effect:${source}`
-        );
 
+        /*
+         * Не змінюємо current.
+         *
+         * Ефект існує окремо.
+         * Його внесок додається тільки
+         * через getEffectiveValue().
+         */
         this.syncToBrain();
 
         return effect;
@@ -451,7 +460,9 @@ class AkiraMood {
     clearEffects(source = null) {
 
         if (!source) {
+
             this.effects = [];
+
         } else {
 
             this.effects =
@@ -460,8 +471,6 @@ class AkiraMood {
                         effect.source !== source
                 );
         }
-
-        this.recalculateCurrent();
 
         this.syncToBrain();
     }
@@ -478,23 +487,14 @@ class AkiraMood {
 
         for (const effect of this.effects) {
 
-            effect.remaining -=
-                minutes;
-
-            /*
-             * Ефект не зменшуємо вдвічі кожен
-             * tick. Його сила залишається
-             * стабільною до моменту завершення.
-             *
-             * Тривалість відповідає часу життя.
-             */
+            effect.remaining -= minutes;
         }
+
 
         this.effects =
             this.effects.filter(
                 effect =>
-                    effect.remaining >
-                    0 &&
+                    effect.remaining > 0 &&
                     Math.abs(effect.amount) >=
                     this.settings.effectThreshold
             );
@@ -508,7 +508,8 @@ class AkiraMood {
             this.baseline[emotion] ??
             0;
 
-        let value = base;
+        let value =
+            Number(base) || 0;
 
         for (const effect of this.effects) {
 
@@ -518,6 +519,9 @@ class AkiraMood {
                 continue;
             }
 
+            /*
+             * Ефект живе окремо від current.
+             */
             value +=
                 effect.amount;
         }
@@ -526,19 +530,47 @@ class AkiraMood {
     }
 
 
+    getEffectiveEmotions() {
+
+        const result = {};
+
+        const names =
+            new Set([
+                ...Object.keys(this.baseline),
+                ...Object.keys(this.current),
+                ...this.effects.map(
+                    effect => effect.emotion
+                )
+            ]);
+
+        for (const emotion of names) {
+
+            result[emotion] =
+                this.getEffectiveValue(
+                    emotion
+                );
+        }
+
+        return result;
+    }
+
+
     recalculateCurrent() {
 
         /*
-         * Current не перераховується просто
-         * як baseline + effects, бо current
-         * може містити самостійний емоційний стан.
+         * Current не є baseline + effects.
          *
-         * Тут лише обмежуємо значення.
+         * Current — власне накопичений
+         * емоційний стан.
+         *
+         * Effects накладаються окремо.
          */
 
-        for (const emotion of Object.keys(
-            this.current
-        )) {
+        for (
+            const emotion of Object.keys(
+                this.current
+            )
+        ) {
 
             this.current[emotion] =
                 this.clamp(
@@ -569,9 +601,11 @@ class AkiraMood {
             (minutes / 60);
 
 
-        for (const emotion of Object.keys(
-            this.baseline
-        )) {
+        for (
+            const emotion of Object.keys(
+                this.baseline
+            )
+        ) {
 
             const base =
                 this.baseline[emotion];
@@ -590,9 +624,6 @@ class AkiraMood {
                 continue;
             }
 
-            /*
-             * Не допускаємо миттєвого стрибка.
-             */
             const step =
                 Math.min(
                     Math.abs(difference),
@@ -625,12 +656,15 @@ class AkiraMood {
             {};
 
         /*
-         * Тут немає жорсткого сценарію.
+         * Старий варіант змінював current
+         * на кожному тіку.
          *
-         * Потреба впливає на емоцію,
-         * але не перетворюється автоматично
-         * на дію.
+         * Тепер потреби створюють
+         * тимчасові ефекти.
          */
+
+        this.clearEffects("needs");
+
 
         const hunger =
             this.readNeed(
@@ -642,6 +676,12 @@ class AkiraMood {
             this.readNeed(
                 needs,
                 "thirst"
+            );
+
+        const energy =
+            this.readNeed(
+                needs,
+                "energy"
             );
 
         const sleep =
@@ -670,117 +710,272 @@ class AkiraMood {
 
 
         /*
-         * Голод.
+         * -----------------------------------------------------
+         * HUNGER
+         *
+         * hunger 0–30 → нормально
+         * hunger 30–60 → помірна потреба
+         * hunger 60–100 → сильна потреба
+         * -----------------------------------------------------
          */
-        this.applyNeedInfluence(
-            "hunger",
-            hunger,
-            {
-                lowThreshold: 65,
+
+        if (hunger > 60) {
+
+            this.addEffect({
+
                 emotion: "irritation",
-                amount: 4
-            }
-        );
+
+                amount:
+                    this.scaleNeedPressure(
+                        hunger,
+                        60,
+                        100,
+                        1,
+                        8
+                    ),
+
+                duration: 60,
+
+                source: "needs"
+            });
+        }
 
 
         /*
-         * Спрага.
+         * -----------------------------------------------------
+         * THIRST
+         * -----------------------------------------------------
          */
-        this.applyNeedInfluence(
-            "thirst",
-            thirst,
-            {
-                lowThreshold: 65,
+
+        if (thirst > 60) {
+
+            this.addEffect({
+
                 emotion: "irritation",
-                amount: 3
-            }
-        );
 
+                amount:
+                    this.scaleNeedPressure(
+                        thirst,
+                        60,
+                        100,
+                        1,
+                        7
+                    ),
 
-        /*
-         * Недосип.
-         */
-        if (sleep > 70) {
+                duration: 45,
 
-            this.change(
-                "fatigue",
-                2,
-                "need:sleep"
-            );
-
-        } else if (sleep < 30) {
-
-            this.change(
-                "anxiety",
-                1.5,
-                "need:sleep"
-            );
+                source: "needs"
+            });
         }
 
 
         /*
-         * Низька соціальна потреба.
+         * -----------------------------------------------------
+         * ENERGY
+         *
+         * Тут більше = краще.
+         * -----------------------------------------------------
          */
-        if (social > 75) {
 
-            this.change(
-                "loneliness",
-                1.2,
-                "need:social"
-            );
+        if (energy < 35) {
+
+            this.addEffect({
+
+                emotion: "fatigue",
+
+                amount:
+                    this.scaleNeedPressure(
+                        35 - energy,
+                        0,
+                        35,
+                        1,
+                        8
+                    ),
+
+                duration: 90,
+
+                source: "needs"
+            });
         }
 
 
         /*
-         * Низька потреба у розвазі.
+         * -----------------------------------------------------
+         * SLEEP
+         *
+         * Більше sleep = запас/задоволення.
+         * -----------------------------------------------------
          */
-        if (fun > 75) {
 
-            this.change(
-                "boredom",
-                1.2,
-                "need:fun"
-            );
+        if (sleep < 35) {
+
+            this.addEffect({
+
+                emotion: "fatigue",
+
+                amount:
+                    this.scaleNeedPressure(
+                        35 - sleep,
+                        0,
+                        35,
+                        2,
+                        10
+                    ),
+
+                duration: 120,
+
+                source: "needs"
+            });
+
+
+            this.addEffect({
+
+                emotion: "anxiety",
+
+                amount:
+                    this.scaleNeedPressure(
+                        35 - sleep,
+                        0,
+                        35,
+                        0.5,
+                        4
+                    ),
+
+                duration: 90,
+
+                source: "needs"
+            });
         }
 
 
         /*
-         * Нереалізована цікавість.
+         * -----------------------------------------------------
+         * SOCIAL
+         *
+         * Низьке social → потреба в контакті.
+         * -----------------------------------------------------
          */
+
+        if (social < 25) {
+
+            this.addEffect({
+
+                emotion: "loneliness",
+
+                amount:
+                    this.scaleNeedPressure(
+                        25 - social,
+                        0,
+                        25,
+                        1,
+                        6
+                    ),
+
+                duration: 90,
+
+                source: "needs"
+            });
+        }
+
+
+        /*
+         * -----------------------------------------------------
+         * FUN
+         * -----------------------------------------------------
+         */
+
+        if (fun < 25) {
+
+            this.addEffect({
+
+                emotion: "boredom",
+
+                amount:
+                    this.scaleNeedPressure(
+                        25 - fun,
+                        0,
+                        25,
+                        1,
+                        6
+                    ),
+
+                duration: 90,
+
+                source: "needs"
+            });
+        }
+
+
+        /*
+         * -----------------------------------------------------
+         * CURIOSITY
+         *
+         * Тут більше = сильніше бажання
+         * щось досліджувати.
+         * -----------------------------------------------------
+         */
+
         if (curiosity > 75) {
 
-            this.change(
-                "curiosity",
-                1.5,
-                "need:curiosity"
-            );
+            this.addEffect({
+
+                emotion: "curiosity",
+
+                amount:
+                    this.scaleNeedPressure(
+                        curiosity,
+                        75,
+                        100,
+                        1,
+                        7
+                    ),
+
+                duration: 90,
+
+                source: "needs"
+            });
         }
     }
 
 
-    applyNeedInfluence(
-        needName,
+    scaleNeedPressure(
         value,
-        config
+        inputMin,
+        inputMax,
+        outputMin,
+        outputMax
     ) {
 
         if (
-            typeof value !== "number"
+            inputMax <= inputMin
         ) {
-            return;
+            return outputMin;
         }
 
-        if (
-            value >= config.lowThreshold
-        ) {
-
-            this.change(
-                config.emotion,
-                config.amount *
-                0.05,
-                `need:${needName}`
+        const ratio =
+            Math.max(
+                0,
+                Math.min(
+                    1,
+                    (
+                        value -
+                        inputMin
+                    ) /
+                    (
+                        inputMax -
+                        inputMin
+                    )
+                )
             );
-        }
+
+        return (
+            outputMin +
+            (
+                outputMax -
+                outputMin
+            ) *
+            ratio
+        );
     }
 
 
@@ -792,17 +987,36 @@ class AkiraMood {
         const value =
             needs[name];
 
-        if (typeof value === "number") {
+        if (
+            typeof value ===
+            "number"
+        ) {
             return value;
         }
 
         if (
             value &&
-            typeof value.value === "number"
+            typeof value ===
+            "object"
         ) {
-            return value.value;
+
+            const candidate =
+                value.value ??
+                value.current ??
+                value.level;
+
+            if (
+                typeof candidate ===
+                "number"
+            ) {
+                return candidate;
+            }
         }
 
+        /*
+         * Якщо потреба не знайдена,
+         * не створюємо штучну проблему.
+         */
         return 50;
     }
 
@@ -824,13 +1038,6 @@ class AkiraMood {
                     0
                 );
 
-
-        /*
-         * Базове значення 50 означає нейтральність.
-         *
-         * 70 → сильний вплив
-         * 30 → протилежний вплив
-         */
 
         const socialInitiative =
             this.clamp(
@@ -953,14 +1160,6 @@ class AkiraMood {
 
     getValence() {
 
-        /*
-         * Valence — умовний напрямок емоційного стану,
-         * але НЕ є "загальним настроєм".
-         *
-         * Він лише допомагає іншим системам
-         * оцінити загальний емоційний фон.
-         */
-
         const positive = [
             "joy",
             "pleasure",
@@ -999,10 +1198,12 @@ class AkiraMood {
         let positiveSum = 0;
         let negativeSum = 0;
 
+
         for (const emotion of positive) {
             positiveSum +=
                 this.get(emotion);
         }
+
 
         for (const emotion of negative) {
             negativeSum +=
@@ -1020,7 +1221,7 @@ class AkiraMood {
         }
 
 
-        return this.clamp(
+        return (
             (
                 (
                     positiveSum -
@@ -1028,8 +1229,6 @@ class AkiraMood {
                 ) /
                 total
             ) *
-            100,
-            -100,
             100
         );
     }
@@ -1063,6 +1262,7 @@ class AkiraMood {
             highSum +=
                 this.get(emotion);
         }
+
 
         for (const emotion of low) {
             lowSum +=
@@ -1114,19 +1314,10 @@ class AkiraMood {
                 const baseline =
                     this.getBaseline(name);
 
-                /*
-                 * Важлива відмінність:
-                 *
-                 * 90 calm при baseline 90
-                 * не обов'язково важливіше,
-                 * ніж curiosity 75 при baseline 40.
-                 *
-                 * Тому враховуємо відхилення.
-                 */
-
                 const deviation =
                     Math.abs(
-                        value - baseline
+                        value -
+                        baseline
                     );
 
                 const salience =
@@ -1135,10 +1326,15 @@ class AkiraMood {
 
 
                 return {
+
                     emotion: name,
+
                     value,
+
                     baseline,
+
                     deviation,
+
                     salience
                 };
             })
@@ -1221,6 +1417,7 @@ class AkiraMood {
         ) {
 
             result.push({
+
                 emotions: [
                     first,
                     second
@@ -1250,13 +1447,6 @@ class AkiraMood {
         }
 
 
-        /*
-         * Тут немає перевірки "якщо це Яні".
-         *
-         * Стосунки передаються сюди вже
-         * як дані конкретної людини.
-         */
-
         const relationship =
             this.findRelationship(
                 person
@@ -1270,25 +1460,25 @@ class AkiraMood {
 
         const liking =
             Number(
-                relationship.liking ||
+                relationship.liking ??
                 0
             );
 
         const affection =
             Number(
-                relationship.affection ||
+                relationship.affection ??
                 0
             );
 
         const trust =
             Number(
-                relationship.trust ||
+                relationship.trust ??
                 0
             );
 
         const irritation =
             Number(
-                relationship.irritation ||
+                relationship.irritation ??
                 0
             );
 
@@ -1296,10 +1486,14 @@ class AkiraMood {
         if (liking > 60) {
 
             this.addEffect({
+
                 emotion: "sympathy",
+
                 amount:
                     liking * 0.05,
+
                 duration: 30,
+
                 source: "person:liking"
             });
         }
@@ -1308,10 +1502,14 @@ class AkiraMood {
         if (affection > 70) {
 
             this.addEffect({
+
                 emotion: "affection",
+
                 amount:
                     affection * 0.06,
+
                 duration: 30,
+
                 source: "person:affection"
             });
         }
@@ -1320,10 +1518,14 @@ class AkiraMood {
         if (trust > 70) {
 
             this.addEffect({
+
                 emotion: "trust",
+
                 amount:
                     trust * 0.04,
+
                 duration: 30,
+
                 source: "person:trust"
             });
         }
@@ -1332,10 +1534,14 @@ class AkiraMood {
         if (irritation > 60) {
 
             this.addEffect({
+
                 emotion: "anger",
+
                 amount:
                     irritation * 0.05,
+
                 duration: 30,
+
                 source: "person:irritation"
             });
         }
@@ -1380,39 +1586,42 @@ class AkiraMood {
 
 
         if (
-            effects &&
-            typeof effects === "object"
+            !effects ||
+            typeof effects !==
+            "object"
+        ) {
+            return;
+        }
+
+
+        for (
+            const [emotion, amount]
+            of Object.entries(effects)
         ) {
 
-            for (
-                const [emotion, amount]
-                of Object.entries(effects)
+            if (
+                typeof amount !==
+                "number"
             ) {
-
-                if (
-                    typeof amount !==
-                    "number"
-                ) {
-                    continue;
-                }
-
-
-                this.addEffect({
-
-                    emotion,
-
-                    amount,
-
-                    duration:
-                        Number(
-                            event.emotionDuration
-                        ) ||
-                        60,
-
-                    source:
-                        `event:${event.id || "unknown"}`
-                });
+                continue;
             }
+
+
+            this.addEffect({
+
+                emotion,
+
+                amount,
+
+                duration:
+                    Number(
+                        event.emotionDuration
+                    ) ||
+                    60,
+
+                source:
+                    `event:${event.id || "unknown"}`
+            });
         }
     }
 
@@ -1480,48 +1689,49 @@ class AkiraMood {
 
 
         if (
-            effects &&
-            typeof effects === "object"
+            !effects ||
+            typeof effects !==
+            "object"
         ) {
-
-            for (
-                const [emotion, amount]
-                of Object.entries(effects)
-            ) {
-
-                if (
-                    typeof amount !==
-                    "number"
-                ) {
-                    continue;
-                }
-
-
-                this.addEffect({
-
-                    emotion,
-
-                    amount,
-
-                    duration: 60,
-
-                    source:
-                        "weather"
-                });
-            }
-
             return;
         }
 
 
         /*
-         * Якщо weather.json має тільки
-         * базові характеристики — не вигадуємо
-         * конкретні емоції.
-         *
-         * decision.js зможе використати
-         * саму погоду окремо.
+         * У weather.json можна буде
+         * задавати емоційні ефекти без
+         * зміни mood.js.
          */
+
+        for (
+            const [emotion, amount]
+            of Object.entries(effects)
+        ) {
+
+            if (
+                typeof amount !==
+                "number"
+            ) {
+                continue;
+            }
+
+
+            this.addEffect({
+
+                emotion,
+
+                amount,
+
+                duration:
+                    Number(
+                        weather.emotionDuration
+                    ) ||
+                    60,
+
+                source:
+                    "weather"
+            });
+        }
     }
 
 
@@ -1545,42 +1755,45 @@ class AkiraMood {
 
 
         if (
-            effects &&
-            typeof effects === "object"
+            !effects ||
+            typeof effects !==
+            "object"
+        ) {
+            return;
+        }
+
+
+        for (
+            const [emotion, amount]
+            of Object.entries(effects)
         ) {
 
-            for (
-                const [emotion, amount]
-                of Object.entries(effects)
+            if (
+                typeof amount !==
+                "number"
             ) {
-
-                if (
-                    typeof amount !==
-                    "number"
-                ) {
-                    continue;
-                }
-
-
-                this.addEffect({
-
-                    emotion,
-
-                    amount,
-
-                    duration:
-                        Number(
-                            activity.duration
-                        ) ||
-                        30,
-
-                    source:
-                        `activity:${
-                            activity.id ||
-                            "unknown"
-                        }`
-                });
+                continue;
             }
+
+
+            this.addEffect({
+
+                emotion,
+
+                amount,
+
+                duration:
+                    Number(
+                        activity.duration
+                    ) ||
+                    30,
+
+                source:
+                    `activity:${
+                        activity.id ||
+                        "unknown"
+                    }`
+            });
         }
     }
 
@@ -1627,8 +1840,8 @@ class AkiraMood {
 
 
         /*
-         * 1. Тимчасові ефекти живуть
-         *    визначений час.
+         * 1. Оновлюємо час життя
+         *    вже наявних ефектів.
          */
         this.updateEffects(
             minutes
@@ -1636,8 +1849,8 @@ class AkiraMood {
 
 
         /*
-         * 2. Поточні емоції повільно
-         *    повертаються до baseline.
+         * 2. Current повільно
+         *    повертається до baseline.
          */
         this.returnTowardBaseline(
             minutes
@@ -1645,23 +1858,25 @@ class AkiraMood {
 
 
         /*
-         * 3. Потреби можуть створювати
-         *    невеликий емоційний тиск.
+         * 3. Формуємо актуальний
+         *    вплив потреб.
          *
-         * Важливо: це не викликається
-         * нескінченним накопиченням.
+         *    Вони не накопичуються:
+         *    старі effects:needs
+         *    спочатку видаляються.
          */
         this.updateFromNeeds();
 
 
         /*
-         * 4. Перераховуємо значення.
+         * 4. Обмежуємо current.
          */
         this.recalculateCurrent();
 
 
         /*
-         * 5. Передаємо brain поточний стан.
+         * 5. Передаємо brain ефективні
+         *    емоції.
          */
         this.syncToBrain();
     }
@@ -1712,26 +1927,10 @@ class AkiraMood {
 
     getState() {
 
-        const effective = {};
-
-        for (
-            const emotion of Object.keys(
-                this.current
-            )
-        ) {
-
-            effective[emotion] =
-                this.getEffectiveValue(
-                    emotion
-                );
-        }
-
-
         return {
 
-            emotions: {
-                ...effective
-            },
+            emotions:
+                this.getEffectiveEmotions(),
 
             baseline: {
                 ...this.baseline
@@ -1777,33 +1976,17 @@ class AkiraMood {
         }
 
 
-        const effective = {};
-
-
-        for (
-            const emotion of Object.keys(
-                this.current
-            )
-        ) {
-
-            effective[emotion] =
-                this.getEffectiveValue(
-                    emotion
-                );
-        }
-
-
         this.brain.state.emotions =
-            effective;
+            this.getEffectiveEmotions();
 
 
         /*
-         * Не копіюємо сюди baseline,
-         * effects та всю внутрішню структуру.
+         * brain.state.emotions містить
+         * лише те, що іншим системам потрібно
+         * бачити як актуальний стан.
          *
-         * brain.state.emotions —
-         * тільки актуальний стан,
-         * доступний іншим системам.
+         * baseline/effects залишаються
+         * всередині mood.js.
          */
     }
 
