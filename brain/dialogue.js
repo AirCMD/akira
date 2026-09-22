@@ -74,7 +74,9 @@ class AkiraDialogue {
 
     analyzeInput(input) {
 
-        const text = input.toLowerCase();
+        const text = input
+            .toLowerCase()
+            .replace(/[’`ʼ]/g, "'");
 
         return {
             raw: input,
@@ -368,11 +370,16 @@ class AkiraDialogue {
 
             for (const pattern of patterns) {
 
-                if (
-                    typeof pattern === "string" &&
-                    text.includes(pattern.toLowerCase())
-                ) {
-                    return intent;
+                if (typeof pattern === "string") {
+                    const normalizedPattern = pattern.toLowerCase().trim();
+                    const escaped = normalizedPattern.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+                    const matches = normalizedPattern.includes(" ")
+                        ? text.includes(normalizedPattern)
+                        : new RegExp(`(^|[^\\p{L}\\p{N}_])${escaped}($|[^\\p{L}\\p{N}_])`, "iu").test(text);
+
+                    if (matches) {
+                        return intent;
+                    }
                 }
             }
         }
@@ -517,9 +524,14 @@ class AkiraDialogue {
 
     getKnowledge(topic) {
 
-        const data =
-            this.brain.data?.knowledge?.domains ||
+        const knowledgeRoot =
+            this.brain.data?.knowledge?.knowledge ||
             this.brain.data?.knowledge ||
+            {};
+
+        const data =
+            knowledgeRoot.domains ||
+            knowledgeRoot ||
             {};
 
         const value = data[topic];
@@ -1030,8 +1042,37 @@ class AkiraDialogue {
 
         const components = [];
 
-        const templates =
-            this.brain.data?.dialogue_templates || {};
+        const templates = this.getDialogueTemplates();
+        const conversation =
+            this.brain.data?.language?.conversation || {};
+
+        // Базові соціальні репліки мають реагувати безпосередньо
+        // на зміст повідомлення, а не провалюватися у fallback.
+        if (profile.analysis.containsGreeting) {
+            const greeting = this.chooseTemplate(conversation.greetings);
+            if (greeting) return [greeting];
+        }
+
+        if (profile.analysis.intent === "thanks") {
+            const reply = this.chooseTemplate(
+                conversation.responsesToThanks || [
+                    "Будь ласка.",
+                    "Та нема за що.",
+                    "Радий, що допоміг.",
+                    "Звертайся."
+                ]
+            );
+            if (reply) return [reply];
+        }
+
+        if (profile.analysis.intent === "apology") {
+            const apologyBlock = templates.apology;
+            const reply = this.chooseFromBlocks([
+                apologyBlock?.accept,
+                conversation.apology
+            ]);
+            if (reply) return [reply];
+        }
 
         const topicBlock =
             this.getTopicTemplate(profile.topic);
@@ -1060,7 +1101,8 @@ class AkiraDialogue {
             const opener =
                 this.chooseTemplate(
                     templates.openers ||
-                    templates.neutralOpeners
+                    templates.neutralOpeners ||
+                    templates.neutral?.openers
                 );
 
             if (opener) {
@@ -1178,7 +1220,9 @@ class AkiraDialogue {
             const closing =
                 this.chooseTemplate(
                     templates.closings ||
-                    templates.transitions
+                    templates.transitions ||
+                    templates.neutral?.closings ||
+                    templates.neutral?.transitions
                 );
 
             if (closing) {
@@ -1194,10 +1238,16 @@ class AkiraDialogue {
     // ШАБЛОНИ
     // =========================================================
 
+    getDialogueTemplates() {
+
+        const root = this.brain.data?.dialogue_templates || {};
+        return root.dialogueTemplates || root;
+    }
+
+
     getTopicTemplate(topic) {
 
-        const data =
-            this.brain.data?.dialogue_templates;
+        const data = this.getDialogueTemplates();
 
         if (!data) {
             return null;
@@ -1206,16 +1256,30 @@ class AkiraDialogue {
         const topics =
             data.topics ||
             data.topicBlocks ||
-            {};
+            data;
 
-        return topics[topic] || null;
+        const block = topics[topic];
+        if (!block || typeof block !== "object") {
+            return null;
+        }
+
+        // Старі JSON-блоки використовують observation/opinion/knowledge/question,
+        // тоді як рушій очікує main/explanations/questions. Нормалізуємо обидві схеми.
+        return {
+            ...block,
+            main: block.main || block.opinion || block.observation || block.knowledge,
+            statements: block.statements || block.observation || block.opinion,
+            explanations: block.explanations || block.knowledge,
+            details: block.details || block.knowledge,
+            reactions: block.reactions || block.opinion,
+            questions: block.questions || block.question
+        };
     }
 
 
     getEmotionalTemplate(profile) {
 
-        const data =
-            this.brain.data?.dialogue_templates;
+        const data = this.getDialogueTemplates();
 
         if (!data) {
             return null;
@@ -1239,8 +1303,7 @@ class AkiraDialogue {
 
     getRelationshipTemplate(profile) {
 
-        const data =
-            this.brain.data?.dialogue_templates;
+        const data = this.getDialogueTemplates();
 
         if (!data) {
             return null;
@@ -1264,8 +1327,7 @@ class AkiraDialogue {
 
     getIntentTemplate(profile) {
 
-        const data =
-            this.brain.data?.dialogue_templates;
+        const data = this.getDialogueTemplates();
 
         if (!data) {
             return null;
@@ -1406,9 +1468,7 @@ class AkiraDialogue {
     ) {
 
         const config =
-            this.brain.data
-                ?.dialogue_templates
-                ?.composition;
+            this.getDialogueTemplates()?.composition;
 
         let chance = probability;
 
@@ -1435,14 +1495,10 @@ class AkiraDialogue {
 
     composeTopicChange(profile) {
 
+        const dialogueTemplates = this.getDialogueTemplates();
         const templates =
-            this.brain.data
-                ?.dialogue_templates
-                ?.boredom
-                ?.changeTopic ||
-            this.brain.data
-                ?.dialogue_templates
-                ?.changeTopic;
+            dialogueTemplates?.boredom?.changeTopic ||
+            dialogueTemplates?.changeTopic;
 
         const text =
             this.chooseTemplate(templates) ||
@@ -1463,14 +1519,12 @@ class AkiraDialogue {
 
     composeClosing(profile) {
 
+        const dialogueTemplates = this.getDialogueTemplates();
         const templates =
-            this.brain.data
-                ?.dialogue_templates
-                ?.conversation
-                ?.end ||
-            this.brain.data
-                ?.dialogue_templates
-                ?.closings;
+            dialogueTemplates?.conversation?.end ||
+            this.brain.data?.language?.conversation?.farewells ||
+            dialogueTemplates?.neutral?.closings ||
+            dialogueTemplates?.closings;
 
         const text =
             this.chooseTemplate(templates) ||
@@ -1603,10 +1657,11 @@ class AkiraDialogue {
 
     fallbackResponse(profile) {
 
+        const dialogueTemplates = this.getDialogueTemplates();
         const templates =
-            this.brain.data
-                ?.dialogue_templates
-                ?.fallback;
+            dialogueTemplates?.fallback ||
+            dialogueTemplates?.confusion?.short ||
+            this.brain.data?.language?.conversation?.confusion;
 
         const fallback =
             this.chooseTemplate(templates);
