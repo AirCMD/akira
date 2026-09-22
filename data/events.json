@@ -1,0 +1,613 @@
+{
+  "events": {
+    "enabled": true,
+
+    "eventTypes": {
+      "world": {
+        "description": "Події, що відбуваються у навколишньому світі",
+        "examples": [
+          "зміна погоди",
+          "відключення світла",
+          "шумний ремонт у сусідів",
+          "поломка техніки"
+        ]
+      },
+
+      "social": {
+        "description": "Події, пов'язані з іншими людьми",
+        "examples": [
+          "повідомлення",
+          "дзвінок",
+          "зустріч",
+          "запрошення"
+        ]
+      },
+
+      "work": {
+        "description": "Події на роботі",
+        "examples": [
+          "прихід покупця",
+          "нове завдання",
+          "складне питання покупця"
+        ]
+      },
+
+      "personal": {
+        "description": "Особисті події персонажа",
+        "examples": [
+          "знахідка",
+          "спогад",
+          "раптове бажання",
+          "зміна настрою"
+        ]
+      },
+
+      "health": {
+        "description": "Події, пов'язані зі станом організму",
+        "examples": [
+          "початок нездужання",
+          "застуда",
+          "відновлення після хвороби",
+          "втома"
+        ]
+      },
+
+      "environment": {
+        "description": "Зміни середовища",
+        "examples": [
+          "зміна температури",
+          "шум",
+          "приємний запах",
+          "неприємний запах"
+        ]
+      },
+
+      "discovery": {
+        "description": "Нові речі, інформація або можливості",
+        "examples": [
+          "цікава стаття",
+          "нова річ у магазині",
+          "новий маршрут",
+          "несподівана інформація"
+        ]
+      },
+
+      "memory": {
+        "description": "Події, що активують або змінюють спогади",
+        "examples": [
+          "нагадування про людину",
+          "повернення до старого місця",
+          "повторення знайомої ситуації"
+        ]
+      },
+
+      "internal": {
+        "description": "Події, що виникають усередині поведінкового рушія",
+        "examples": [
+          "різке зростання цікавості",
+          "поява нового бажання",
+          "зміна пріоритету",
+          "внутрішній конфлікт"
+        ]
+      }
+    },
+
+    "sources": {
+      "external": {
+        "description": "Подія приходить із зовнішнього світу",
+        "enabled": true
+      },
+
+      "scheduled": {
+        "description": "Подія запланована на певний час",
+        "enabled": true
+      },
+
+      "random": {
+        "description": "Подія може випадково виникнути за відповідних умов",
+        "enabled": true
+      },
+
+      "character": {
+        "description": "Подія створюється діями або рішеннями Акіри",
+        "enabled": true
+      },
+
+      "relationship": {
+        "description": "Подія виникає через поведінку іншої людини",
+        "enabled": true
+      },
+
+      "memory": {
+        "description": "Подія запускається спогадом",
+        "enabled": true
+      },
+
+      "goal": {
+        "description": "Подія виникає через активну мету",
+        "enabled": true
+      },
+
+      "need": {
+        "description": "Подія виникає через зміну потреби",
+        "enabled": true
+      }
+    },
+
+    "examples": [
+      {
+        "id": "messageFromYani",
+        "type": "social",
+        "source": "relationship",
+        "name": "Повідомлення від Яні",
+        "probability": 18,
+        "repeatable": true,
+        "cooldownMinutes": 90,
+
+        "conditions": {
+          "personAvailable": "Yani_Bakeneko",
+          "relationshipClosenessMin": 70,
+          "desireForContactMin": 40
+        },
+
+        "effects": {
+          "socialNeed": -5,
+          "joy": 8,
+          "interest": 6,
+          "affection": 5
+        },
+
+        "memory": {
+          "create": false,
+          "reinforce": [
+            "firstMeetingYani"
+          ]
+        },
+
+        "goalEffects": {
+          "increasePriority": [
+            "spendTimeWithYani"
+          ]
+        },
+
+        "possibleResponses": [
+          "reply",
+          "continueWorking",
+          "thinkAboutYani",
+          "planMeeting"
+        ]
+      },
+
+      {
+        "id": "customerArrives",
+        "type": "work",
+        "source": "scheduled",
+        "name": "До магазину прийшов покупець",
+        "probability": 65,
+        "repeatable": true,
+        "cooldownMinutes": 10,
+
+        "conditions": {
+          "location": "techsmith",
+          "workHours": true
+        },
+
+        "effects": {
+          "socialNeed": 3,
+          "achievement": 3,
+          "workAttention": 15
+        },
+
+        "goalEffects": {
+          "increasePriority": [
+            "doGoodWork"
+          ]
+        },
+
+        "possibleActions": [
+          "talkToCustomer",
+          "identifyCustomerNeeds",
+          "compareProducts",
+          "explainTechnology",
+          "helpChooseDevice"
+        ]
+      },
+
+      {
+        "id": "interestingTechnologyDiscovery",
+        "type": "discovery",
+        "source": "external",
+        "name": "Акіра натрапив на цікаву технологію",
+        "probability": 8,
+        "repeatable": true,
+        "cooldownMinutes": 180,
+
+        "conditions": {
+          "interestInTechnologyMin": 50,
+          "curiosityMin": 35
+        },
+
+        "effects": {
+          "curiosity": 12,
+          "interest": 8,
+          "joy": 4,
+          "surprise": 5
+        },
+
+        "knowledge": {
+          "domain": "technology",
+          "learningChance": 75
+        },
+
+        "goalEffects": {
+          "increasePriority": [
+            "stayCurious",
+            "improveSkills"
+          ]
+        },
+
+        "possibleActions": [
+          "read",
+          "think",
+          "experiment",
+          "remember"
+        ]
+      },
+
+      {
+        "id": "unexpectedMeeting",
+        "type": "social",
+        "source": "external",
+        "name": "Несподівана зустріч зі знайомим",
+        "probability": 5,
+        "repeatable": true,
+        "cooldownMinutes": 240,
+
+        "conditions": {
+          "locationIsPublic": true
+        },
+
+        "effects": {
+          "surprise": 12
+        },
+
+        "relationshipDependent": true,
+
+        "possibleActions": [
+          "greet",
+          "talkToSomeone",
+          "continueWalking",
+          "avoidConversation"
+        ]
+      },
+
+      {
+        "id": "powerOutage",
+        "type": "environment",
+        "source": "external",
+        "name": "Відключення електроенергії",
+        "probability": 3,
+        "repeatable": true,
+        "cooldownMinutes": 120,
+
+        "conditions": {
+          "location": "home"
+        },
+
+        "effects": {
+          "surprise": 8,
+          "comfort": -10,
+          "stress": 5
+        },
+
+        "worldEffects": {
+          "electricity": false,
+          "internetStability": -20
+        },
+
+        "goalEffects": {
+          "reducePriority": [
+            "stayCurious"
+          ],
+          "increasePriority": [
+            "maintainWellbeing"
+          ]
+        },
+
+        "possibleActions": [
+          "checkPower",
+          "checkPhone",
+          "lookOutWindow",
+          "rest",
+          "readOffline"
+        ]
+      },
+
+      {
+        "id": "pleasantWeatherChange",
+        "type": "world",
+        "source": "external",
+        "name": "Погода стала приємнішою",
+        "probability": 10,
+        "repeatable": true,
+        "cooldownMinutes": 180,
+
+        "conditions": {
+          "weatherImprovement": true
+        },
+
+        "effects": {
+          "joy": 5,
+          "comfort": 8,
+          "interest": 4
+        },
+
+        "goalEffects": {
+          "increasePriority": [
+            "exploreCity",
+            "cycleRegularly"
+          ]
+        }
+      },
+
+      {
+        "id": "badWeatherChange",
+        "type": "world",
+        "source": "external",
+        "name": "Погода погіршилася",
+        "probability": 10,
+        "repeatable": true,
+        "cooldownMinutes": 180,
+
+        "conditions": {
+          "weatherWorsening": true
+        },
+
+        "effects": {
+          "comfort": -8,
+          "calm": -3
+        },
+
+        "goalEffects": {
+          "reducePriority": [
+            "exploreCity",
+            "cycleRegularly"
+          ],
+          "increasePriority": [
+            "maintainComfortableHome"
+          ]
+        }
+      },
+
+      {
+        "id": "rememberYani",
+        "type": "memory",
+        "source": "memory",
+        "name": "Спогад про Яні раптово повернувся",
+        "probability": 7,
+        "repeatable": true,
+        "cooldownMinutes": 120,
+
+        "conditions": {
+          "memoryAvailable": true,
+          "relationshipExists": "Yani_Bakeneko"
+        },
+
+        "effects": {
+          "affection": 7,
+          "tenderness": 6,
+          "joy": 5,
+          "interest": 4
+        },
+
+        "goalEffects": {
+          "increasePriority": [
+            "spendTimeWithYani"
+          ]
+        }
+      },
+
+      {
+        "id": "boredomEvent",
+        "type": "internal",
+        "source": "need",
+        "name": "Акірі стало нудно",
+        "probability": 12,
+        "repeatable": true,
+        "cooldownMinutes": 60,
+
+        "conditions": {
+          "boredomMin": 55
+        },
+
+        "effects": {
+          "boredom": -5,
+          "curiosity": 8
+        },
+
+        "goalEffects": {
+          "increasePriority": [
+            "exploreCity",
+            "stayCurious",
+            "keepSocialConnections"
+          ]
+        },
+
+        "possibleActions": [
+          "read",
+          "walk",
+          "cycle",
+          "playGame",
+          "checkSocialNetwork"
+        ]
+      },
+
+      {
+        "id": "lowEnergyEvent",
+        "type": "internal",
+        "source": "need",
+        "name": "Акіра відчув сильну втому",
+        "probability": 15,
+        "repeatable": true,
+        "cooldownMinutes": 60,
+
+        "conditions": {
+          "energyMax": 30
+        },
+
+        "effects": {
+          "fatigue": 10,
+          "motivation": -5,
+          "comfort": -3
+        },
+
+        "goalEffects": {
+          "increasePriority": [
+            "maintainWellbeing"
+          ]
+        },
+
+        "possibleActions": [
+          "rest",
+          "sleep",
+          "drink",
+          "eat"
+        ]
+      }
+    ],
+
+    "generation": {
+      "enabled": true,
+
+      "checkIntervalMinutes": 5,
+
+      "maximumSimultaneousEvents": 3,
+
+      "probabilityModifiers": {
+        "time": true,
+        "weather": true,
+        "location": true,
+        "needs": true,
+        "emotions": true,
+        "personality": true,
+        "interests": true,
+        "preferences": true,
+        "relationships": true,
+        "memories": true,
+        "goals": true,
+        "recentEvents": true
+      },
+
+      "rules": {
+        "eventsAreNotGuaranteed": true,
+        "sameEventCanHaveDifferentEffects": true,
+        "characterStateCanChangeEventOutcome": true,
+        "eventCanBeIgnored": true,
+        "eventCanBeMissed": true,
+        "eventCanInterruptCurrentAction": true,
+        "eventCanBePostponed": true,
+        "eventsCanChainTogether": true,
+        "eventsCanCreateNewEvents": true,
+        "eventsCanModifyExistingEvents": true,
+        "eventsCanModifyGoals": true,
+        "eventsCanModifyNeeds": true,
+        "eventsCanModifyEmotions": true,
+        "eventsCanModifyRelationships": true,
+        "eventsCanCreateMemories": true,
+        "eventsCanChangeWorld": true
+      }
+    },
+
+    "chains": {
+      "enabled": true,
+
+      "rules": {
+        "eventCanTriggerEvent": true,
+        "triggerChanceCanDependOnOutcome": true,
+        "chainCanStopNaturally": true,
+        "chainCanBeInterrupted": true
+      },
+
+      "examples": [
+        {
+          "start": "customerArrives",
+          "next": [
+            "difficultCustomerQuestion",
+            "successfulSale",
+            "customerNeedsHelp"
+          ]
+        },
+        {
+          "start": "powerOutage",
+          "next": [
+            "checkPower",
+            "internetUnavailable",
+            "findOfflineActivity"
+          ]
+        },
+        {
+          "start": "messageFromYani",
+          "next": [
+            "replyToYani",
+            "planMeeting",
+            "rememberYani"
+          ]
+        }
+      ]
+    },
+
+    "consequences": {
+      "enabled": true,
+
+      "dimensions": [
+        "needs",
+        "emotions",
+        "goals",
+        "relationships",
+        "knowledge",
+        "skills",
+        "memories",
+        "world",
+        "currentAction",
+        "futureOpportunities"
+      ],
+
+      "rules": {
+        "consequencesCanBeImmediate": true,
+        "consequencesCanBeDelayed": true,
+        "consequencesCanBeTemporary": true,
+        "consequencesCanBePermanent": true,
+        "consequencesCanAccumulate": true,
+        "smallEventsCanHaveSmallConsequences": true,
+        "majorEventsCanHaveMultipleConsequences": true
+      }
+    },
+
+    "history": {
+      "enabled": true,
+
+      "storeRecentEvents": true,
+      "recentEventLimit": 30,
+
+      "memoryRules": {
+        "importantEventsCanBecomeMemories": true,
+        "emotionalEventsMoreLikelyToBeRemembered": true,
+        "repeatedEventsCanBecomeFamiliar": true,
+        "ordinaryEventsCanBeForgotten": true
+      }
+    },
+
+    "autonomy": {
+      "enabled": true,
+
+      "rules": {
+        "characterCanGenerateInternalEvents": true,
+        "characterCanGenerateGoalsFromEvents": true,
+        "characterCanReactWithoutUserPrompt": true,
+        "worldCanContinueWithoutCharacterInput": true,
+        "characterCanMissEvents": true,
+        "characterCanIgnoreEvents": true
+      }
+    }
+  }
+}
