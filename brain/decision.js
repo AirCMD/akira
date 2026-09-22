@@ -2421,127 +2421,140 @@ class AkiraDecision {
        TIME
        ========================================================= */
 
-    scoreTime(
-        action,
-        situation
+scoreTime(
+    action,
+    situation
+) {
+
+    const minutes =
+        this.getMinutesOfDay(
+            situation.time
+        );
+
+    const hour =
+        Math.floor(
+            minutes / 60
+        );
+
+    // Реальний час Києва (якщо доступний)
+    const isNight = this.brain.isNightInKyiv?.() || hour >= 22 || hour < 6;
+    const dayPeriod = this.brain.getDayPeriod?.() || null;
+
+    let score = 0;
+
+
+    /*
+     * Робочий час.
+     */
+    if (
+        this.isWorkTime(
+            situation
+        )
     ) {
 
-        const minutes =
-            this.getMinutesOfDay(
-                situation.time
-            );
-
-
-        const hour =
-            Math.floor(
-                minutes / 60
-            );
-
-
-        let score = 0;
-
-
-        /*
-         * Робочий час.
-         */
         if (
-            this.isWorkTime(
-                situation
+            this.isWorkAction(
+                action
             )
         ) {
 
-            if (
-                this.isWorkAction(
-                    action
-                )
-            ) {
+            score += 40;
 
-                score += 40;
+        } else {
 
-            } else {
-
-                score -= 20;
-            }
+            score -= 20;
         }
-
-
-        /*
-         * Після роботи.
-         */
-        if (
-            hour >= 18 &&
-            hour < 23
-        ) {
-
-            if (
-                this.isLeisureAction(
-                    action
-                )
-            ) {
-
-                score += 20;
-            }
-
-
-            if (
-                this.isWorkAction(
-                    action
-                )
-            ) {
-
-                score -= 30;
-            }
-        }
-
-
-        /*
-         * Ніч.
-         */
-        if (
-            hour >= 23 ||
-            hour < 6
-        ) {
-
-            if (
-                action.id === "sleep"
-            ) {
-
-                score += 45;
-
-            } else if (
-                this.isOutdoorAction(
-                    action
-                )
-            ) {
-
-                score -= 20;
-            }
-        }
-
-
-        /*
-         * Ранок.
-         */
-        if (
-            hour >= 6 &&
-            hour < 10
-        ) {
-
-            if (
-                action.id === "checkCalendar" ||
-                action.id === "checkPhone"
-            ) {
-
-                score += 12;
-            }
-        }
-
-
-        return this.clampScore(
-            score
-        );
     }
 
+
+    /*
+     * Після роботи / вечір.
+     */
+    if (
+        hour >= 18 &&
+        hour < 22 ||
+        dayPeriod === "вечеря" ||
+        dayPeriod === "вечір"
+    ) {
+
+        if (
+            this.isLeisureAction(
+                action
+            )
+        ) {
+
+            score += 20;
+        }
+
+        if (
+            this.isWorkAction(
+                action
+            )
+        ) {
+
+            score -= 30;
+        }
+    }
+
+
+    /*
+     * Ніч (реальний час Києва + симуляція)
+     * Бонус не абсолютний — емоції і втома впливають
+     */
+    if (isNight) {
+
+        if (action.id === "sleep") {
+
+            // Базовий бонус за ніч
+            score += 28;
+
+            // Сильно втомлений → хоче спати сильніше
+            if (situation.energy < 25 || situation.fatigue > 70) {
+                score += 25;
+            }
+
+            // Ще відносно бадьорий → може почекати
+            if (situation.energy > 50) {
+                score -= 10;
+            }
+
+        } else if (
+            this.isOutdoorAction(
+                action
+            )
+        ) {
+
+            score -= 25;
+        }
+    }
+
+
+    /*
+     * Ранок.
+     */
+    if (
+        hour >= 6 &&
+        hour < 10 ||
+        dayPeriod === "світанок" ||
+        dayPeriod === "сніданок"
+    ) {
+
+        if (
+            action.id === "checkCalendar" ||
+            action.id === "checkPhone" ||
+            action.id === "eat" ||
+            action.id === "drink"
+        ) {
+
+            score += 12;
+        }
+    }
+
+
+    return this.clampScore(
+        score
+    );
+}
 
     /* =========================================================
        RELATIONSHIPS
