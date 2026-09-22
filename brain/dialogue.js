@@ -1765,10 +1765,12 @@ class AkiraDialogue {
 
             if (Math.random() < 0.20) {
 
-                this.brain.memory.recordMemoryEvent?.({
+                this.brain.memory.remember?.({
                     type: "conversation",
+                    title: `Розмова: ${profile.topic}`,
                     content: response.text,
-                    topic: profile.topic,
+                    topics: [profile.topic],
+                    people: profile.personId ? [profile.personId] : [],
                     importance: 15,
                     emotionalIntensity:
                         this.getConversationEmotionalIntensity(

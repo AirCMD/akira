@@ -568,6 +568,18 @@ class AkiraBrain {
             new window.AkiraMemory(this);
 
         this.memory.init?.();
+
+        // Динамічні спогади мають переживати перезавантаження сторінки.
+        if (this._savedMemoryState) {
+            if (Array.isArray(this._savedMemoryState.memories)) {
+                this.memory.memories = this._savedMemoryState.memories
+                    .map(memory => this.memory.normalizeMemory(memory));
+            }
+            if (Array.isArray(this._savedMemoryState.recentlyRecalled)) {
+                this.memory.recentlyRecalled = [...this._savedMemoryState.recentlyRecalled];
+            }
+            this._savedMemoryState = null;
+        }
     }
 
 
@@ -1000,6 +1012,14 @@ finishAction() {
     }
 
     this.social?.completeAction?.(action);
+
+    // Використовуємо тільки тригери, які прямо описані в emotions.json.
+    if (action.actionId === "rest") {
+        this.mood?.trigger?.("rest");
+    }
+    if (action.actionId === "talkToSomeone" || action.actionId === "talkToYani") {
+        this.mood?.trigger?.("positiveInteraction");
+    }
 
     const memoryPerson = action.targetPerson ||
         (action.actionId === "talkToYani" ? "Yani_Bakeneko" : null);
@@ -1454,6 +1474,11 @@ finishAction() {
                 dialogueHistory:
                     this.dialogueHistory.slice(-50),
 
+                memoryState: this.memory ? {
+                    memories: this.memory.memories || [],
+                    recentlyRecalled: this.memory.recentlyRecalled || []
+                } : null,
+
                 savedAt:
                     Date.now()
             };
@@ -1545,6 +1570,10 @@ finishAction() {
             ) {
                 this.dialogueHistory =
                     saved.dialogueHistory;
+            }
+
+            if (saved.memoryState && typeof saved.memoryState === "object") {
+                this._savedMemoryState = saved.memoryState;
             }
 
             return true;
