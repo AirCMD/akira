@@ -1105,6 +1105,10 @@ finishAction() {
                 ?.getBehaviorModifiers?.() || {};
 
         this.state.situation = {
+            kyivTime: this.getKyivTime(),
+            dayPeriod: this.getDayPeriod(),
+            isNight: this.isNightInKyiv(),
+            isTwilight: this.isTwilightInKyiv(),
 
             date:
                 this.state.world.date,
@@ -1646,6 +1650,50 @@ finishAction() {
         }
     }
 
+// =========================================================
+// РЕАЛЬНИЙ ЧАС КИЄВА
+// =========================================================
+
+getKyivTime() {
+    const now = new Date();
+    const formatter = new Intl.DateTimeFormat("uk-UA", {
+        timeZone: "Europe/Kyiv",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false
+    });
+    return formatter.format(now); // "HH:MM"
+}
+
+getKyivHour() {
+    const time = this.getKyivTime();
+    return parseInt(time.split(":")[0], 10);
+}
+
+getDayPeriod() {
+    const hour = this.getKyivHour();
+
+    if (hour >= 5 && hour < 8)   return "світанок";
+    if (hour >= 8 && hour < 11)  return "сніданок";
+    if (hour >= 11 && hour < 14) return "обід";
+    if (hour >= 14 && hour < 17) return "день";
+    if (hour >= 17 && hour < 20) return "вечеря";
+    if (hour >= 20 && hour < 22) return "вечір";
+    if (hour >= 22 || hour < 5)  return "ніч";
+
+    return "день";
+}
+
+isNightInKyiv() {
+    const hour = this.getKyivHour();
+    return hour >= 22 || hour < 6;
+}
+
+isTwilightInKyiv() {
+    const hour = this.getKyivHour();
+    // Приблизні сутінки (можна потім уточнити)
+    return (hour >= 5 && hour < 7) || (hour >= 20 && hour < 22);
+}
 
     // =========================================================
     // ДОПОМІЖНІ
