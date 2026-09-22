@@ -1,0 +1,4 @@
+{
+  "source": "people.json",
+  "note": "Runtime relationship state is initialized from people.json and then persisted in localStorage."
+}

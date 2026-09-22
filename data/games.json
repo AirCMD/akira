@@ -1,0 +1,7 @@
+{
+  "enabled": true,
+  "source": "activities.json",
+  "activities": [
+    "playGame"
+  ]
+}

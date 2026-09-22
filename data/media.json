@@ -1,0 +1,10 @@
+{
+  "enabled": true,
+  "source": "activities.json",
+  "activities": [
+    "listenToMusic",
+    "goToCinema",
+    "visitConcert",
+    "visitTheatre"
+  ]
+}
