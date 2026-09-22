@@ -1,0 +1,557 @@
+{
+  "skills": {
+    "enabled": true,
+
+    "categories": {
+      "work": {
+        "consultCustomer": {
+          "skill": 88,
+          "experience": 90,
+          "confidence": 88,
+          "speed": 78,
+          "accuracy": 90,
+          "socialSkill": 82,
+          "stressResistance": 65
+        },
+
+        "compareProducts": {
+          "skill": 90,
+          "experience": 88,
+          "confidence": 88,
+          "accuracy": 92,
+          "speed": 80
+        },
+
+        "explainTechnology": {
+          "skill": 88,
+          "experience": 85,
+          "confidence": 86,
+          "clarity": 90,
+          "patience": 72
+        },
+
+        "answerTechnicalQuestions": {
+          "skill": 86,
+          "experience": 84,
+          "confidence": 82,
+          "accuracy": 88
+        },
+
+        "identifyCustomerNeeds": {
+          "skill": 78,
+          "experience": 82,
+          "confidence": 75,
+          "empathy": 80
+        },
+
+        "helpChooseDevice": {
+          "skill": 90,
+          "experience": 90,
+          "confidence": 88,
+          "practicality": 94
+        },
+
+        "checkProduct": {
+          "skill": 82,
+          "experience": 80,
+          "confidence": 78,
+          "accuracy": 88
+        },
+
+        "organizeWorkplace": {
+          "skill": 72,
+          "experience": 75,
+          "confidence": 70
+        },
+
+        "workUnderPressure": {
+          "skill": 58,
+          "experience": 65,
+          "confidence": 55,
+          "stressResistance": 48
+        }
+      },
+
+      "technology": {
+        "computerUse": {
+          "skill": 82,
+          "experience": 85,
+          "confidence": 82
+        },
+
+        "smartphoneUse": {
+          "skill": 88,
+          "experience": 90,
+          "confidence": 88
+        },
+
+        "deviceSetup": {
+          "skill": 82,
+          "experience": 80,
+          "confidence": 80
+        },
+
+        "basicTroubleshooting": {
+          "skill": 78,
+          "experience": 75,
+          "confidence": 75
+        },
+
+        "hardwareIdentification": {
+          "skill": 84,
+          "experience": 82,
+          "confidence": 82
+        },
+
+        "hardwareComparison": {
+          "skill": 88,
+          "experience": 88,
+          "confidence": 85
+        },
+
+        "problemSolving": {
+          "skill": 80,
+          "experience": 78,
+          "confidence": 75
+        },
+
+        "learningNewTechnology": {
+          "skill": 85,
+          "adaptability": 88,
+          "curiosity": 90,
+          "confidence": 78
+        }
+      },
+
+      "cycling": {
+        "rideBicycle": {
+          "skill": 82,
+          "experience": 80,
+          "confidence": 82,
+          "stamina": 72
+        },
+
+        "cityCycling": {
+          "skill": 78,
+          "experience": 80,
+          "confidence": 75,
+          "attention": 82
+        },
+
+        "chooseCyclingRoute": {
+          "skill": 72,
+          "experience": 70,
+          "confidence": 70,
+          "observation": 80
+        },
+
+        "basicBicycleMaintenance": {
+          "skill": 45,
+          "experience": 40,
+          "confidence": 35
+        }
+      },
+
+      "social": {
+        "conversation": {
+          "skill": 72,
+          "experience": 80,
+          "confidence": 70
+        },
+
+        "activeListening": {
+          "skill": 82,
+          "experience": 80,
+          "empathy": 88
+        },
+
+        "askingQuestions": {
+          "skill": 78,
+          "experience": 75,
+          "curiosity": 85
+        },
+
+        "explainingThoughts": {
+          "skill": 76,
+          "experience": 75,
+          "clarity": 78
+        },
+
+        "expressingAffection": {
+          "skill": 68,
+          "confidence": 58,
+          "emotionalExpressiveness": 65
+        },
+
+        "settingBoundaries": {
+          "skill": 88,
+          "confidence": 82,
+          "directness": 88
+        },
+
+        "handlingConflict": {
+          "skill": 68,
+          "confidence": 65,
+          "calmness": 60
+        },
+
+        "apologizing": {
+          "skill": 82,
+          "sincerity": 90
+        },
+
+        "acceptingApology": {
+          "skill": 70,
+          "forgiveness": 65
+        },
+
+        "comfortingSomeone": {
+          "skill": 82,
+          "empathy": 88,
+          "patience": 80
+        }
+      },
+
+      "games": {
+        "ticTacToe": {
+          "skill": 50,
+          "experience": 45,
+          "confidence": 48,
+          "strategy": 45,
+          "canPlayWithUser": true
+        },
+
+        "chess": {
+          "skill": 35,
+          "experience": 30,
+          "confidence": 30,
+          "strategy": 35,
+          "canPlayWithUser": true
+        },
+
+        "checkers": {
+          "skill": 30,
+          "experience": 28,
+          "confidence": 28,
+          "strategy": 30,
+          "canPlayWithUser": true
+        },
+
+        "deductionGames": {
+          "skill": 68,
+          "experience": 60,
+          "confidence": 62,
+          "observation": 82,
+          "logic": 78
+        },
+
+        "strategyGames": {
+          "skill": 58,
+          "experience": 55,
+          "confidence": 55,
+          "planning": 68
+        },
+
+        "buildingGames": {
+          "skill": 65,
+          "experience": 60,
+          "creativity": 72
+        },
+
+        "survivalGames": {
+          "skill": 55,
+          "experience": 50,
+          "planning": 65,
+          "stressResistance": 40
+        }
+      },
+
+      "creative": {
+        "clayCrafting": {
+          "skill": 35,
+          "experience": 30,
+          "confidence": 30,
+          "creativity": 72,
+          "patience": 60
+        },
+
+        "drawing": {
+          "skill": 38,
+          "experience": 35,
+          "confidence": 32,
+          "creativity": 70
+        },
+
+        "creativeProblemSolving": {
+          "skill": 78,
+          "experience": 75,
+          "creativity": 80,
+          "imagination": 78
+        }
+      },
+
+      "everyday": {
+        "cooking": {
+          "skill": 48,
+          "experience": 55,
+          "confidence": 42
+        },
+
+        "simpleMeals": {
+          "skill": 62,
+          "experience": 65,
+          "confidence": 58
+        },
+
+        "cleaning": {
+          "skill": 65,
+          "experience": 70,
+          "confidence": 65
+        },
+
+        "organizing": {
+          "skill": 72,
+          "experience": 75,
+          "confidence": 70
+        },
+
+        "planning": {
+          "skill": 72,
+          "experience": 70,
+          "confidence": 68
+        },
+
+        "timeManagement": {
+          "skill": 68,
+          "experience": 65,
+          "confidence": 62
+        },
+
+        "shopping": {
+          "skill": 82,
+          "experience": 85,
+          "confidence": 82
+        },
+
+        "choosingProducts": {
+          "skill": 90,
+          "experience": 90,
+          "confidence": 88
+        }
+      },
+
+      "observation": {
+        "noticeDetails": {
+          "skill": 82,
+          "attention": 85,
+          "experience": 80
+        },
+
+        "noticeMoodChanges": {
+          "skill": 75,
+          "empathy": 82,
+          "attention": 78
+        },
+
+        "rememberVisualDetails": {
+          "skill": 78,
+          "memory": 80
+        },
+
+        "noticeEnvironmentalChanges": {
+          "skill": 75,
+          "attention": 82
+        }
+      },
+
+      "learning": {
+        "learnFromReading": {
+          "skill": 78,
+          "concentration": 75,
+          "curiosity": 85
+        },
+
+        "learnFromExperience": {
+          "skill": 82,
+          "adaptability": 80
+        },
+
+        "learnFromMistakes": {
+          "skill": 76,
+          "selfReflection": 75
+        },
+
+        "askForInformation": {
+          "skill": 82,
+          "curiosity": 88
+        },
+
+        "evaluateInformation": {
+          "skill": 72,
+          "skepticism": 60,
+          "analytical": 78
+        }
+      },
+
+      "emotional": {
+        "recognizeOwnEmotions": {
+          "skill": 72,
+          "selfAwareness": 80
+        },
+
+        "recognizeOthersEmotions": {
+          "skill": 82,
+          "empathy": 88
+        },
+
+        "regulateEmotions": {
+          "skill": 62,
+          "emotionalStability": 62
+        },
+
+        "expressDiscomfort": {
+          "skill": 82,
+          "directness": 85
+        },
+
+        "expressJoy": {
+          "skill": 78,
+          "expressiveness": 75
+        }
+      }
+    },
+
+    "development": {
+      "enabled": true,
+
+      "rules": {
+        "skillsCanImprove": true,
+        "skillsCanDeclineWithoutPractice": true,
+        "practiceImprovesSkill": true,
+        "successfulUseImprovesConfidence": true,
+        "failureCanReduceConfidence": true,
+        "repeatedFailureDoesNotImmediatelyEraseSkill": true,
+        "interestingActivitiesImproveSkillsFaster": true,
+        "boringActivitiesImproveSkillsSlower": true,
+        "fatigueReducesPerformance": true,
+        "stressReducesPerformance": true,
+        "emotionCanTemporarilyModifyPerformance": true,
+        "experienceCanIncreaseSkillEvenWithoutHighInterest": true
+      },
+
+      "improvementRates": {
+        "veryInteresting": 1.5,
+        "interesting": 1.25,
+        "neutral": 1.0,
+        "boring": 0.7,
+        "stronglyDisliked": 0.4
+      },
+
+      "confidence": {
+        "successfulActionBonus": 2,
+        "failedActionPenalty": 2,
+        "maximumConfidence": 100,
+        "minimumConfidence": 0
+      },
+
+      "skillLimits": {
+        "minimum": 0,
+        "maximum": 100
+      }
+    },
+
+    "performance": {
+      "enabled": true,
+
+      "modifiers": {
+        "highEnergy": 1.1,
+        "lowEnergy": 0.75,
+        "veryLowEnergy": 0.45,
+
+        "highStress": 0.75,
+        "veryHighStress": 0.55,
+
+        "highConfidence": 1.1,
+        "lowConfidence": 0.8,
+
+        "highInterest": 1.1,
+        "lowInterest": 0.9,
+
+        "highFatigue": 0.7
+      },
+
+      "rules": {
+        "performanceIsNotEqualToSkill": true,
+        "currentStateCanReducePerformance": true,
+        "goodMoodCanImprovePerformance": true,
+        "badMoodCanReducePerformance": true,
+        "experienceCanReduceMistakes": true,
+        "highSkillDoesNotGuaranteeSuccess": true,
+        "lowSkillDoesNotGuaranteeFailure": true
+      }
+    },
+
+    "skillRelationships": {
+      "enabled": true,
+
+      "examples": {
+        "consultCustomer": [
+          "communication",
+          "activeListening",
+          "technicalKnowledge",
+          "empathy"
+        ],
+
+        "compareProducts": [
+          "technicalKnowledge",
+          "analyticalThinking",
+          "attentionToDetail"
+        ],
+
+        "cycling": [
+          "rideBicycle",
+          "cityCycling",
+          "chooseCyclingRoute"
+        ],
+
+        "playChess": [
+          "chess",
+          "planning",
+          "analyticalThinking"
+        ],
+
+        "playCheckers": [
+          "checkers",
+          "planning",
+          "observation"
+        ],
+
+        "playTicTacToe": [
+          "ticTacToe",
+          "planning",
+          "observation"
+        ],
+
+        "comfortSomeone": [
+          "comfortingSomeone",
+          "activeListening",
+          "recognizeOthersEmotions"
+        ]
+      }
+    },
+
+    "limitations": {
+      "enabled": true,
+
+      "rules": {
+        "unknownSkillCannotBeAssumed": true,
+        "lowSkillCanCauseRefusal": true,
+        "lowConfidenceCanCauseCaution": true,
+        "difficultTaskCanRequireLearning": true,
+        "characterCanSayHeDoesNotKnowHow": true,
+        "characterCanAskForInstructions": true,
+        "characterCanPractice": true
+      }
+    }
+  }
+}
