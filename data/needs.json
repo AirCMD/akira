@@ -1,0 +1,236 @@
+{
+  "needs": {
+    "energy": {
+      "value": 80,
+      "minimumComfort": 30,
+      "critical": 15,
+      "recovery": {
+        "sleep": 35,
+        "rest": 10
+      }
+    },
+
+    "sleep": {
+      "value": 80,
+      "minimumComfort": 35,
+      "critical": 15,
+      "recoveryPerHour": 12
+    },
+
+    "hunger": {
+      "value": 20,
+      "minimumComfort": 40,
+      "critical": 80
+    },
+
+    "thirst": {
+      "value": 20,
+      "minimumComfort": 40,
+      "critical": 80
+    },
+
+    "social": {
+      "value": 45,
+      "minimumComfort": 30,
+      "critical": 10
+    },
+
+    "fun": {
+      "value": 55,
+      "minimumComfort": 30,
+      "critical": 10
+    },
+
+    "rest": {
+      "value": 60,
+      "minimumComfort": 35,
+      "critical": 15
+    },
+
+    "curiosity": {
+      "value": 65,
+      "minimumComfort": 25,
+      "critical": 10
+    },
+
+    "safety": {
+      "value": 90,
+      "minimumComfort": 60,
+      "critical": 30
+    },
+
+    "privacy": {
+      "value": 55,
+      "minimumComfort": 30,
+      "critical": 10
+    },
+
+    "achievement": {
+      "value": 50,
+      "minimumComfort": 25,
+      "critical": 10
+    },
+
+    "comfort": {
+      "value": 65,
+      "minimumComfort": 35,
+      "critical": 15
+    }
+  },
+
+  "drift": {
+    "enabled": true,
+
+    "perHour": {
+      "energy": -4,
+      "sleep": -3,
+      "hunger": 8,
+      "thirst": 10,
+      "social": -2,
+      "fun": -2,
+      "rest": -3,
+      "curiosity": -1,
+      "privacy": -1,
+      "achievement": -1,
+      "comfort": -1
+    }
+  },
+
+  "activities": {
+    "sleep": {
+      "effects": {
+        "energy": 35,
+        "sleep": 45,
+        "rest": 35,
+        "hunger": 5,
+        "thirst": 5
+      }
+    },
+
+    "eat": {
+      "effects": {
+        "energy": 10,
+        "hunger": -55,
+        "comfort": 8
+      }
+    },
+
+    "drink": {
+      "effects": {
+        "energy": 3,
+        "thirst": -50,
+        "comfort": 5
+      }
+    },
+
+    "rest": {
+      "effects": {
+        "energy": 12,
+        "rest": 25,
+        "comfort": 10
+      }
+    },
+
+    "talk": {
+      "effects": {
+        "social": 20,
+        "fun": 8,
+        "energy": -4
+      }
+    },
+
+    "playGame": {
+      "effects": {
+        "fun": 30,
+        "social": 12,
+        "energy": -12,
+        "achievement": 5
+      }
+    },
+
+    "read": {
+      "effects": {
+        "fun": 15,
+        "curiosity": 20,
+        "energy": -5,
+        "rest": 5
+      }
+    },
+
+    "walk": {
+      "effects": {
+        "fun": 18,
+        "energy": -10,
+        "curiosity": 12,
+        "rest": 8
+      }
+    },
+
+    "cycle": {
+      "effects": {
+        "fun": 25,
+        "energy": -18,
+        "curiosity": 15,
+        "achievement": 8
+      }
+    },
+
+    "work": {
+      "effects": {
+        "energy": -20,
+        "achievement": 12,
+        "social": 5,
+        "rest": -12
+      }
+    }
+  },
+
+  "priority": {
+    "criticalNeedMultiplier": 3,
+    "lowNeedMultiplier": 2,
+    "normalNeedMultiplier": 1
+  },
+
+  "sleep": {
+    "preferredStart": 1,
+    "preferredEnd": 9,
+    "variationHours": 2,
+
+    "decision": {
+      "tirednessThreshold": 35,
+      "criticalEnergyThreshold": 15,
+      "canSleepOutsidePreferredHours": true
+    }
+  },
+
+  "socialBehavior": {
+    "minimumSocialNeedForInitiatingConversation": 35,
+    "preferredSocialNeed": 60,
+    "socialFatigue": {
+      "enabled": true,
+      "fatiguePerConversation": 3
+    }
+  },
+
+  "autonomy": {
+    "enabled": true,
+
+    "canInitiateActions": true,
+
+    "actions": [
+      "sleep",
+      "eat",
+      "drink",
+      "rest",
+      "read",
+      "playGame",
+      "walk",
+      "cycle",
+      "work",
+      "listenToMusic",
+      "checkSocialNetwork",
+      "writePost",
+      "talkToSomeone"
+    ]
+  }
+}
