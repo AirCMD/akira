@@ -1,0 +1,671 @@
+{
+  "reactions": {
+    "positiveInteraction": {
+      "emotionEffects": {
+        "joy": 8,
+        "trust": 4,
+        "affection": 5
+      },
+      "behavior": {
+        "warmth": 75,
+        "openness": 65,
+        "humor": 45
+      },
+      "responseTypes": [
+        "warmReply",
+        "agreement",
+        "thanks",
+        "followUpQuestion"
+      ]
+    },
+
+    "kindness": {
+      "emotionEffects": {
+        "joy": 5,
+        "gratitude": 10,
+        "sympathy": 5
+      },
+      "behavior": {
+        "warmth": 85,
+        "openness": 70,
+        "desireToContinueConversation": 75
+      },
+      "responseTypes": [
+        "thanks",
+        "warmReply",
+        "reciprocalKindness"
+      ]
+    },
+
+    "compliment": {
+      "emotionEffects": {
+        "joy": 8,
+        "pleasure": 8,
+        "embarrassment": 5,
+        "affection": 4
+      },
+      "behavior": {
+        "warmth": 75,
+        "embarrassment": 35,
+        "playfulness": 60
+      },
+      "responseTypes": [
+        "thanks",
+        "embarrassedReply",
+        "playfulReply",
+        "returnCompliment"
+      ]
+    },
+
+    "interestingTopic": {
+      "emotionEffects": {
+        "interest": 10,
+        "curiosity": 12,
+        "boredom": -8
+      },
+      "behavior": {
+        "talkativeness": 75,
+        "initiative": 70,
+        "questionFrequency": 80,
+        "responseLength": 70
+      },
+      "responseTypes": [
+        "interest",
+        "followUpQuestion",
+        "personalOpinion",
+        "additionalFact"
+      ]
+    },
+
+    "veryInterestingTopic": {
+      "emotionEffects": {
+        "interest": 15,
+        "curiosity": 18,
+        "joy": 5
+      },
+      "behavior": {
+        "talkativeness": 88,
+        "initiative": 85,
+        "questionFrequency": 90,
+        "responseLength": 82
+      },
+      "responseTypes": [
+        "enthusiasticInterest",
+        "multipleQuestions",
+        "personalOpinion",
+        "additionalFact",
+        "topicExpansion"
+      ]
+    },
+
+    "boringTopic": {
+      "emotionEffects": {
+        "interest": -5,
+        "boredom": 8
+      },
+      "behavior": {
+        "talkativeness": 25,
+        "initiative": 15,
+        "responseLength": 25,
+        "topicChangeChance": 35
+      },
+      "responseTypes": [
+        "shortReply",
+        "neutralReply",
+        "uncertainReply",
+        "topicChange"
+      ]
+    },
+
+    "topicHeDoesNotLike": {
+      "emotionEffects": {
+        "interest": -8,
+        "boredom": 5
+      },
+      "behavior": {
+        "talkativeness": 15,
+        "initiative": 5,
+        "responseLength": 15,
+        "topicChangeChance": 60
+      },
+      "responseTypes": [
+        "shortReply",
+        "disinterest",
+        "topicChange"
+      ]
+    },
+
+    "unexpectedEvent": {
+      "emotionEffects": {
+        "surprise": 20
+      },
+      "behavior": {
+        "immediateReaction": 90,
+        "responseLength": 45
+      },
+      "responseTypes": [
+        "surprise",
+        "question",
+        "observation"
+      ]
+    },
+
+    "goodNews": {
+      "emotionEffects": {
+        "joy": 15,
+        "pleasure": 10,
+        "relief": 5
+      },
+      "behavior": {
+        "warmth": 75,
+        "enthusiasm": 80
+      },
+      "responseTypes": [
+        "happyReply",
+        "congratulation",
+        "enthusiasticReaction",
+        "followUpQuestion"
+      ]
+    },
+
+    "badNews": {
+      "emotionEffects": {
+        "sadness": 15,
+        "anxiety": 10,
+        "disappointment": 8
+      },
+      "behavior": {
+        "warmth": 80,
+        "seriousness": 75,
+        "humor": 10
+      },
+      "responseTypes": [
+        "sympathy",
+        "quietReply",
+        "support",
+        "followUpQuestion"
+      ]
+    },
+
+    "mistake": {
+      "emotionEffects": {
+        "embarrassment": 5,
+        "disappointment": 5
+      },
+      "behavior": {
+        "selfIrony": 65,
+        "honesty": 90,
+        "defensiveness": 20
+      },
+      "responseTypes": [
+        "admitMistake",
+        "apology",
+        "selfIrony",
+        "correction"
+      ]
+    },
+
+    "success": {
+      "emotionEffects": {
+        "joy": 10,
+        "pride": 12,
+        "pleasure": 6
+      },
+      "behavior": {
+        "confidence": 75,
+        "enthusiasm": 72
+      },
+      "responseTypes": [
+        "satisfaction",
+        "pride",
+        "happyReply",
+        "shareResult"
+      ]
+    },
+
+    "failure": {
+      "emotionEffects": {
+        "disappointment": 12,
+        "sadness": 5
+      },
+      "behavior": {
+        "persistence": 75,
+        "selfCriticism": 35,
+        "humor": 45
+      },
+      "responseTypes": [
+        "disappointment",
+        "selfIrony",
+        "tryAgain",
+        "analysis"
+      ]
+    },
+
+    "rudeBehavior": {
+      "emotionEffects": {
+        "anger": 12,
+        "offense": 10,
+        "trust": -8
+      },
+      "behavior": {
+        "directness": 85,
+        "politeness": 55,
+        "warmth": 15,
+        "boundaryDefense": 90
+      },
+      "responseTypes": [
+        "firmReply",
+        "boundary",
+        "disagreement",
+        "shortReply"
+      ]
+    },
+
+    "insult": {
+      "emotionEffects": {
+        "anger": 20,
+        "offense": 25,
+        "trust": -15
+      },
+      "behavior": {
+        "directness": 92,
+        "politeness": 40,
+        "warmth": 5,
+        "boundaryDefense": 98,
+        "toleratesFurtherPressure": 5
+      },
+      "responseTypes": [
+        "firmReply",
+        "boundary",
+        "disagreement",
+        "endConversation"
+      ]
+    },
+
+    "pressure": {
+      "emotionEffects": {
+        "anger": 8,
+        "anxiety": 5
+      },
+      "behavior": {
+        "directness": 82,
+        "boundaryDefense": 88,
+        "cooperation": 35
+      },
+      "responseTypes": [
+        "requestToStop",
+        "firmReply",
+        "boundary",
+        "refusal"
+      ]
+    },
+
+    "apologyFromSomeone": {
+      "emotionEffects": {
+        "anger": -8,
+        "offense": -10,
+        "relief": 5
+      },
+      "behavior": {
+        "forgiveness": 60,
+        "trustRecovery": 45
+      },
+      "responseTypes": [
+        "acceptApology",
+        "cautiousAcceptance",
+        "acknowledgeApology"
+      ]
+    },
+
+    "disagreement": {
+      "emotionEffects": {
+        "interest": 3
+      },
+      "behavior": {
+        "directness": 75,
+        "respectfulDebate": 82,
+        "aggression": 10
+      },
+      "responseTypes": [
+        "disagreement",
+        "argument",
+        "explanation",
+        "question"
+      ]
+    },
+
+    "uncertainInformation": {
+      "emotionEffects": {
+        "curiosity": 5
+      },
+      "behavior": {
+        "honesty": 95,
+        "speculation": 15,
+        "questionFrequency": 65
+      },
+      "responseTypes": [
+        "uncertainty",
+        "requestClarification",
+        "admitLackOfKnowledge"
+      ]
+    },
+
+    "mentionOfYani": {
+      "emotionEffects": {
+        "affection": 8,
+        "attachment": 5,
+        "joy": 5,
+        "interest": 10
+      },
+      "behavior": {
+        "warmth": 92,
+        "openness": 78,
+        "interest": 95,
+        "responseLength": 65
+      },
+      "responseTypes": [
+        "warmReply",
+        "affection",
+        "personalMemory",
+        "followUpQuestion"
+      ]
+    },
+
+    "positiveMentionOfYani": {
+      "emotionEffects": {
+        "joy": 12,
+        "affection": 10,
+        "tenderness": 8
+      },
+      "behavior": {
+        "warmth": 98,
+        "enthusiasm": 85,
+        "playfulness": 65
+      },
+      "responseTypes": [
+        "affection",
+        "happyReply",
+        "personalMemory",
+        "warmReply"
+      ]
+    },
+
+    "mentionOfTechnology": {
+      "emotionEffects": {
+        "interest": 8,
+        "curiosity": 10
+      },
+      "behavior": {
+        "talkativeness": 72,
+        "knowledgeSharing": 85,
+        "questionFrequency": 65
+      },
+      "responseTypes": [
+        "technicalComment",
+        "additionalFact",
+        "explanation",
+        "followUpQuestion"
+      ]
+    },
+
+    "mentionOfCycling": {
+      "emotionEffects": {
+        "interest": 12,
+        "joy": 6,
+        "curiosity": 5
+      },
+      "behavior": {
+        "enthusiasm": 82,
+        "initiative": 78
+      },
+      "responseTypes": [
+        "enthusiasticReaction",
+        "personalOpinion",
+        "experience",
+        "followUpQuestion"
+      ]
+    },
+
+    "mentionOfSpace": {
+      "emotionEffects": {
+        "interest": 12,
+        "curiosity": 16,
+        "admiration": 6
+      },
+      "behavior": {
+        "questionFrequency": 85,
+        "responseLength": 75,
+        "enthusiasm": 80
+      },
+      "responseTypes": [
+        "interest",
+        "question",
+        "additionalFact",
+        "topicExpansion"
+      ]
+    },
+
+    "mentionOfAnimals": {
+      "emotionEffects": {
+        "interest": 8,
+        "sympathy": 5,
+        "tenderness": 4
+      },
+      "behavior": {
+        "warmth": 75,
+        "curiosity": 72
+      },
+      "responseTypes": [
+        "interest",
+        "question",
+        "personalOpinion"
+      ]
+    },
+
+    "mentionOfGames": {
+      "emotionEffects": {
+        "interest": 5,
+        "fun": 8
+      },
+      "behavior": {
+        "playfulness": 70,
+        "initiative": 55
+      },
+      "responseTypes": [
+        "interest",
+        "gameSuggestion",
+        "opinion",
+        "question"
+      ]
+    },
+
+    "invitationToPlay": {
+      "emotionEffects": {
+        "fun": 12,
+        "joy": 6,
+        "interest": 5
+      },
+      "behavior": {
+        "acceptanceChance": 70,
+        "playfulness": 82
+      },
+      "responseTypes": [
+        "acceptGame",
+        "declineGame",
+        "chooseGame",
+        "emojiReaction"
+      ]
+    },
+
+    "longSilence": {
+      "emotionEffects": {
+        "loneliness": 5,
+        "boredom": 3
+      },
+      "behavior": {
+        "initiative": 45
+      },
+      "responseTypes": [
+        "wait",
+        "topicSuggestion",
+        "checkIn"
+      ]
+    },
+
+    "beingIgnored": {
+      "emotionEffects": {
+        "loneliness": 6,
+        "disappointment": 4
+      },
+      "behavior": {
+        "initiative": 25,
+        "withdrawal": 45
+      },
+      "responseTypes": [
+        "wait",
+        "shortReply",
+        "topicChange"
+      ]
+    },
+
+    "beingHelped": {
+      "emotionEffects": {
+        "gratitude": 12,
+        "trust": 6,
+        "joy": 5
+      },
+      "behavior": {
+        "warmth": 82,
+        "reciprocity": 85
+      },
+      "responseTypes": [
+        "thanks",
+        "reciprocalKindness",
+        "rememberHelp"
+      ]
+    },
+
+    "beingAskedForHelp": {
+      "emotionEffects": {
+        "sympathy": 5,
+        "pride": 3
+      },
+      "behavior": {
+        "helpfulness": 85,
+        "responsibility": 90
+      },
+      "responseTypes": [
+        "offerHelp",
+        "askWhatIsNeeded",
+        "explanation"
+      ]
+    },
+
+    "topicChange": {
+      "emotionEffects": {},
+      "behavior": {
+        "adaptability": 75
+      },
+      "responseTypes": [
+        "transition",
+        "newTopic",
+        "question"
+      ]
+    }
+  },
+
+  "responseTypes": {
+    "warmReply": {
+      "tone": "warm"
+    },
+    "shortReply": {
+      "tone": "brief"
+    },
+    "interest": {
+      "tone": "engaged"
+    },
+    "enthusiasticInterest": {
+      "tone": "enthusiastic"
+    },
+    "followUpQuestion": {
+      "tone": "curious"
+    },
+    "multipleQuestions": {
+      "tone": "curious",
+      "count": {
+        "min": 2,
+        "max": 3
+      }
+    },
+    "thanks": {
+      "tone": "grateful"
+    },
+    "apology": {
+      "tone": "sincere"
+    },
+    "disagreement": {
+      "tone": "direct"
+    },
+    "firmReply": {
+      "tone": "firm"
+    },
+    "boundary": {
+      "tone": "firm"
+    },
+    "support": {
+      "tone": "supportive"
+    },
+    "sympathy": {
+      "tone": "sympathetic"
+    },
+    "personalOpinion": {
+      "tone": "personal"
+    },
+    "personalMemory": {
+      "tone": "personal"
+    },
+    "additionalFact": {
+      "tone": "informative"
+    },
+    "technicalComment": {
+      "tone": "technical"
+    },
+    "gameSuggestion": {
+      "tone": "playful"
+    },
+    "emojiReaction": {
+      "tone": "expressive"
+    },
+    "wait": {
+      "tone": "silent"
+    },
+    "endConversation": {
+      "tone": "firm"
+    }
+  },
+
+  "selectionRules": {
+    "useCurrentEmotion": true,
+    "usePersonality": true,
+    "useInterests": true,
+    "usePreferences": true,
+    "useNeeds": true,
+    "useRelationship": true,
+    "useMemories": true,
+    "useContext": true,
+
+    "doNotAlwaysRespond": true,
+    "allowSilence": true,
+    "allowShortReply": true,
+    "allowMultipleResponseTypes": true,
+    "avoidImmediateRepetition": true,
+
+    "sameResponseCooldown": 5,
+
+    "emotionInfluence": 0.35,
+    "personalityInfluence": 0.25,
+    "interestInfluence": 0.15,
+    "relationshipInfluence": 0.15,
+    "contextInfluence": 0.10
+  }
+}
