@@ -1,0 +1,215 @@
+{
+  "food": {
+    "values": {
+      "nutritiousFood": 90,
+      "vitamins": 88,
+      "balancedMeals": 85,
+      "naturalProducts": 78,
+      "variety": 82,
+      "satiety": 75
+    },
+
+    "preferences": {
+      "normalMeals": 88,
+      "fastFood": 55,
+      "snacks": 25,
+      "sweets": 50
+    },
+
+    "items": {
+      "friedChicken": 92,
+      "burgers": 88,
+      "frenchFries": 45,
+      "friedFish": 65,
+      "driedFish": 90,
+      "chips": 65,
+      "crackers": 60,
+      "sticks": 55,
+      "candies": 75,
+      "chocolate": 65
+    },
+
+    "dislikes": {
+      "mushrooms": -100,
+      "lard": -95,
+      "birchSap": -100,
+      "tomatoJuice": -95,
+      "carrotJuice": -90
+    },
+
+    "relative": [
+      {
+        "preferred": "friedChicken",
+        "over": "frenchFries",
+        "strength": 75
+      },
+      {
+        "preferred": "driedFish",
+        "over": "friedFish",
+        "strength": 65
+      }
+    ]
+  },
+
+  "drinks": {
+    "orangeSoda": 90,
+    "appleCompote": 88,
+    "uzvar": 92,
+    "birchSap": -100,
+    "tomatoJuice": -95,
+    "carrotJuice": -90
+  },
+
+  "music": {
+    "genres": {
+      "trance": 92,
+      "electronic": 85,
+      "dance": 82,
+      "synth": 75
+    },
+
+    "features": {
+      "catchyMelody": 98,
+      "viralHook": 95,
+      "repetitiveRhythm": 82,
+      "danceable": 80,
+      "atmospheric": 85
+    }
+  },
+
+  "games": {
+    "genres": {
+      "survival": 82,
+      "strategy": 78,
+      "horror": 55,
+      "simulation": 58,
+      "lifeSimulation": 50,
+      "crafting": 88,
+      "building": 85,
+      "competitive": -55,
+      "pvp": -90
+    },
+
+    "mechanics": {
+      "strategy": 90,
+      "survival": 82,
+      "building": 88,
+      "crafting": 90,
+      "resourceManagement": 78,
+      "investigation": 85,
+      "deduction": 82,
+      "threatDetection": 85,
+      "relaxedGameplay": 88,
+      "lowStress": 92,
+      "constantCombat": -55,
+      "aggressiveEnemies": -70,
+      "highPressure": -65
+    }
+  },
+
+  "cinema": {
+    "genres": {
+      "sliceOfLife": 88,
+      "drama": 72,
+      "romance": 58,
+      "artHouse": 78,
+      "experimental": 82,
+      "unusualCinema": 90,
+      "horror": 30,
+      "thriller": 18,
+      "action": 12
+    },
+
+    "features": {
+      "everydayLife": 94,
+      "relationships": 88,
+      "atmosphere": 90,
+      "interestingCharacters": 92,
+      "unusualStorytelling": 90,
+      "slowPacing": 72,
+      "emotionalDepth": 85,
+      "constantAction": -65,
+      "excessiveViolence": -50
+    }
+  },
+
+  "anime": {
+    "genres": {
+      "sliceOfLife": 80,
+      "comedy": 70,
+      "fantasy": 85,
+      "scienceFiction": 95,
+      "mystery": 90,
+      "horror": -40,
+      "isekai": 20,
+      "romance": 35,
+      "sports": -30
+    },
+
+    "features": {
+      "cuteCharacters": 50,
+      "overpoweredProtagonist": -60,
+      "fanservice": -70,
+      "slowWorldbuilding": 90,
+      "largeCast": 40,
+      "tragicEndings": -50
+    }
+  },
+
+  "space": {
+    "astronomy": 95,
+    "planets": 90,
+    "stars": 95,
+    "nebulae": 100,
+    "blackHoles": 85,
+    "spaceTravel": 90,
+    "aliens": 60,
+    "rockets": 70,
+    "astrology": 15
+  },
+
+  "scents": {
+    "petrichor": 95,
+    "wetSoil": 90,
+    "pine": 75,
+    "freshGrass": 80,
+    "rain": 90,
+    "sea": 50,
+    "vanilla": 40,
+    "citrus": 65,
+    "perfume": 20,
+    "strongPerfume": -55,
+    "smoke": -90
+  },
+
+  "interior": {
+    "quality": 90,
+    "comfort": 96,
+    "durability": 94,
+    "naturalMaterials": 78,
+    "wood": 85,
+    "metal": 40,
+    "glass": 55,
+    "softSurfaces": 88,
+    "brightColors": 65,
+    "darkColors": 30,
+    "cheapLooking": -75,
+    "uncomfortable": -95
+  },
+
+  "lighting": {
+    "warmLight": 92,
+    "softLight": 88,
+    "adjustableBrightness": 94,
+    "colorfulLight": 65,
+    "coldWhite": -35,
+    "harshLight": -80
+  },
+
+  "jewelry": {
+    "silver": 85,
+    "sapphire": 92,
+    "minimalistStyle": 70,
+    "quality": 80
+  }
+}
