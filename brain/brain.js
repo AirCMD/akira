@@ -969,58 +969,41 @@ class AkiraBrain {
     }
 
 
-    finishAction() {
+finishAction() {
 
-        const action =
-            this.state.action;
+    const action = this.state.action;
 
-        if (!action) {
-            return;
-        }
+    if (!action) {
+        return;
+    }
 
-        if (this.needs && action.actionId) {
+    // Застосовуємо ефекти дії
+    if (this.needs && action.actionId) {
         this.needs.applyActivity(action.actionId);
     }
 
-        this.actionHistory.push({
-            ...action,
-            finishedAt: Date.now()
-        });
+    this.actionHistory.push({
+        ...action,
+        finishedAt: Date.now()
+    });
 
-        if (
-            this.actionHistory.length >
-            50
-        ) {
-            this.actionHistory.shift();
-        }
-
-        this.state.recentActions
-            .push(action.actionId);
-
-        if (
-            this.state.recentActions.length >
-            10
-        ) {
-            this.state.recentActions.shift();
-        }
-
-        this.state.action = null;
-
-        this.state.activity =
-            "idle";
-
-        this.state.actionStartedAt =
-            null;
-
-        this.state.actionEndsAt =
-            null;
-
-        this.emit(
-            "actionFinished",
-            action
-        );
+    if (this.actionHistory.length > 50) {
+        this.actionHistory.shift();
     }
 
+    this.state.recentActions.push(action.actionId);
+
+    if (this.state.recentActions.length > 10) {
+        this.state.recentActions.shift();
+    }
+
+    this.state.action = null;
+    this.state.activity = "idle";
+    this.state.actionStartedAt = null;
+    this.state.actionEndsAt = null;
+
+    this.emit("actionFinished", action);
+}
 
     // =========================================================
     // АВТОНОМНЕ РІШЕННЯ
