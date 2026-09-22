@@ -74,20 +74,55 @@ class AkiraOpinions {
         return null;
     }
 
+
+    analyzeMessage(text = "") {
+        const normalized = String(text)
+            .toLowerCase()
+            .replace(/[’`ʼ]/g, "'")
+            .replace(/\s+/g, " ")
+            .trim();
+
+        const topic = this.inferTopic(normalized);
+        const opinionRequest = this.isOpinionQuestion(normalized);
+        let direction = null;
+        let eventKind = null;
+
+        if (/(підвищ|піднял|подорожч|зросл|виросл|дорожч|стала\s+дорож|стало\s+дорож|стали\s+дорож)/u.test(normalized)) {
+            direction = "increase";
+            eventKind = "priceIncrease";
+        } else if (/(зниз|зменш|здешев|подешев|дешевш|стала\s+дешев|стало\s+дешев|стали\s+дешев)/u.test(normalized)) {
+            direction = "decrease";
+            eventKind = "priceDecrease";
+        } else if (/(погірш|скасув|закрил)/u.test(normalized)) {
+            direction = "worsening";
+            eventKind = "serviceWorsening";
+        } else if (/(покращ|зручніш|відкрили|додали)/u.test(normalized)) {
+            direction = "improvement";
+            eventKind = "serviceImprovement";
+        }
+
+        return {
+            normalized,
+            domain: topic ? "economy" : null,
+            topic,
+            opinionRequest,
+            eventKind,
+            direction,
+            isEconomicMessage: Boolean(topic && (opinionRequest || eventKind))
+        };
+    }
+
     inferEvent(text = "") {
-        const t = String(text).toLowerCase().replace(/[’`ʼ]/g, "'");
-        const topic = this.inferTopic(t);
-        if (!topic) return null;
-
-        let kind = null;
-        if (/(підвищ|піднял|подорожч|зросл|виросл|дорожч|стала\s+дорож|стало\s+дорож|стали\s+дорож)/u.test(t)) kind = "priceIncrease";
-        else if (/(зниз|зменш|здешев|подешев|дешевш|стала\s+дешев|стало\s+дешев|стали\s+дешев)/u.test(t)) kind = "priceDecrease";
-        else if (/(погірш|скасув|закрил)/u.test(t)) kind = "serviceWorsening";
-        else if (/(покращ|зручніш|відкрили|додали)/u.test(t)) kind = "serviceImprovement";
-        if (!kind) return null;
-
-        const personalImpact = ["food_prices", "transport_prices", "utilities_prices"].includes(topic) ? 0.8 : 0.55;
-        return { topic, kind, personalImpact, description: String(text), source: "conversation" };
+        const analysis = this.analyzeMessage(text);
+        if (!analysis.topic || !analysis.eventKind) return null;
+        const personalImpact = ["food_prices", "transport_prices", "utilities_prices"].includes(analysis.topic) ? 0.8 : 0.55;
+        return {
+            topic: analysis.topic,
+            kind: analysis.eventKind,
+            personalImpact,
+            description: String(text),
+            source: "conversation"
+        };
     }
 
     isOpinionQuestion(text = "") {
@@ -184,22 +219,47 @@ class AkiraOpinions {
         };
     }
 
+    describeChangeOpinion(analysis) {
+        if (!analysis?.topic || !analysis?.eventKind) return null;
+        const labels = {
+            transport_prices: "проїзду й транспорту",
+            food_prices: "їжі та продуктів",
+            delivery_prices: "доставки",
+            utilities_prices: "комунальних послуг",
+            cost_of_living: "повсякденних витрат",
+            government_decisions: "повсякденних витрат"
+        };
+        const subject = labels[analysis.topic] || "цього";
+        if (analysis.eventKind === "priceIncrease") {
+            return `До підвищення вартості ${subject} я ставлюся скоріше негативно: це збільшує звичайні витрати. Але конкретне рішення я б оцінював за причинами й наслідками.`;
+        }
+        if (analysis.eventKind === "priceDecrease") {
+            return `Зниження вартості ${subject} для мене скоріше позитивне, якщо воно не погіршує якість або доступність.`;
+        }
+        return this.describeOpinion(analysis.normalized || "");
+    }
+
     describeReaction(result) {
         if (!result) return null;
-        const topicNames = {
-            transport_prices: "проїзд",
-            food_prices: "їжу й продукти",
-            delivery_prices: "доставку",
-            utilities_prices: "комунальні послуги",
-            cost_of_living: "повсякденні витрати",
-            government_decisions: "це рішення"
+        const increaseText = {
+            transport_prices: "Коли дорожчає проїзд, це просто додає повсякденних витрат.",
+            food_prices: "Коли дорожчають їжа й продукти, це відчутно додає повсякденних витрат.",
+            delivery_prices: "Коли дорожчає доставка, замовляти їжу стає менш привабливо.",
+            utilities_prices: "Коли дорожчають комунальні послуги, це збільшує обов'язкові витрати.",
+            cost_of_living: "Коли ростуть повсякденні витрати, мені це не подобається."
         };
-        const subject = topicNames[result.topic] || "це";
+        const decreaseText = {
+            transport_prices: "Якщо проїзд дешевшає, це приємна зміна для повсякденних витрат.",
+            food_prices: "Якщо їжа й продукти дешевшають, це для мене скоріше хороша зміна.",
+            delivery_prices: "Якщо доставка дешевшає, замовляти їжу стає трохи привабливіше.",
+            utilities_prices: "Якщо комунальні послуги дешевшають, це зменшує обов'язкові витрати.",
+            cost_of_living: "Якщо повсякденні витрати зменшуються, це для мене скоріше позитивно."
+        };
         if (result.kind === "priceIncrease") {
-            return `Мені таке не дуже подобається. Коли дорожчає ${subject}, це просто додає повсякденних витрат.`;
+            return `Мені таке не дуже подобається. ${increaseText[result.topic] || "Це збільшує повсякденні витрати."}`;
         }
         if (result.kind === "priceDecrease") {
-            return `Оце вже приємніше. Якщо ${subject} стає дешевше, я скоріше це підтримаю.`;
+            return `Оце вже приємніше. ${decreaseText[result.topic] || "Це зменшує повсякденні витрати."}`;
         }
         if (result.kind === "serviceImprovement") {
             return "Якщо від цього справді стає зручніше в повсякденному житті, я до такого ставлюся позитивно.";

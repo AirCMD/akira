@@ -42,6 +42,16 @@ class AkiraDialogue {
 
         const profile = this.buildDialogueProfile(text, context);
 
+        // Структуровані наміри обробляємо ДО випадкового вибору діалогової дії.
+        // Інакше коректно розпізнана економічна подія могла бути перехоплена
+        // changeTopic/staySilent або звичайною темою food.
+        const structuredResponse = this.composeStructuredResponse(profile);
+        if (structuredResponse) {
+            const finalized = this.finalizeResponse(structuredResponse, profile);
+            this.recordDialogue(text, finalized, profile);
+            return finalized;
+        }
+
         const action = this.selectDialogueAction(profile);
 
         if (action === "staySilent") {
@@ -1271,6 +1281,32 @@ class AkiraDialogue {
     // =========================================================
     // СКЛАДАННЯ
     // =========================================================
+
+    composeStructuredResponse(profile) {
+        // Запити, що читають живий стан, не повинні залежати від випадкового
+        // dialogue action. Те саме стосується економічних подій/opinions.
+        const intent = profile.analysis.intent;
+        if (intent === "ask_date") return [this.composeDateAnswer(profile)];
+        if (intent === "ask_holiday") return [this.composeHolidayAnswer(profile)];
+        if (intent === "ask_weather") return [this.composeWeatherAnswer(profile)];
+        if (intent === "ask_state") return [this.composeStateAnswer(profile)];
+        if (intent === "ask_activity") return [this.composeActivityAnswer(profile)];
+        if (intent === "ask_future_activity") return [this.composeFutureActivityAnswer(profile)];
+
+        const opinionAnalysis = this.brain.opinions?.analyzeMessage?.(profile.input);
+        if (opinionAnalysis?.opinionRequest && opinionAnalysis.topic) {
+            const reply = opinionAnalysis.eventKind
+                ? this.brain.opinions.describeChangeOpinion?.(opinionAnalysis)
+                : this.brain.opinions.describeOpinion?.(profile.input);
+            return reply ? [reply] : null;
+        }
+        if (opinionAnalysis?.eventKind && opinionAnalysis.topic) {
+            const reaction = this.brain.opinions.reactToText?.(profile.input);
+            const reply = this.brain.opinions.describeReaction?.(reaction);
+            return reply ? [reply] : null;
+        }
+        return null;
+    }
 
     composeResponse(profile, action) {
 
