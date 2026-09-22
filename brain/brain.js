@@ -12,7 +12,6 @@ class AkiraBrain {
             saveKey: config.saveKey || "akira_brain_state_v3",
 
             // 1 реальна секунда = 1 симульована хвилина.
-            // Пізніше це можна винести в world.json.
             simulationSpeed:
                 Number(config.simulationSpeed) || 1,
 
@@ -29,6 +28,7 @@ class AkiraBrain {
 
         this.memory = null;
         this.mood = null;
+        this.needs = null;
         this.decision = null;
         this.dialogue = null;
 
@@ -285,15 +285,19 @@ class AkiraBrain {
 
         this.initializeWorld();
         this.initializeRelationships();
-        this.initializeNeeds();
         this.initializeGoals();
+
+        // Спочатку відновлюємо збережений стан.
+        this.loadSavedState();
+
+        // Потім створюємо рушії, які працюють
+        // поверх поточного стану.
+        this.initializeNeeds();
 
         this.initializeMemory();
         this.initializeMood();
         this.initializeDecision();
         this.initializeDialogue();
-
-        this.loadSavedState();
 
         this.state.initialized = true;
         this.initialized = true;
@@ -379,7 +383,10 @@ class AkiraBrain {
             of Object.entries(source)
         ) {
 
-            if (!person || typeof person !== "object") {
+            if (
+                !person ||
+                typeof person !== "object"
+            ) {
                 continue;
             }
 
@@ -459,7 +466,8 @@ class AkiraBrain {
             };
         }
 
-        this.state.relationships = relationships;
+        this.state.relationships =
+            relationships;
     }
 
 
@@ -469,46 +477,38 @@ class AkiraBrain {
 
     initializeNeeds() {
 
-        const needs =
-            this.data.needs || {};
-
-        const source =
-            needs.current ||
-            needs.needs ||
-            needs;
-
-        const result = {};
-
-        for (
-            const [name, value]
-            of Object.entries(source)
+        if (
+            typeof window.AkiraNeeds !==
+            "function"
         ) {
+            console.warn(
+                "AkiraNeeds ще не підключений."
+            );
 
-            if (
-                typeof value === "number"
-            ) {
-
-                result[name] =
-                    this.clamp(value);
-
-            } else if (
-                value &&
-                typeof value === "object"
-            ) {
-
-                result[name] =
-                    this.clamp(
-                        this.number(
-                            value.value ??
-                            value.current ??
-                            value.level,
-                            50
-                        )
-                    );
-            }
+            return;
         }
 
-        this.state.needs = result;
+        this.needs =
+            new window.AkiraNeeds(this);
+
+        this.needs.init();
+    }
+
+
+    updateNeeds(minutes) {
+
+        if (!this.needs) {
+            return;
+        }
+
+        if (
+            typeof this.needs.update !==
+            "function"
+        ) {
+            return;
+        }
+
+        this.needs.update(minutes);
     }
 
 
@@ -544,7 +544,8 @@ class AkiraBrain {
         }
 
         this.state.goals.current =
-            this.state.goals.active[0] || null;
+            this.state.goals.active[0] ||
+            null;
     }
 
 
@@ -561,6 +562,7 @@ class AkiraBrain {
             console.warn(
                 "AkiraMemory ще не підключений."
             );
+
             return;
         }
 
@@ -580,6 +582,7 @@ class AkiraBrain {
             console.warn(
                 "AkiraMood ще не підключений."
             );
+
             return;
         }
 
@@ -599,6 +602,7 @@ class AkiraBrain {
             console.warn(
                 "AkiraDecision ще не підключений."
             );
+
             return;
         }
 
@@ -618,6 +622,7 @@ class AkiraBrain {
             console.warn(
                 "AkiraDialogue ще не підключений."
             );
+
             return;
         }
 
@@ -798,7 +803,9 @@ class AkiraBrain {
         this.state.world.day =
             date.toLocaleDateString(
                 "en-US",
-                { weekday: "long" }
+                {
+                    weekday: "long"
+                }
             );
 
         this.updateSeason(date);
@@ -814,70 +821,28 @@ class AkiraBrain {
             month === 12 ||
             month <= 2
         ) {
+
             this.state.world.season =
                 "winter";
 
         } else if (
             month <= 5
         ) {
+
             this.state.world.season =
                 "spring";
 
         } else if (
             month <= 8
         ) {
+
             this.state.world.season =
                 "summer";
 
         } else {
+
             this.state.world.season =
                 "autumn";
-        }
-    }
-
-
-    // =========================================================
-    // ПОТРЕБИ
-    // =========================================================
-
-    updateNeeds(minutes) {
-
-        if (!this.state.needs) {
-            return;
-        }
-
-        const needsData =
-            this.data.needs || {};
-
-        const drift =
-            needsData.driftPerHour ||
-            needsData.drift ||
-            {};
-
-        const hours =
-            minutes / 60;
-
-        for (
-            const [need, value]
-            of Object.entries(
-                this.state.needs
-            )
-        ) {
-
-            const rate =
-                this.number(
-                    drift[need],
-                    0
-                );
-
-            if (!rate) {
-                continue;
-            }
-
-            this.state.needs[need] =
-                this.clamp(
-                    value + rate * hours
-                );
         }
     }
 
@@ -951,8 +916,6 @@ class AkiraBrain {
         const now =
             Date.now();
 
-        // Не перевіряємо події буквально
-        // на кожній мілісекунді.
         if (
             now - this.lastEventCheck <
             5000
@@ -971,8 +934,6 @@ class AkiraBrain {
             return;
         }
 
-        // Поки що це лише підготовчий шар.
-        // Реальний генератор подій буде окремим.
         this.emit(
             "eventCheck",
             {
@@ -1005,10 +966,6 @@ class AkiraBrain {
 
             return;
         }
-
-        // Поступове виснаження/відновлення
-        // залишаємо decision/activity logic,
-        // а brain лише координує.
     }
 
 
@@ -1071,9 +1028,6 @@ class AkiraBrain {
             return;
         }
 
-        // Поки персонаж виконує дію,
-        // не потрібно кожну секунду
-        // змушувати його приймати нове рішення.
         if (this.state.action) {
             return;
         }
@@ -1136,7 +1090,10 @@ class AkiraBrain {
         const minutes =
             min +
             Math.random() *
-            Math.max(0, max - min);
+            Math.max(
+                0,
+                max - min
+            );
 
         return minutes * 1000;
     }
@@ -1219,7 +1176,8 @@ class AkiraBrain {
             relationships:
                 this.state.relationships,
 
-            emotions: mood,
+            emotions:
+                mood,
 
             dominantEmotions:
                 dominant,
@@ -1368,9 +1326,12 @@ class AkiraBrain {
 
             return {
                 type: "text",
+
                 text:
                     "Я зараз не можу нормально сформулювати відповідь.",
-                timestamp: Date.now()
+
+                timestamp:
+                    Date.now()
             };
         }
 
@@ -1582,6 +1543,7 @@ class AkiraBrain {
     getPublicState() {
 
         return {
+
             initialized:
                 this.initialized,
 
@@ -1606,6 +1568,9 @@ class AkiraBrain {
             socialEnergy:
                 this.state.socialEnergy,
 
+            socialNeed:
+                this.state.socialNeed,
+
             boredom:
                 this.state.boredom,
 
@@ -1617,6 +1582,9 @@ class AkiraBrain {
 
             currentPerson:
                 this.state.currentPerson,
+
+            needs:
+                { ...this.state.needs },
 
             conversation:
                 {
@@ -1680,6 +1648,7 @@ class AkiraBrain {
 
             try {
                 listener(data);
+
             } catch (error) {
 
                 console.error(
@@ -1716,7 +1685,10 @@ class AkiraBrain {
             min,
             Math.min(
                 max,
-                this.number(value, min)
+                this.number(
+                    value,
+                    min
+                )
             )
         );
     }
