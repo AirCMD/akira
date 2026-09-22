@@ -337,9 +337,12 @@ class AkiraBrain {
         const timeCurrent = timeCfg.current || {};
         const locationCfg = world.location || {};
 
-        const date = (calendar.year && calendar.month && calendar.day)
-            ? `${calendar.year}-${String(calendar.month).padStart(2,"0")}-${String(calendar.day).padStart(2,"0")}`
-            : (world.date || this.getToday());
+        const realCalendar = timeCfg.simulation?.realTime !== false;
+        const date = realCalendar
+            ? this.getToday()
+            : ((calendar.year && calendar.month && calendar.day)
+                ? `${calendar.year}-${String(calendar.month).padStart(2,"0")}-${String(calendar.day).padStart(2,"0")}`
+                : (world.date || this.getToday()));
 
         const time = (Number.isFinite(Number(timeCurrent.hour)))
             ? `${String(Number(timeCurrent.hour)).padStart(2,"0")}:${String(Number(timeCurrent.minute)||0).padStart(2,"0")}`
@@ -646,7 +649,8 @@ class AkiraBrain {
             ["relationships", "AkiraRelationships"],
             ["perception", "AkiraPerception"],
             ["activities", "AkiraActivities"],
-            ["social", "AkiraSocial"]
+            ["social", "AkiraSocial"],
+            ["calendar", "AkiraCalendar"]
         ];
         for (const [property, globalName] of modules) {
             const Ctor = window[globalName];
@@ -798,8 +802,11 @@ class AkiraBrain {
 
         while (hours >= 24) {
             hours -= 24;
-            this.advanceCalendarDay();
+            const realCalendar = this.data?.world?.world?.time?.simulation?.realTime !== false;
+            if (!realCalendar) this.advanceCalendarDay();
         }
+
+        this.calendar?.sync?.();
 
         world.time =
             `${String(
@@ -1793,10 +1800,11 @@ isTwilightInKyiv() {
 
 
     getToday() {
-
-        return new Date()
-            .toISOString()
-            .slice(0, 10);
+        const now = new Date();
+        const y = now.getFullYear();
+        const m = String(now.getMonth() + 1).padStart(2, "0");
+        const d = String(now.getDate()).padStart(2, "0");
+        return `${y}-${m}-${d}`;
     }
 
 

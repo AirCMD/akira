@@ -19,15 +19,29 @@
   "holidays": {
     "halloween": {
       "month": 10,
-      "day": 31
+      "day": 31,
+      "name": "Геловін",
+      "seasonalFood": true
     },
     "newYear": {
       "month": 1,
-      "day": 1
+      "day": 1,
+      "name": "Новий рік",
+      "seasonalFood": true
     },
     "valentinesDay": {
       "month": 2,
       "day": 14
+    },
+    "newYearsEve": {
+      "month": 12,
+      "day": 31,
+      "name": "Переддень Нового року"
     }
-  }
+  },
+  "mode": "realCalendar",
+  "weekendDays": [
+    "saturday",
+    "sunday"
+  ]
 }

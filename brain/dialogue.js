@@ -361,6 +361,21 @@ class AkiraDialogue {
         // Інакше «як ти?» бачиться лише як слово «як» + знак питання.
         const normalized = String(text || "").toLowerCase().replace(/[’`ʼ]/g, "'").trim();
 
+        const askDatePatterns = [
+            /^(який|котрий)\s+сьогодні\s+(день|день\s+тижня|дата)[\s?!.,]*$/iu,
+            /^що\s+сьогодні\s+за\s+(день|дата)[\s?!.,]*$/iu,
+            /^сьогодні\s+який\s+(день|день\s+тижня)[\s?!.,]*$/iu,
+            /^яке\s+сьогодні\s+число[\s?!.,]*$/iu
+        ];
+        if (askDatePatterns.some(pattern => pattern.test(normalized))) return "ask_date";
+
+        const askHolidayPatterns = [
+            /^(яке|який|що\s+за)\s+сьогодні\s+свято[\s?!.,]*$/iu,
+            /^сьогодні\s+(геловін|хелловін|новий\s+рік)[\s?!.,]*$/iu,
+            /^(коли|скоро)\s+(геловін|хелловін|новий\s+рік)[\s?!.,]*$/iu
+        ];
+        if (askHolidayPatterns.some(pattern => pattern.test(normalized))) return "ask_holiday";
+
         const askWellbeingPatterns = [
             /^(ну\s+)?як\s+ти[\s?!.,]*$/iu,
             /^(ну\s+)?як\s+(твої|у\s+тебе)\s+справи[\s?!.,]*$/iu,
@@ -1161,6 +1176,38 @@ class AkiraDialogue {
     }
 
 
+    composeDateAnswer() {
+        const info = this.brain.calendar?.sync?.() || this.brain.state?.calendar || {};
+        const now = new Date();
+        const weekdays = ["неділя", "понеділок", "вівторок", "середа", "четвер", "п’ятниця", "субота"];
+        const months = ["січня", "лютого", "березня", "квітня", "травня", "червня", "липня", "серпня", "вересня", "жовтня", "листопада", "грудня"];
+        let text = `Сьогодні ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()} року, ${weekdays[now.getDay()]}.`;
+        if (info.holiday) text += ` Сьогодні ${this.brain.calendar.getHolidayName(info.holiday)}.`;
+        else if (info.isWeekend) text += " У мене вихідний день.";
+        return text;
+    }
+
+    composeHolidayAnswer(profile) {
+        const info = this.brain.calendar?.sync?.() || this.brain.state?.calendar || {};
+        const text = profile.analysis.normalized;
+        if (info.holiday) return `Сьогодні ${this.brain.calendar.getHolidayName(info.holiday)}.`;
+
+        const target = text.includes("геловін") || text.includes("хелловін") ? {id:"halloween", month:10, day:31, name:"Геловін"}
+            : text.includes("новий рік") ? {id:"newYear", month:1, day:1, name:"Новий рік"} : null;
+        if (target) {
+            const now = new Date();
+            let next = new Date(now.getFullYear(), target.month - 1, target.day);
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            if (next < today) next = new Date(now.getFullYear() + 1, target.month - 1, target.day);
+            const days = Math.round((next - today) / 86400000);
+            if (days === 0) return `Так, сьогодні ${target.name}.`;
+            if (/^сьогодні/u.test(text)) return `Ні, сьогодні не ${target.name}.`;
+            return `До ${target.name === "Новий рік" ? "Нового року" : "Геловіну"} ще ${days} дн.`;
+        }
+        if (info.tomorrowHoliday) return `Сьогодні звичайний день, а завтра ${this.brain.calendar.getHolidayName(info.tomorrowHoliday)}.`;
+        return "Сьогодні в моєму календарі немає окремого свята.";
+    }
+
     // =========================================================
     // СКЛАДАННЯ
     // =========================================================
@@ -1175,6 +1222,14 @@ class AkiraDialogue {
 
         // Питання про поточний стан відповідають з живого стану мозку,
         // а не з випадкового fallback-шаблону.
+        if (profile.analysis.intent === "ask_date") {
+            return [this.composeDateAnswer(profile)];
+        }
+
+        if (profile.analysis.intent === "ask_holiday") {
+            return [this.composeHolidayAnswer(profile)];
+        }
+
         if (profile.analysis.intent === "ask_state") {
             return [this.composeStateAnswer(profile)];
         }
