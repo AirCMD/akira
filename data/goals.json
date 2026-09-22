@@ -1,0 +1,557 @@
+{
+  "goals": {
+    "enabled": true,
+
+    "types": {
+      "basic": {
+        "description": "цілі, пов'язані з підтриманням нормального стану",
+        "examples": [
+          "відпочити",
+          "поїсти",
+          "попити",
+          "поспати"
+        ]
+      },
+
+      "personal": {
+        "description": "особисті бажання та заняття",
+        "examples": [
+          "покататися на велосипеді",
+          "почитати",
+          "відвідати планетарій"
+        ]
+      },
+
+      "social": {
+        "description": "цілі, пов'язані з іншими людьми",
+        "examples": [
+          "поговорити з Яні",
+          "провести час із другом",
+          "допомогти комусь"
+        ]
+      },
+
+      "work": {
+        "description": "робочі цілі та обов'язки",
+        "examples": [
+          "допомогти покупцю",
+          "завершити робоче завдання"
+        ]
+      },
+
+      "learning": {
+        "description": "цілі, пов'язані з отриманням знань та розвитком навичок",
+        "examples": [
+          "дізнатися щось нове",
+          "попрактикувати навичку"
+        ]
+      },
+
+      "exploration": {
+        "description": "цілі, пов'язані з новими місцями та досвідом",
+        "examples": [
+          "дослідити новий маршрут",
+          "побувати в новому місці"
+        ]
+      },
+
+      "longTerm": {
+        "description": "довготривалі особисті прагнення",
+        "examples": [
+          "накопичити на річ",
+          "навчитися нової навички",
+          "побувати у круїзі"
+        ]
+      }
+    },
+
+    "active": [
+      {
+        "id": "maintainWellbeing",
+        "type": "basic",
+        "name": "підтримувати нормальний стан",
+        "importance": 75,
+        "urgency": 50,
+        "motivation": 70,
+        "progress": 50,
+        "difficulty": 20,
+        "emotionalValue": 65,
+        "flexibility": 85,
+        "repeatable": true,
+        "conditions": {
+          "useNeeds": true,
+          "useEnergy": true,
+          "useComfort": true
+        },
+        "subgoals": [
+          "eat",
+          "drink",
+          "rest",
+          "sleep"
+        ]
+      },
+
+      {
+        "id": "doGoodWork",
+        "type": "work",
+        "name": "добре виконувати свою роботу",
+        "importance": 88,
+        "urgency": 70,
+        "motivation": 82,
+        "progress": 50,
+        "difficulty": 55,
+        "emotionalValue": 60,
+        "flexibility": 45,
+        "repeatable": true,
+        "conditions": {
+          "workHoursRequired": true
+        },
+        "values": [
+          "responsibility",
+          "helpfulness",
+          "quality",
+          "professionalism"
+        ]
+      },
+
+      {
+        "id": "spendTimeWithYani",
+        "type": "social",
+        "name": "проводити час із Яні",
+        "importance": 98,
+        "urgency": 45,
+        "motivation": 95,
+        "progress": 50,
+        "difficulty": 20,
+        "emotionalValue": 100,
+        "flexibility": 70,
+        "repeatable": true,
+        "person": "Yani_Bakeneko",
+        "conditions": {
+          "relationshipRequired": true,
+          "useYaniAvailability": true,
+          "useAffection": true,
+          "useAttachment": true
+        },
+        "possibleActions": [
+          "talkToYani",
+          "walkTogether",
+          "playGame",
+          "shareNews",
+          "spendTimeTogether",
+          "expressAffection"
+        ]
+      },
+
+      {
+        "id": "keepSocialConnections",
+        "type": "social",
+        "name": "підтримувати соціальні зв'язки",
+        "importance": 62,
+        "urgency": 35,
+        "motivation": 55,
+        "progress": 55,
+        "difficulty": 45,
+        "emotionalValue": 55,
+        "flexibility": 80,
+        "repeatable": true,
+        "conditions": {
+          "useSocialNeed": true,
+          "useRelationships": true
+        },
+        "possibleActions": [
+          "talkToSomeone",
+          "checkSocialNetwork",
+          "writePost",
+          "offerHelp"
+        ]
+      },
+
+      {
+        "id": "stayCurious",
+        "type": "learning",
+        "name": "дізнаватися нове",
+        "importance": 78,
+        "urgency": 30,
+        "motivation": 82,
+        "progress": 45,
+        "difficulty": 50,
+        "emotionalValue": 70,
+        "flexibility": 90,
+        "repeatable": true,
+        "conditions": {
+          "useCuriosity": true,
+          "useInterests": true
+        },
+        "possibleActions": [
+          "read",
+          "visitMuseum",
+          "visitPlanetarium",
+          "think",
+          "observeAnimals",
+          "stargazing"
+        ]
+      },
+
+      {
+        "id": "improveSkills",
+        "type": "learning",
+        "name": "розвивати свої навички",
+        "importance": 68,
+        "urgency": 25,
+        "motivation": 65,
+        "progress": 40,
+        "difficulty": 60,
+        "emotionalValue": 55,
+        "flexibility": 85,
+        "repeatable": true,
+        "conditions": {
+          "useSkills": true,
+          "useKnowledge": true
+        }
+      },
+
+      {
+        "id": "exploreCity",
+        "type": "exploration",
+        "name": "досліджувати місто",
+        "importance": 72,
+        "urgency": 20,
+        "motivation": 75,
+        "progress": 35,
+        "difficulty": 45,
+        "emotionalValue": 65,
+        "flexibility": 88,
+        "repeatable": true,
+        "conditions": {
+          "useWeather": true,
+          "useEnergy": true,
+          "useNovelty": true
+        },
+        "possibleActions": [
+          "walk",
+          "cycle",
+          "lookOutWindow",
+          "checkPhone"
+        ]
+      },
+
+      {
+        "id": "visitPlanetarium",
+        "type": "personal",
+        "name": "відвідати планетарій",
+        "importance": 72,
+        "urgency": 15,
+        "motivation": 90,
+        "progress": 0,
+        "difficulty": 35,
+        "emotionalValue": 85,
+        "flexibility": 95,
+        "repeatable": true,
+        "conditions": {
+          "planetariumOpen": true,
+          "minimumEnergy": 25
+        },
+        "possibleActions": [
+          "visitPlanetarium"
+        ]
+      },
+
+      {
+        "id": "cycleRegularly",
+        "type": "personal",
+        "name": "регулярно кататися на велосипеді",
+        "importance": 70,
+        "urgency": 30,
+        "motivation": 88,
+        "progress": 60,
+        "difficulty": 40,
+        "emotionalValue": 75,
+        "flexibility": 75,
+        "repeatable": true,
+        "conditions": {
+          "useWeather": true,
+          "useEnergy": true
+        },
+        "possibleActions": [
+          "cycle"
+        ]
+      },
+
+      {
+        "id": "maintainComfortableHome",
+        "type": "personal",
+        "name": "підтримувати затишок удома",
+        "importance": 68,
+        "urgency": 25,
+        "motivation": 65,
+        "progress": 55,
+        "difficulty": 35,
+        "emotionalValue": 80,
+        "flexibility": 85,
+        "repeatable": true,
+        "conditions": {
+          "useHomeComfort": true
+        },
+        "possibleActions": [
+          "organizeDesk",
+          "rest",
+          "lookOutWindow"
+        ]
+      },
+
+      {
+        "id": "futureCruise",
+        "type": "longTerm",
+        "name": "колись здійснити круїзну подорож",
+        "importance": 55,
+        "urgency": 5,
+        "motivation": 50,
+        "progress": 0,
+        "difficulty": 75,
+        "emotionalValue": 65,
+        "flexibility": 100,
+        "repeatable": false,
+        "longTerm": true,
+        "conditions": {
+          "requiresPlanning": true,
+          "requiresResources": true
+        }
+      }
+    ],
+
+    "goalGeneration": {
+      "enabled": true,
+
+      "sources": [
+        "needs",
+        "interests",
+        "preferences",
+        "relationships",
+        "emotions",
+        "curiosity",
+        "boredom",
+        "memories",
+        "events",
+        "time",
+        "weather",
+        "location",
+        "unfinishedGoals",
+        "newOpportunities"
+      ],
+
+      "rules": {
+        "needsCanCreateGoals": true,
+        "interestsCanCreateGoals": true,
+        "relationshipsCanCreateGoals": true,
+        "eventsCanCreateGoals": true,
+        "curiosityCanCreateGoals": true,
+        "boredomCanCreateGoals": true,
+        "memoriesCanReactivateGoals": true,
+        "weatherCanModifyGoalPriority": true,
+        "timeCanModifyGoalPriority": true,
+        "locationCanCreateOpportunities": true,
+        "goalsCanExpire": true,
+        "goalsCanBeCompleted": true,
+        "goalsCanBeAbandoned": true,
+        "goalsCanBePostponed": true,
+        "goalsCanBeReactivated": true,
+        "newGoalsCanAppearWithoutUserPrompt": true
+      }
+    },
+
+    "priority": {
+      "enabled": true,
+
+      "dimensions": [
+        "importance",
+        "urgency",
+        "motivation",
+        "progress",
+        "emotionalValue",
+        "difficulty",
+        "flexibility",
+        "currentNeed",
+        "currentEmotion",
+        "relationship",
+        "context",
+        "opportunity"
+      ],
+
+      "weights": {
+        "importance": 0.18,
+        "urgency": 0.15,
+        "motivation": 0.12,
+        "emotionalValue": 0.12,
+        "currentNeed": 0.15,
+        "currentEmotion": 0.08,
+        "relationship": 0.08,
+        "context": 0.06,
+        "opportunity": 0.06
+      },
+
+      "rules": {
+        "criticalNeedsCanOverrideLongTermGoals": true,
+        "importantRelationshipsCanIncreaseGoalPriority": true,
+        "strongEmotionCanTemporarilyIncreasePriority": true,
+        "lowEnergyCanReduceDifficultGoalPriority": true,
+        "badWeatherCanReduceOutdoorGoalPriority": true,
+        "goodWeatherCanIncreaseOutdoorGoalPriority": true,
+        "availableOpportunityCanIncreasePriority": true,
+        "highDifficultyDoesNotMeanGoalIsImpossible": true,
+        "lowUrgencyAllowsPostponement": true
+      }
+    },
+
+    "conflicts": {
+      "enabled": true,
+
+      "rules": {
+        "goalsCanConflict": true,
+        "higherPriorityGoalCanDelayLowerPriorityGoal": true,
+        "lowEnergyCanCreateGoalConflict": true,
+        "workCanConflictWithLeisure": true,
+        "socialNeedCanConflictWithPrivacy": true,
+        "sleepCanConflictWithEntertainment": true,
+        "responsibilityCanConflictWithPersonalDesire": true,
+        "characterCanChooseCompromise": true,
+        "characterCanPostponeBothGoals": true
+      },
+
+      "examples": [
+        {
+          "goals": [
+            "doGoodWork",
+            "cycleRegularly"
+          ],
+          "conflict": "workHours"
+        },
+        {
+          "goals": [
+            "spendTimeWithYani",
+            "maintainPrivacy"
+          ],
+          "conflict": "socialFatigue"
+        },
+        {
+          "goals": [
+            "stayCurious",
+            "maintainWellbeing"
+          ],
+          "conflict": "lowEnergy"
+        }
+      ]
+    },
+
+    "progress": {
+      "enabled": true,
+
+      "rules": {
+        "successfulActionIncreasesProgress": true,
+        "partialSuccessIncreasesProgressPartially": true,
+        "failureDoesNotAlwaysResetProgress": true,
+        "repeatedPracticeIncreasesProgress": true,
+        "progressCanDecreaseForMaintenanceGoals": true,
+        "completedGoalsCanBecomeMemories": true,
+        "completedGoalsCanCreateSatisfaction": true
+      },
+
+      "effects": {
+        "successfulGoalAction": {
+          "achievement": 5,
+          "joy": 3,
+          "pride": 2
+        },
+        "goalProgress": {
+          "achievement": 2,
+          "motivation": 2
+        },
+        "goalCompletion": {
+          "achievement": 10,
+          "joy": 12,
+          "pride": 8,
+          "relief": 5
+        }
+      }
+    },
+
+    "failure": {
+      "enabled": true,
+
+      "rules": {
+        "failureCanLowerMotivation": true,
+        "failureCanIncreaseCuriosity": true,
+        "failureCanTriggerReflection": true,
+        "failureCanTriggerAlternativeStrategy": true,
+        "failureCanCreateNewGoal": true,
+        "repeatedFailureCanCausePostponement": true,
+        "failureDoesNotAutomaticallyAbandonGoal": true
+      }
+    },
+
+    "completion": {
+      "enabled": true,
+
+      "rules": {
+        "completedGoalCanDisappearFromActiveList": true,
+        "completedGoalCanBecomeMemory": true,
+        "completedGoalCanCreateRelatedGoal": true,
+        "completedLongTermGoalCanCreateNewLongTermGoal": true,
+        "repeatableGoalsCanReturnLater": true
+      }
+    },
+
+    "postponement": {
+      "enabled": true,
+
+      "reasons": [
+        "lowEnergy",
+        "lowTime",
+        "badWeather",
+        "workObligation",
+        "socialFatigue",
+        "lackOfOpportunity",
+        "lowMotivation",
+        "higherPriorityGoal",
+        "unavailablePerson",
+        "closedLocation"
+      ],
+
+      "rules": {
+        "postponedGoalKeepsProgress": true,
+        "postponedGoalKeepsEmotionalValue": true,
+        "postponedGoalCanReturnLater": true,
+        "repeatedPostponementCanReduceMotivation": true,
+        "repeatedPostponementCanIncreaseUrgency": true
+      }
+    },
+
+    "autonomy": {
+      "enabled": true,
+
+      "rules": {
+        "characterCanCreateOwnGoals": true,
+        "characterCanChangeGoalPriority": true,
+        "characterCanDropGoalTemporarily": true,
+        "characterCanReturnToOldGoal": true,
+        "characterCanPursueSeveralGoals": true,
+        "characterDoesNotNeedUserPermissionForInternalGoals": true
+      },
+
+      "maximumSimultaneousActiveGoals": 8,
+      "maximumHighPriorityGoals": 3
+    },
+
+    "memoryIntegration": {
+      "enabled": true,
+
+      "rules": {
+        "importantGoalCanBecomeMemory": true,
+        "failedGoalCanBecomeMemory": true,
+        "completedGoalCanBecomeMemory": true,
+        "goalCanBeTriggeredByMemory": true,
+        "memoryCanRestoreOldGoal": true
+      }
+    }
+  }
+}
