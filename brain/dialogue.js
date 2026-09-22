@@ -418,6 +418,21 @@ class AkiraDialogue {
             return "ask_activity";
         }
 
+        const identityPatterns = [
+            [/^(як\s+тебе\s+звати|як\s+твоє\s+ім['’ʼ]?я|твоє\s+ім['’ʼ]?я)[\s?!.,]*$/iu, "ask_name"],
+            [/^(яке\s+твоє\s+прізвище|твоє\s+прізвище)[\s?!.,]*$/iu, "ask_surname"],
+            [/^(як\s+тебе\s+звати\s+повністю|яке\s+твоє\s+повне\s+ім['’ʼ]?я)[\s?!.,]*$/iu, "ask_full_name"],
+            [/^(скільки\s+тобі\s+років|який\s+твій\s+вік)[\s?!.,]*$/iu, "ask_age"],
+            [/^(з\s+якого\s+ти\s+міста|звідки\s+ти\s+родом)[\s?!.,]*$/iu, "ask_hometown"],
+            [/^(з\s+якої\s+ти\s+країни|яка\s+твоя\s+країна)[\s?!.,]*$/iu, "ask_country"],
+            [/^(де\s+ти\s+живеш|у\s+якому\s+місті\s+ти\s+живеш)[\s?!.,]*$/iu, "ask_residence"],
+            [/^(ким\s+ти\s+працюєш|яка\s+в\s+тебе\s+професія|хто\s+ти\s+за\s+професією)[\s?!.,]*$/iu, "ask_occupation"],
+            [/^(де\s+ти\s+працюєш|яке\s+твоє\s+місце\s+роботи)[\s?!.,]*$/iu, "ask_workplace"]
+        ];
+        for (const [pattern, identityIntent] of identityPatterns) {
+            if (pattern.test(normalized)) return identityIntent;
+        }
+
         const askFutureActivityPatterns = [
             /^(ти\s+)?(ще\s+)?будеш\s+.*(велосипед|покат|катат|гулят|прогулян)/iu,
             /^(ти\s+)?(плануєш|збираєшся|хочеш)\s+.*(велосипед|покат|катат|гулят|прогулян)/iu
@@ -1282,6 +1297,72 @@ class AkiraDialogue {
     // СКЛАДАННЯ
     // =========================================================
 
+    composeIdentityAnswer(intent) {
+        const character = this.brain.data?.character?.identity || {};
+        const residence = character.residence || {};
+        const world = this.brain.data?.world?.world || this.brain.data?.world || {};
+        const schedule = world.workSchedule || {};
+        const locations = world.location?.locations || world.locations || {};
+        const workplaceId = schedule.workplace;
+        const workplaceName = locations?.[workplaceId]?.name || workplaceId || null;
+        const occupation = schedule.position || null;
+
+        switch (intent) {
+            case "ask_name":
+                return character.firstName ? `Мене звати ${character.firstName}.` : "У моєму профілі ім'я поки не задане.";
+            case "ask_surname":
+                return character.lastName ? `Моє прізвище — ${character.lastName}.` : "У моєму профілі прізвище поки не задане.";
+            case "ask_full_name":
+                return character.fullName ? `Мене звати ${character.fullName}.` : (character.firstName ? `Мене звати ${character.firstName}.` : "Повне ім'я в моєму профілі поки не задане.");
+            case "ask_age": {
+                const age = character.age ?? null;
+                if (Number.isFinite(Number(age))) return `Мені ${Number(age)} років.`;
+                if (character.birthDate) {
+                    const born = new Date(character.birthDate);
+                    if (!Number.isNaN(born.getTime())) {
+                        const now = new Date();
+                        let years = now.getFullYear() - born.getFullYear();
+                        const beforeBirthday = now.getMonth() < born.getMonth() || (now.getMonth() === born.getMonth() && now.getDate() < born.getDate());
+                        if (beforeBirthday) years -= 1;
+                        return `Мені ${years} років.`;
+                    }
+                }
+                return "Мій вік у профілі поки не заданий.";
+            }
+            case "ask_country":
+                return residence.country ? `Я живу в країні ${residence.country}.` : "Країна в моєму профілі поки не задана.";
+            case "ask_residence":
+                return residence.city ? `Я живу в місті ${residence.city}.` : "Місце проживання в моєму профілі поки не задане.";
+            case "ask_hometown":
+                if (character.hometown?.city) return `Я родом з міста ${character.hometown.city}.`;
+                if (character.hometown) return `Я родом з ${character.hometown}.`;
+                return "Місто, звідки я родом, у моєму профілі поки не задане.";
+            case "ask_occupation":
+                return occupation ? `Я працюю ${occupation}.` : "Моя професія в профілі поки не задана.";
+            case "ask_workplace":
+                return workplaceName ? `Я працюю в «${workplaceName}».` : "Місце роботи в профілі поки не задане.";
+            default:
+                return null;
+        }
+    }
+
+    analyzeEconomicMessage(text = "") {
+        // Резервний parser у dialogue: structured routing не залежить від того,
+        // чи встиг/зміг ініціалізуватися модуль opinions.
+        if (this.brain.opinions?.analyzeMessage) return this.brain.opinions.analyzeMessage(text);
+        const normalized = String(text).toLowerCase().replace(/[’`ʼ]/g, "'").replace(/\s+/g, " ").trim();
+        let topic = null;
+        if (/(доставк|кур'єр)/u.test(normalized)) topic = "delivery_prices";
+        else if (/(транспорт|проїзд|метро|автобус|трамва|тролейб)/u.test(normalized)) topic = "transport_prices";
+        else if (/(їж|продукт|харч)/u.test(normalized)) topic = "food_prices";
+        else if (/(комунал|опален|електроенерг|тариф)/u.test(normalized)) topic = "utilities_prices";
+        const opinionRequest = /(що\s+(ти\s+)?думаєш|як\s+ти\s+ставишся|твоя\s+думка|що\s+скажеш)/u.test(normalized);
+        let eventKind = null;
+        if (/(підвищ|піднял|подорожч|зросл|виросл|дорожч)/u.test(normalized)) eventKind = "priceIncrease";
+        else if (/(зниз|зменш|здешев|подешев|дешевш)/u.test(normalized)) eventKind = "priceDecrease";
+        return { normalized, topic, opinionRequest, eventKind };
+    }
+
     composeStructuredResponse(profile) {
         // Запити, що читають живий стан, не повинні залежати від випадкового
         // dialogue action. Те саме стосується економічних подій/opinions.
@@ -1292,8 +1373,12 @@ class AkiraDialogue {
         if (intent === "ask_state") return [this.composeStateAnswer(profile)];
         if (intent === "ask_activity") return [this.composeActivityAnswer(profile)];
         if (intent === "ask_future_activity") return [this.composeFutureActivityAnswer(profile)];
+        if (intent.startsWith("ask_") && ["ask_name","ask_surname","ask_full_name","ask_age","ask_hometown","ask_country","ask_residence","ask_occupation","ask_workplace"].includes(intent)) {
+            const identityReply = this.composeIdentityAnswer(intent);
+            if (identityReply) return [identityReply];
+        }
 
-        const opinionAnalysis = this.brain.opinions?.analyzeMessage?.(profile.input);
+        const opinionAnalysis = this.analyzeEconomicMessage(profile.input);
         if (opinionAnalysis?.opinionRequest && opinionAnalysis.topic) {
             const reply = opinionAnalysis.eventKind
                 ? this.brain.opinions.describeChangeOpinion?.(opinionAnalysis)
