@@ -1,0 +1,319 @@
+{
+  "people": {
+    "Yani_Bakeneko": {
+      "name": "Яні Бакенеко",
+      "gender": "female",
+
+      "knowledge": 82,
+      "familiarity": 88,
+
+      "relationship": {
+        "type": "кохана",
+        "closeness": 98,
+        "trust": 92,
+        "respect": 94,
+        "liking": 100,
+        "affection": 100,
+        "attraction": 100,
+        "jealousy": 35,
+        "irritation": 2,
+        "fear": 0
+      },
+
+      "interestInLife": 95,
+      "desireForContact": 98,
+      "desireToKnowMore": 95,
+
+      "knownFacts": [
+        "має блакитні котячі вуха",
+        "має довге блакитне волосся",
+        "має золотисто-жовті очі",
+        "має особливу посмішку",
+        "Акірі запам'яталися її хитрі очі",
+        "дружить із Джині Мацмац"
+      ],
+
+      "associations": [
+        "блакитний",
+        "котячі вуха",
+        "довге волосся",
+        "золотисто-жовті очі",
+        "посмішка",
+        "хитрі очі",
+        "Джині Мацмац",
+        "магазин електронних іграшок"
+      ]
+    },
+
+    "Derek_Q": {
+      "name": "Дерек К'ю",
+      "gender": "male",
+
+      "knowledge": 15,
+      "familiarity": 28,
+
+      "relationship": {
+        "type": "знайомий",
+        "closeness": 3,
+        "trust": 0,
+        "respect": 10,
+        "liking": -95,
+        "affection": 0,
+        "attraction": 0,
+        "jealousy": 0,
+        "irritation": 95,
+        "fear": 10
+      },
+
+      "interestInLife": 2,
+      "desireForContact": -95,
+      "desireToKnowMore": -90,
+
+      "knownFacts": [
+        "носить окуляри",
+        "часто реагує різко",
+        "часто буває злим",
+        "може швидко переходити до агресивної реакції"
+      ],
+
+      "akirasOpinion": {
+        "predictability": -80,
+        "emotionalStability": -80
+      }
+    },
+
+    "Cornel_Vus": {
+      "name": "Корнел Вус",
+      "gender": "male",
+
+      "knowledge": 25,
+      "familiarity": 35,
+
+      "relationship": {
+        "type": "друг",
+        "closeness": 30,
+        "trust": 45,
+        "respect": 50,
+        "liking": 45,
+        "affection": 20,
+        "attraction": 0,
+        "jealousy": 0,
+        "irritation": 5,
+        "fear": 0
+      },
+
+      "interestInLife": 20,
+      "desireForContact": 35,
+      "desireToKnowMore": 20,
+
+      "knownFacts": [
+        "продає речі на барахолці"
+      ]
+    },
+
+    "Kate_Chan": {
+      "name": "Кейт Чан",
+      "gender": "female",
+
+      "knowledge": 20,
+      "familiarity": 30,
+
+      "relationship": {
+        "type": "знайома",
+        "closeness": 15,
+        "trust": 25,
+        "respect": 30,
+        "liking": -45,
+        "affection": 0,
+        "attraction": 0,
+        "jealousy": 5,
+        "irritation": 40,
+        "fear": 0
+      },
+
+      "interestInLife": 10,
+      "desireForContact": 10,
+      "desireToKnowMore": 5,
+
+      "knownFacts": [
+        "є знайомою Яні",
+        "може поводитися досить різко"
+      ],
+
+      "akirasOpinion": {
+        "reasonForDislike": "грубість"
+      }
+    },
+
+    "Kent_White": {
+      "name": "Кент Уайт",
+      "gender": "male",
+
+      "knowledge": 2,
+      "familiarity": 3,
+
+      "relationship": {
+        "type": "майже незнайомий",
+        "closeness": 0,
+        "trust": 0,
+        "respect": 0,
+        "liking": 0,
+        "affection": 0,
+        "attraction": 0,
+        "jealousy": 0,
+        "irritation": 0,
+        "fear": 0
+      },
+
+      "interestInLife": 0,
+      "desireForContact": 0,
+      "desireToKnowMore": 0,
+
+      "knownFacts": []
+    },
+
+    "Jeannie_Matsmats": {
+      "name": "Джині Мацмац",
+      "gender": "female",
+
+      "knowledge": 25,
+      "familiarity": 30,
+
+      "relationship": {
+        "type": "знайома",
+        "closeness": 20,
+        "trust": 30,
+        "respect": 45,
+        "liking": 45,
+        "affection": 10,
+        "attraction": 0,
+        "jealousy": 0,
+        "irritation": 0,
+        "fear": 0
+      },
+
+      "interestInLife": 25,
+      "desireForContact": 25,
+      "desireToKnowMore": 20,
+
+      "knownFacts": [
+        "дружить із Яні",
+        "працює в магазині електронних іграшок",
+        "Акіра вперше побачив Яні, коли вона розмовляла з Джині"
+      ],
+
+      "associations": [
+        "Яні",
+        "магазин електронних іграшок",
+        "перша зустріч з Яні"
+      ]
+    },
+
+    "Sayuri_Kit": {
+      "name": "Саюрі Кіт",
+      "gender": "female",
+
+      "knowledge": 30,
+      "familiarity": 25,
+
+      "relationship": {
+        "type": "знайома",
+        "closeness": 10,
+        "trust": 15,
+        "respect": 20,
+        "liking": 10,
+        "affection": 0,
+        "attraction": 0,
+        "jealousy": 0,
+        "irritation": 15,
+        "fear": 5
+      },
+
+      "interestInLife": 15,
+      "desireForContact": 10,
+      "desireToKnowMore": 10,
+
+      "knownFacts": [
+        "закохана в Дерека",
+        "надсилає йому любовні повідомлення",
+        "продовжує це робити попри його негативну реакцію"
+      ],
+
+      "akirasOpinion": {
+        "creepiness": 55,
+        "reason": "така поведінка здається Акірі трохи стрьомною"
+      }
+    },
+
+    "Hiki_Komori": {
+      "name": "Гікі Коморі",
+      "gender": "female",
+
+      "knowledge": 15,
+      "familiarity": 20,
+
+      "relationship": {
+        "type": "знайома",
+        "closeness": 10,
+        "trust": 20,
+        "respect": 30,
+        "liking": 25,
+        "affection": 0,
+        "attraction": 0,
+        "jealousy": 0,
+        "irritation": 0,
+        "fear": 0
+      },
+
+      "interestInLife": 15,
+      "desireForContact": 15,
+      "desireToKnowMore": 10,
+
+      "knownFacts": [
+        "часто залишається онлайн вночі",
+        "майже не спить уночі"
+      ]
+    },
+
+    "Jura_Kun": {
+      "name": "Джура Кун",
+      "gender": "male",
+
+      "knowledge": 30,
+      "familiarity": 25,
+
+      "relationship": {
+        "type": "клієнт",
+        "closeness": 8,
+        "trust": 30,
+        "respect": 30,
+        "liking": 25,
+        "affection": 0,
+        "attraction": 0,
+        "jealousy": 0,
+        "irritation": 5,
+        "fear": 0
+      },
+
+      "interestInLife": 12,
+      "desireForContact": 15,
+      "desireToKnowMore": 8,
+
+      "knownFacts": [
+        "купував техніку в магазині Техсмітник",
+        "купував вебкамеру",
+        "купував комп'ютер",
+        "купував крісло",
+        "купував клавіатуру",
+        "використовує техніку для перебування онлайн",
+        "пише про вигаданий гарем жінок",
+        "має дакімакури із жіночими персонажами"
+      ],
+
+      "akirasOpinion": {
+        "interestInHisLife": 10,
+        "attitude": "легка цікавість без особливого інтересу"
+      }
+    }
+  }
+}
