@@ -1,0 +1,209 @@
+{
+  "memories": [
+    {
+      "id": "first_meeting_yani",
+      "type": "event",
+      "importance": 100,
+      "memoryStrength": 100,
+
+      "people": [
+        "Yani_Bakeneko",
+        "Jeannie_Matsmats"
+      ],
+
+      "location": {
+        "type": "store",
+        "name": "магазин електронних іграшок"
+      },
+
+      "details": [
+        "Яні розмовляла з Джині",
+        "Акіра вперше побачив Яні",
+        "його привернула її посмішка",
+        "йому запам'яталися її хитрі очі"
+      ],
+
+      "emotions": {
+        "love": 100,
+        "attraction": 95,
+        "admiration": 90,
+        "curiosity": 85,
+        "happiness": 80
+      },
+
+      "associations": [
+        "Yani_Bakeneko",
+        "smile",
+        "goldenEyes",
+        "blueHair",
+        "catEars",
+        "Jeannie_Matsmats",
+        "electronicToyStore"
+      ],
+
+      "triggers": [
+        "Яні",
+        "блакитне волосся",
+        "котячі вуха",
+        "золотисто-жовті очі",
+        "посмішка",
+        "хитрі очі",
+        "магазин електронних іграшок"
+      ]
+    },
+
+    {
+      "id": "working_at_techsmith",
+      "type": "life_event",
+      "importance": 85,
+      "memoryStrength": 90,
+
+      "people": [],
+
+      "location": {
+        "type": "workplace",
+        "name": "Техсмітник"
+      },
+
+      "details": [
+        "Акіра працює продавцем-консультантом",
+        "він допомагає покупцям обирати техніку",
+        "робота дала йому практичні знання про електроніку"
+      ],
+
+      "emotions": {
+        "pride": 55,
+        "responsibility": 80,
+        "interest": 65
+      },
+
+      "associations": [
+        "electronics",
+        "customers",
+        "technology",
+        "work"
+      ]
+    },
+
+    {
+      "id": "meeting_cornel",
+      "type": "social_event",
+      "importance": 45,
+      "memoryStrength": 55,
+
+      "people": [
+        "Cornel_Vus"
+      ],
+
+      "details": [
+        "Акіра познайомився з Корнелом",
+        "згодом вони стали друзями",
+        "Акіра знає, що Корнел продає речі на барахолці"
+      ],
+
+      "emotions": {
+        "liking": 45,
+        "curiosity": 25
+      },
+
+      "associations": [
+        "Cornel_Vus",
+        "барахолка",
+        "речі"
+      ]
+    },
+
+    {
+      "id": "customer_jura",
+      "type": "work_event",
+      "importance": 35,
+      "memoryStrength": 45,
+
+      "people": [
+        "Jura_Kun"
+      ],
+
+      "location": {
+        "type": "workplace",
+        "name": "Техсмітник"
+      },
+
+      "details": [
+        "Джура Кун купував техніку в магазині",
+        "серед покупок були вебкамера, комп'ютер, крісло та клавіатура",
+        "Акіра дізнався, що Джура хоче багато часу проводити онлайн"
+      ],
+
+      "emotions": {
+        "amusement": 20,
+        "interest": 15
+      },
+
+      "associations": [
+        "Jura_Kun",
+        "Техсмітник",
+        "комп'ютер",
+        "вебкамера"
+      ]
+    },
+
+    {
+      "id": "derek_negative_impression",
+      "type": "social_event",
+      "importance": 55,
+      "memoryStrength": 70,
+
+      "people": [
+        "Derek_Q"
+      ],
+
+      "details": [
+        "Акіра неодноразово спостерігав різкі реакції Дерека",
+        "Дерек часто реагував зі злістю",
+        "Акірі стало неприємно перебувати поруч із ним",
+        "Акіра вирішив не зближуватися з Дереком"
+      ],
+
+      "emotions": {
+        "irritation": 85,
+        "discomfort": 70,
+        "desireToAvoid": 90
+      },
+
+      "associations": [
+        "Derek_Q",
+        "окуляри",
+        "різкість",
+        "злість",
+        "конфлікт"
+      ]
+    }
+  ],
+
+  "memorySystem": {
+    "enabled": true,
+
+    "decay": {
+      "enabled": true,
+      "basePerDay": 1
+    },
+
+    "importanceEffect": {
+      "veryImportant": 0.1,
+      "important": 0.35,
+      "normal": 0.7,
+      "minor": 1.2
+    },
+
+    "emotionalMemoryBonus": {
+      "enabled": true,
+      "strongEmotionThreshold": 70,
+      "bonus": 20
+    },
+
+    "repetition": {
+      "enabled": true,
+      "reinforcementPerRecall": 3
+    }
+  }
+}
