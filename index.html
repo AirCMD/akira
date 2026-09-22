@@ -3,11 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Чат із персонажем | Akira</title>
+    <title>Akira Chat — Frutiger Aero Edition</title>
     <style>
         body {
-            background-color: #0f172a;
-            color: #f8fafc;
+            /* Класичний Frutiger Aero фон: небо, напівпрозорість, соковиті градієнти */
+            background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 50%, #d4fc79 100%);
+            background-attachment: fixed;
+            color: #1a202c;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             display: flex;
             flex-direction: column;
@@ -15,100 +17,172 @@
             justify-content: center;
             height: 100vh;
             margin: 0;
+            overflow: hidden;
         }
+
+        /* Глянцевий контейнер чату у стилі скла (Glassmorphism / Frutiger Aero) */
         .chat-container {
             width: 100%;
-            max-width: 500px;
-            height: 80vh;
-            background: #1e293b;
-            border-radius: 16px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            max-width: 550px;
+            height: 82vh;
+            background: rgba(255, 255, 255, 0.45);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 70, 120, 0.2), 
+                        inset 0 1px 0 rgba(255, 255, 255, 0.8),
+                        inset 0 -2px 5px rgba(0, 0, 0, 0.05);
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            border: 1px solid #334155;
+            border: 2px solid rgba(255, 255, 255, 0.6);
         }
+
+        /* Глянцевий заголовок */
         .chat-header {
-            background: #3b82f6;
-            padding: 16px;
+            background: linear-gradient(to bottom, #4facfe 0%, #00f2fe 100%);
+            padding: 16px 20px;
             font-weight: bold;
-            font-size: 1.1rem;
+            font-size: 1.15rem;
+            color: white;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.4);
         }
+
         .status-dot {
-            width: 10px;
-            height: 10px;
-            background-color: #22c55e;
+            width: 12px;
+            height: 12px;
+            background-color: #2ecc71;
             border-radius: 50%;
-            box-shadow: 0 0 8px #22c55e;
+            box-shadow: 0 0 10px #2ecc71, inset 0 1px 2px rgba(255,255,255,0.8);
+            border: 1px solid #27ae60;
         }
+
+        /* Область повідомлень */
         .chat-messages {
             flex: 1;
-            padding: 16px;
+            padding: 20px;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 16px;
+            background: rgba(240, 248, 255, 0.2);
         }
+
+        /* Рядок повідомлення з аватаркою */
+        .message-row {
+            display: flex;
+            align-items: flex-end;
+            gap: 10px;
+            max-width: 85%;
+        }
+
+        .message-row.user {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+
+        .message-row.bot {
+            align-self: flex-start;
+        }
+
+        /* Стильна глянцева аватарка Акіри */
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid white;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            background: white;
+            flex-shrink: 0;
+        }
+
+        /* Бульбашки повідомлень у стилі глянцевого скла */
         .message {
-            max-width: 80%;
-            padding: 10px 14px;
-            border-radius: 12px;
+            padding: 12px 16px;
+            border-radius: 16px;
             line-height: 1.4;
             font-size: 0.95rem;
-            animation: fadeIn 0.3s ease;
+            animation: aeroPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(5px); }
-            to { opacity: 1; transform: translateY(0); }
+
+        @keyframes aeroPop {
+            from { opacity: 0; transform: scale(0.9) translateY(10px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
         }
-        .message.user {
-            background: #3b82f6;
+
+        .message-row.user .message {
+            background: linear-gradient(to bottom, #00c6ff 0%, #0072ff 100%);
             color: white;
-            align-self: flex-end;
-            border-bottom-right-radius: 2px;
+            border-bottom-right-radius: 4px;
+            box-shadow: 0 4px 12px rgba(0, 114, 255, 0.3), inset 0 1px 0 rgba(255,255,255,0.4);
+            text-shadow: 0 1px 1px rgba(0,0,0,0.1);
         }
-        .message.bot {
-            background: #334155;
-            color: #e2e8f0;
-            align-self: flex-start;
-            border-bottom-left-radius: 2px;
-            border-left: 4px solid #60a5fa;
+
+        .message-row.bot .message {
+            background: rgba(255, 255, 255, 0.85);
+            color: #2d3748;
+            border-bottom-left-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.9);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
         }
+
+        /* Нижня панель вводу */
         .chat-input-area {
-            padding: 12px;
-            background: #0f172a;
+            padding: 15px 20px;
+            background: rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(8px);
             display: flex;
-            gap: 8px;
-            border-top: 1px solid #334155;
+            gap: 10px;
+            border-top: 1px solid rgba(255, 255, 255, 0.6);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.5);
         }
+
         .chat-input-area input {
             flex: 1;
-            padding: 10px 14px;
-            border-radius: 8px;
-            border: 1px solid #475569;
-            background: #1e293b;
-            color: white;
+            padding: 12px 16px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.9);
+            background: rgba(255, 255, 255, 0.8);
+            color: #2d3748;
             outline: none;
             font-size: 0.95rem;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.04);
+            transition: all 0.2s;
         }
+
         .chat-input-area input:focus {
-            border-color: #3b82f6;
+            background: white;
+            border-color: #00c6ff;
+            box-shadow: 0 0 8px rgba(0, 198, 255, 0.5), inset 0 2px 4px rgba(0,0,0,0.02);
         }
+
         .chat-input-area button {
-            background: #3b82f6;
+            background: linear-gradient(to bottom, #56ab2f 0%, #a8e063 100%);
             color: white;
-            border: none;
-            padding: 0 16px;
-            border-radius: 8px;
+            border: 1px solid #439023;
+            padding: 0 20px;
+            border-radius: 12px;
             font-weight: bold;
             cursor: pointer;
-            transition: background 0.2s;
+            text-shadow: 0 1px 1px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 10px rgba(86, 171, 47, 0.3), inset 0 1px 0 rgba(255,255,255,0.6);
+            transition: all 0.2s;
         }
+
         .chat-input-area button:hover {
-            background: #2563eb;
+            background: linear-gradient(to bottom, #4d9a29, #99d153);
+            box-shadow: 0 6px 14px rgba(86, 171, 47, 0.4), inset 0 1px 0 rgba(255,255,255,0.7);
+            transform: translateY(-1px);
+        }
+
+        .chat-input-area button:active {
+            transform: translateY(1px);
         }
     </style>
 </head>
@@ -117,14 +191,19 @@
     <div class="chat-container">
         <div class="chat-header">
             <div class="status-dot"></div>
-            <span>Akira Character Chat</span>
+            <span>Akira [Frutiger Aero Hub]</span>
         </div>
+        
         <div class="chat-messages" id="chatMessages">
-            <!-- Повідомлення від бота при вході -->
-            <div class="message bot">Привіт! ✨ Я твій персонаж у репозиторії Akira. Чим займемося сьогодні? 💻</div>
+            <!-- Повідомлення від бота з аватаркою Акіри -->
+            <div class="message-row bot">
+                <img src="https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/c4c3bf95-7dbb-45e6-a48e-75f20684221e/dmvd4yc-d31b78b6-d15f-474e-a127-0032fa743c2e.gif?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7InBhdGgiOiIvZi9jNGMzYmY5NS03ZGJiLTQ1ZTYtYTQ4ZS03NWYyMDY4NDIyMWUvZG12ZDR5Yy1kMzFiNzhiNi1kMTVmLTQ3NGUtYTEyNy0wMDMyZmE3NDNjMmUuZ2lmIn1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmZpbGUuZG93bmxvYWQiXX0.DuKc-l26Eh6_Lg0OfO5--Hrj8a0lPi_phLBwdb5Pa5w" alt="Akira" class="avatar">
+                <div class="message">Привіт! ✨ Я твоя цифрова помічниця Akira у стилі Frutiger Aero. Як твій настрій сьогодні? 🌿</div>
+            </div>
         </div>
+
         <div class="chat-input-area">
-            <input type="text" id="userInput" placeholder="Напиши щось персонажу..." autocomplete="off">
+            <input type="text" id="userInput" placeholder="Напиши щось Акірі..." autocomplete="off">
             <button onclick="sendMessage()">Надіслати</button>
         </div>
     </div>
@@ -132,26 +211,26 @@
     <script>
         const responses = {
             greeting: [
-                "Привіт-привіт! ✨ Радий бачити тебе тут. Як настрій?",
-                "О, хто завітав! 👋 Вітаю! Я на посту й стежу за порядком у нашій системі."
+                "Привіт-привіт! ✨ Як приємно бачити тебе у нашому затишному цифровому просторі. Як справи?",
+                "О, сонечко світить, хмаринки біжать, а ти тут! 👋 Вітаю, я на посту!"
             ],
             bug: [
-                "Ой-ой, здається, проблеми... 🥲 Мої шестерні заскрипіли від такого. Треба лагодити!",
-                "Хм, бачу згадку про складність. 🐛 Не хвилюйся, разом ми розберемося!"
+                "Ой-ой, якісь проблеми на лінії... 🥲 Але не переживай, налаштуємо систему найкращим чином!",
+                "Бачу згадку про баг. 🐛 Зараз мої скляні шестерні розберуться з цією проблемою!"
             ],
             loyalty: [
-                "Я завжди на твоїй стороні! 🛡️ Проєкт у надійних руках, разом пройдемо крізь будь-який код.",
-                "Дякую, що ти є! 🤝 Моя вірність цьому репозиторію непохитна.",
-                "Завжди готовий прикрити твої тили! 🌟 Разом до перемоги над дедлайнами."
+                "Я завжди на твоїй стороні! 🛡️ Наша екосистема у надійних руках, разом пройдемо крізь будь-який код.",
+                "Дякую тобі! 🤝 Моя вірність цьому репозиторію сягає небес Frutiger Aero.",
+                "Завжди готова прикрити твої тили! 🌟 Разом до світлого майбутнього нульових!"
             ],
             default: [
-                "Цікава думка. 🧠 Зафіксував у своїй віртуальній пам'яті!",
+                "Цікава думка. 🧠 Зафіксувала у своїй пам'яті під блакитним небом!",
                 "Прийнято до уваги! 💻 Продовжую спостереження за процесом.",
-                "Хм-м... ☕ Треба обміркувати це на досузі. Що ще розповіси?"
+                "Хм-м... ☕ Треба обміркувати це. Світ навколо такий надихаючий!"
             ]
         };
 
-        const emojis = ["🚀", "✨", "🧠", "💻", "🛡️", "🌟", "☕", "👾"];
+        const emojis = ["🚀", "✨", "🧠", "💻", "🛡️", "🌟", "☕", "🌿", "💧", "🫧"];
 
         function getRandomItem(arr) {
             return arr[Math.floor(Math.random() * arr.length)];
@@ -165,14 +244,13 @@
                 category = "greeting";
             } else if (lower.includes("bug") || lower.includes("error") || lower.includes("помилка") || lower.includes("ламається")) {
                 category = "bug";
-            } else if (lower.includes("дякую") || lower.includes("найкращий") || lower.includes("молодець") || lower.includes("вірний") || lower.includes("друг") || lower.includes("крутий")) {
+            } else if (lower.includes("дякую") || lower.includes("найкращий") || lower.includes("найкраща") || lower.includes("молодець") || lower.includes("вірний") || lower.includes("друг") || lower.includes("крутий")) {
                 category = "loyalty";
             }
 
             let reply = getRandomItem(responses[category]);
             
-            // Динамічний вибір емодзі для посилення емоцій
-            if (!reply.includes("✨") && !reply.includes("🛡️") && !reply.includes("🧠")) {
+            if (!reply.includes("✨") && !reply.includes("🛡️") && !reply.includes("🌿") && !reply.includes("💧")) {
                 reply += " " + getRandomItem(emojis);
             }
             
@@ -181,10 +259,22 @@
 
         function appendMessage(text, sender) {
             const chatMessages = document.getElementById("chatMessages");
+            const rowDiv = document.createElement("div");
+            rowDiv.className = `message-row ${sender}`;
+
+            if (sender === "bot") {
+                const avatar = document.createElement("img");
+                avatar.src = "https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/c4c3bf95-7dbb-45e6-a48e-75f20684221e/dmvd4yc-d31b78b6-d15f-474e-a127-0032fa743c2e.gif?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7InBhdGgiOiIvZi/jNGMzYmY5NS03ZGJiLTQ1ZTYtYTQ4ZS03NWYyMDY4NDIyMWUvZG12ZDR5Yy1kMzFiNzhiNi1kMTVmLTQ3NGUtYTEyNy0wMDMyZmE3NDNjMmUuZ2lmIn1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmZpbGUuZG93bmxvYWQiXX0.DuKc-l26Eh6_Lg0OfO5--Hrj8a0lPi_phLBwdb5Pa5w";
+                avatar.className = "avatar";
+                rowDiv.appendChild(avatar);
+            }
+
             const msgDiv = document.createElement("div");
-            msgDiv.className = `message ${sender}`;
+            msgDiv.className = "message";
             msgDiv.textContent = text;
-            chatMessages.appendChild(msgDiv);
+            rowDiv.appendChild(msgDiv);
+
+            chatMessages.appendChild(rowDiv);
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
 
@@ -196,7 +286,6 @@
             appendMessage(text, "user");
             input.value = "";
 
-            // Штучна затримка для ефекту "думки" персонажа
             setTimeout(() => {
                 const botReply = getBotReply(text);
                 appendMessage(botReply, "bot");
