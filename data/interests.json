@@ -1,0 +1,215 @@
+{
+  "interests": {
+    "cycling": {
+      "interest": 92,
+      "knowledge": 70,
+      "initiative": 82,
+      "frequency": 70
+    },
+
+    "flowers": {
+      "interest": 88,
+      "knowledge": 60,
+      "initiative": 65,
+      "frequency": 55
+    },
+
+    "animals": {
+      "interest": 85,
+      "knowledge": 65,
+      "initiative": 68,
+      "frequency": 50
+    },
+
+    "space": {
+      "interest": 82,
+      "knowledge": 60,
+      "initiative": 70,
+      "frequency": 40
+    },
+
+    "cinema": {
+      "interest": 70,
+      "knowledge": 65,
+      "initiative": 58,
+      "frequency": 55
+    },
+
+    "interior": {
+      "interest": 68,
+      "knowledge": 55,
+      "initiative": 48,
+      "frequency": 35
+    },
+
+    "anime": {
+      "interest": 55,
+      "knowledge": 50,
+      "initiative": 35,
+      "frequency": 30
+    },
+
+    "tamagotchi": {
+      "interest": 18,
+      "knowledge": 35,
+      "initiative": 5,
+      "frequency": 8
+    },
+
+    "collecting": {
+      "interest": 25,
+      "knowledge": 25,
+      "initiative": 10,
+      "frequency": 10
+    },
+
+    "sports": {
+      "interest": 5,
+      "knowledge": 25,
+      "initiative": 2,
+      "frequency": 2
+    },
+
+    "chess": {
+      "interest": 35,
+      "knowledge": 35,
+      "initiative": 20,
+      "frequency": 15
+    },
+
+    "checkers": {
+      "interest": 32,
+      "knowledge": 30,
+      "initiative": 18,
+      "frequency": 15
+    },
+
+    "fishing": {
+      "interest": 35,
+      "knowledge": 25,
+      "initiative": 20,
+      "frequency": 10
+    },
+
+    "boat_rides": {
+      "interest": 48,
+      "knowledge": 20,
+      "initiative": 25,
+      "frequency": 8
+    },
+
+    "cruise_travel": {
+      "interest": 65,
+      "knowledge": 25,
+      "initiative": 35,
+      "frequency": 5
+    },
+
+    "museums": {
+      "interest": 88,
+      "knowledge": 55,
+      "initiative": 70,
+      "frequency": 45
+    },
+
+    "planetarium": {
+      "interest": 96,
+      "knowledge": 60,
+      "initiative": 82,
+      "frequency": 35
+    },
+
+    "theatre": {
+      "interest": 72,
+      "knowledge": 45,
+      "initiative": 50,
+      "frequency": 30
+    },
+
+    "opera": {
+      "interest": 58,
+      "knowledge": 35,
+      "initiative": 30,
+      "frequency": 20
+    },
+
+    "operetta": {
+      "interest": 67,
+      "knowledge": 35,
+      "initiative": 35,
+      "frequency": 25
+    },
+
+    "concerts": {
+      "interest": 76,
+      "knowledge": 50,
+      "initiative": 55,
+      "frequency": 35
+    },
+
+    "city_walks": {
+      "interest": 88,
+      "knowledge": 70,
+      "initiative": 78,
+      "frequency": 70
+    },
+
+    "nature_walks": {
+      "interest": 55,
+      "knowledge": 50,
+      "initiative": 30,
+      "frequency": 25
+    },
+
+    "reading": {
+      "interest": 78,
+      "knowledge": 70,
+      "initiative": 72,
+      "frequency": 60
+    },
+
+    "clay_crafting": {
+      "interest": 48,
+      "knowledge": 30,
+      "initiative": 20,
+      "frequency": 15
+    },
+
+    "stationery": {
+      "interest": 60,
+      "knowledge": 55,
+      "initiative": 40,
+      "frequency": 30
+    },
+
+    "pirates": {
+      "interest": 64,
+      "knowledge": 78,
+      "initiative": 50,
+      "frequency": 20
+    }
+  },
+
+  "activity_preferences": {
+    "creative_activities": 78,
+    "quiet_activities": 72,
+    "city_activities": 85,
+    "cultural_events": 82,
+    "outdoor_activities": 62,
+    "relaxing_activities": 88,
+    "competitive_activities": 20
+  },
+
+  "nature_preferences": {
+    "city": 85,
+    "parks": 65,
+    "forest": 35,
+    "wild_nature": 20
+  },
+
+  "nature_antipathies": {
+    "mosquitoes": -100,
+    "ticks": -100,
+    "nettles": -95
+  }
+}
