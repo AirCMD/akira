@@ -1768,19 +1768,16 @@ document.addEventListener(
 
         try {
 
-            const brain =
-                new AkiraBrain({
-                    autoStart: false
-                });
+            const brain = new AkiraBrain({
+                autoStart: true,          // ← увімкнули
+                simulationSpeed: 1        // 1 сек = 1 хв
+            });
 
-            window.akiraBrain =
-                brain;
+            window.akiraBrain = brain;
 
             await brain.init();
 
-            console.log(
-                "Акіра: мозок ініціалізовано."
-            );
+            console.log("Акіра: мозок ініціалізовано і запущено.");
 
         } catch (error) {
 
