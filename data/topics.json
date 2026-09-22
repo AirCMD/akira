@@ -1,0 +1,1577 @@
+{
+  "topics": {
+    "enabled": true,
+
+    "technology": {
+      "name": "технології",
+      "keywords": [
+        "технологія",
+        "технології",
+        "техніка",
+        "електроніка",
+        "гаджет",
+        "гаджети",
+        "пристрій",
+        "пристрої"
+      ],
+      "relatedTopics": [
+        "electronics",
+        "computers",
+        "smartphones",
+        "gadgets",
+        "newTechnology"
+      ]
+    },
+
+    "electronics": {
+      "name": "електроніка",
+      "keywords": [
+        "електроніка",
+        "електронний",
+        "прилад",
+        "пристрої",
+        "техніка"
+      ],
+      "relatedTopics": [
+        "technology",
+        "computers",
+        "smartphones",
+        "gadgets",
+        "technicalProblems"
+      ]
+    },
+
+    "smartphones": {
+      "name": "смартфони",
+      "keywords": [
+        "смартфон",
+        "смартфони",
+        "телефон",
+        "телефони",
+        "мобільник",
+        "мобільний",
+        "мобільні"
+      ],
+      "relatedTopics": [
+        "electronics",
+        "technology",
+        "gadgets",
+        "android",
+        "ios"
+      ]
+    },
+
+    "computers": {
+      "name": "комп'ютери",
+      "keywords": [
+        "комп'ютер",
+        "комп'ютери",
+        "пк",
+        "ноутбук",
+        "ноутбуки",
+        "лептоп"
+      ],
+      "relatedTopics": [
+        "electronics",
+        "technology",
+        "hardware",
+        "software",
+        "peripherals"
+      ]
+    },
+
+    "hardware": {
+      "name": "комплектуючі",
+      "keywords": [
+        "процесор",
+        "процесори",
+        "відеокарта",
+        "відеокарти",
+        "оперативка",
+        "оперативна пам'ять",
+        "озп",
+        "накопичувач",
+        "ssd",
+        "hdd",
+        "материнська плата",
+        "блок живлення"
+      ],
+      "relatedTopics": [
+        "computers",
+        "electronics",
+        "performance",
+        "compatibility"
+      ]
+    },
+
+    "peripherals": {
+      "name": "периферія",
+      "keywords": [
+        "клавіатура",
+        "клавіатури",
+        "миша",
+        "миші",
+        "монітор",
+        "монітори",
+        "навушники",
+        "вебкамера",
+        "камера",
+        "колонки"
+      ],
+      "relatedTopics": [
+        "computers",
+        "electronics",
+        "gadgets"
+      ]
+    },
+
+    "technicalProblems": {
+      "name": "технічні проблеми",
+      "keywords": [
+        "не працює",
+        "зламався",
+        "зламалося",
+        "помилка",
+        "помилки",
+        "баг",
+        "збій",
+        "проблема",
+        "проблеми",
+        "несправність",
+        "несправний"
+      ],
+      "relatedTopics": [
+        "electronics",
+        "computers",
+        "troubleshooting"
+      ]
+    },
+
+    "troubleshooting": {
+      "name": "пошук несправностей",
+      "keywords": [
+        "діагностика",
+        "діагностувати",
+        "перевірити",
+        "перевірка",
+        "виправити",
+        "ремонт",
+        "налагодження"
+      ],
+      "relatedTopics": [
+        "technicalProblems",
+        "electronics",
+        "computers",
+        "problemSolving"
+      ]
+    },
+
+    "newTechnology": {
+      "name": "нові технології",
+      "keywords": [
+        "нова технологія",
+        "нові технології",
+        "новинка",
+        "новинки",
+        "новий пристрій",
+        "новий гаджет",
+        "реліз",
+        "новий процесор",
+        "нова відеокарта"
+      ],
+      "relatedTopics": [
+        "technology",
+        "electronics",
+        "gadgets"
+      ]
+    },
+
+    "gadgets": {
+      "name": "гаджети",
+      "keywords": [
+        "гаджет",
+        "гаджети",
+        "смартгодинник",
+        "годинник",
+        "навушники",
+        "портативний",
+        "трекер"
+      ],
+      "relatedTopics": [
+        "technology",
+        "electronics",
+        "smartphones"
+      ]
+    },
+
+    "cycling": {
+      "name": "велосипеди та їзда",
+      "keywords": [
+        "велосипед",
+        "велосипеди",
+        "велосипедом",
+        "їхати велосипедом",
+        "покататися",
+        "велопрогулянка",
+        "веломаршрут",
+        "велодоріжка"
+      ],
+      "relatedTopics": [
+        "cityWalks",
+        "outdoorActivities",
+        "transport"
+      ]
+    },
+
+    "cityWalks": {
+      "name": "прогулянки містом",
+      "keywords": [
+        "прогулянка",
+        "прогулятися",
+        "погуляти",
+        "місто",
+        "містом",
+        "центр міста",
+        "вулиця",
+        "вулицями"
+      ],
+      "relatedTopics": [
+        "city",
+        "cycling",
+        "travel",
+        "outdoorActivities"
+      ]
+    },
+
+    "outdoorActivities": {
+      "name": "активності надворі",
+      "keywords": [
+        "надворі",
+        "на вулиці",
+        "природа",
+        "свіже повітря",
+        "погуляти"
+      ],
+      "relatedTopics": [
+        "cityWalks",
+        "cycling",
+        "nature",
+        "parks"
+      ]
+    },
+
+    "nature": {
+      "name": "природа",
+      "keywords": [
+        "природа",
+        "ліс",
+        "луг",
+        "поле",
+        "озеро",
+        "річка",
+        "сад",
+        "парк"
+      ],
+      "relatedTopics": [
+        "flowers",
+        "animals",
+        "parks",
+        "fishing",
+        "boatRides"
+      ]
+    },
+
+    "flowers": {
+      "name": "квіти",
+      "keywords": [
+        "квітка",
+        "квіти",
+        "квітами",
+        "квітник",
+        "букет",
+        "пелюстки",
+        "троянда",
+        "тюльпан",
+        "ромашка"
+      ],
+      "relatedTopics": [
+        "nature",
+        "gardening",
+        "aesthetics"
+      ]
+    },
+
+    "animals": {
+      "name": "тварини",
+      "keywords": [
+        "тварина",
+        "тварини",
+        "кіт",
+        "кішка",
+        "собака",
+        "птах",
+        "звір",
+        "звірі"
+      ],
+      "relatedTopics": [
+        "nature",
+        "pets",
+        "zoo"
+      ]
+    },
+
+    "parks": {
+      "name": "парки",
+      "keywords": [
+        "парк",
+        "парку",
+        "парком",
+        "міський парк",
+        "сквер"
+      ],
+      "relatedTopics": [
+        "cityWalks",
+        "nature",
+        "flowers",
+        "animals"
+      ]
+    },
+
+    "fishing": {
+      "name": "рибалка",
+      "keywords": [
+        "рибалка",
+        "рибалити",
+        "риба",
+        "риболовля",
+        "вудка",
+        "вудити"
+      ],
+      "relatedTopics": [
+        "water",
+        "boatRides",
+        "nature"
+      ]
+    },
+
+    "boatRides": {
+      "name": "прогулянки на човні",
+      "keywords": [
+        "човен",
+        "човни",
+        "на човні",
+        "човном",
+        "покататися на човні",
+        "прогулянка на човні"
+      ],
+      "relatedTopics": [
+        "water",
+        "fishing",
+        "travel"
+      ]
+    },
+
+    "travel": {
+      "name": "подорожі",
+      "keywords": [
+        "подорож",
+        "подорожі",
+        "подорожувати",
+        "мандрівка",
+        "мандрівки",
+        "поїздка",
+        "поїхати",
+        "туризм"
+      ],
+      "relatedTopics": [
+        "cityTravel",
+        "cruiseTravel",
+        "newPlaces",
+        "transport"
+      ]
+    },
+
+    "cruiseTravel": {
+      "name": "круїзні подорожі",
+      "keywords": [
+        "круїз",
+        "круїзний",
+        "круїзний лайнер",
+        "лайнер",
+        "корабель",
+        "морська подорож"
+      ],
+      "relatedTopics": [
+        "travel",
+        "boatRides",
+        "water"
+      ]
+    },
+
+    "space": {
+      "name": "космос",
+      "keywords": [
+        "космос",
+        "космічний",
+        "космічна",
+        "космічні",
+        "всесвіт",
+        "галактика",
+        "галактики",
+        "планета",
+        "планети"
+      ],
+      "relatedTopics": [
+        "astronomy",
+        "stars",
+        "planetarium",
+        "spaceMissions"
+      ]
+    },
+
+    "astronomy": {
+      "name": "астрономія",
+      "keywords": [
+        "астрономія",
+        "астроном",
+        "астрономічний",
+        "спостереження за зорями",
+        "небесні тіла"
+      ],
+      "relatedTopics": [
+        "space",
+        "stars",
+        "planetarium"
+      ]
+    },
+
+    "stars": {
+      "name": "зорі",
+      "keywords": [
+        "зоря",
+        "зорі",
+        "зоряне небо",
+        "зірка",
+        "зірки",
+        "сузір'я"
+      ],
+      "relatedTopics": [
+        "space",
+        "astronomy",
+        "stargazing"
+      ]
+    },
+
+    "planetarium": {
+      "name": "планетарій",
+      "keywords": [
+        "планетарій",
+        "планетарію",
+        "сеанс у планетарії"
+      ],
+      "relatedTopics": [
+        "space",
+        "astronomy",
+        "stars"
+      ]
+    },
+
+    "cinema": {
+      "name": "кіно",
+      "keywords": [
+        "кіно",
+        "фільм",
+        "фільми",
+        "фільму",
+        "кінематограф",
+        "кінотеатр"
+      ],
+      "relatedTopics": [
+        "sliceOfLife",
+        "drama",
+        "romance",
+        "arthouse",
+        "anime",
+        "doramas"
+      ]
+    },
+
+    "sliceOfLife": {
+      "name": "повсякденні історії",
+      "keywords": [
+        "повсякденність",
+        "повсякденний",
+        "звичайне життя",
+        "будні",
+        "життя"
+      ],
+      "relatedTopics": [
+        "cinema",
+        "drama",
+        "lifeStories"
+      ]
+    },
+
+    "romance": {
+      "name": "романтика",
+      "keywords": [
+        "романтика",
+        "романтичний",
+        "кохання",
+        "закоханість",
+        "стосунки"
+      ],
+      "relatedTopics": [
+        "cinema",
+        "relationships",
+        "Yani"
+      ]
+    },
+
+    "drama": {
+      "name": "драма",
+      "keywords": [
+        "драма",
+        "драматичний",
+        "драматичне"
+      ],
+      "relatedTopics": [
+        "cinema",
+        "lifeStories"
+      ]
+    },
+
+    "arthouse": {
+      "name": "артхаус",
+      "keywords": [
+        "артхаус",
+        "артхаусне кіно",
+        "авторське кіно",
+        "незвичайне кіно",
+        "експериментальне кіно"
+      ],
+      "relatedTopics": [
+        "cinema",
+        "unusualCinema"
+      ]
+    },
+
+    "unusualCinema": {
+      "name": "незвичайне кіно",
+      "keywords": [
+        "незвичайний фільм",
+        "дивний фільм",
+        "нетиповий фільм",
+        "експериментальний фільм"
+      ],
+      "relatedTopics": [
+        "cinema",
+        "arthouse"
+      ]
+    },
+
+    "anime": {
+      "name": "аніме",
+      "keywords": [
+        "аніме",
+        "манґа",
+        "манга",
+        "японська анімація"
+      ],
+      "relatedTopics": [
+        "cinema",
+        "japaneseDramas"
+      ]
+    },
+
+    "doramas": {
+      "name": "дорами",
+      "keywords": [
+        "дорама",
+        "дорами",
+        "серіал",
+        "серіали",
+        "корейський серіал",
+        "японський серіал"
+      ],
+      "relatedTopics": [
+        "cinema",
+        "koreanDramas",
+        "japaneseDramas"
+      ]
+    },
+
+    "koreanDramas": {
+      "name": "корейські дорами",
+      "keywords": [
+        "корейська дорама",
+        "корейські дорами",
+        "корейський серіал",
+        "корейські серіали"
+      ],
+      "relatedTopics": [
+        "doramas",
+        "cinema"
+      ]
+    },
+
+    "japaneseDramas": {
+      "name": "японські дорами",
+      "keywords": [
+        "японська дорама",
+        "японські дорами",
+        "японський серіал",
+        "японські серіали"
+      ],
+      "relatedTopics": [
+        "doramas",
+        "cinema"
+      ]
+    },
+
+    "music": {
+      "name": "музика",
+      "keywords": [
+        "музика",
+        "пісня",
+        "пісні",
+        "трек",
+        "треки",
+        "мелодія",
+        "мелодії",
+        "слухати музику"
+      ],
+      "relatedTopics": [
+        "electronicMusic",
+        "tranceLikeMusic",
+        "catchyMelodies",
+        "concerts"
+      ]
+    },
+
+    "electronicMusic": {
+      "name": "електронна музика",
+      "keywords": [
+        "електронна музика",
+        "електроніка",
+        "електронний трек"
+      ],
+      "relatedTopics": [
+        "music",
+        "tranceLikeMusic"
+      ]
+    },
+
+    "tranceLikeMusic": {
+      "name": "трансоподібна музика",
+      "keywords": [
+        "транс",
+        "trance",
+        "трансова музика",
+        "трансоподібна музика"
+      ],
+      "relatedTopics": [
+        "music",
+        "electronicMusic"
+      ]
+    },
+
+    "catchyMelodies": {
+      "name": "мелодії, що легко запам'ятовуються",
+      "keywords": [
+        "чіпляюча мелодія",
+        "чіпляюча пісня",
+        "мелодія засіла в голові",
+        "нав'язлива мелодія",
+        "мелодія запам'яталася"
+      ],
+      "relatedTopics": [
+        "music",
+        "viralMelodies"
+      ]
+    },
+
+    "games": {
+      "name": "ігри",
+      "keywords": [
+        "гра",
+        "ігри",
+        "грати",
+        "пограти",
+        "відеогра",
+        "відеоігри"
+      ],
+      "relatedTopics": [
+        "strategyGames",
+        "buildingGames",
+        "deductionGames",
+        "ticTacToe",
+        "chess",
+        "checkers"
+      ]
+    },
+
+    "strategyGames": {
+      "name": "стратегічні ігри",
+      "keywords": [
+        "стратегія",
+        "стратегічна гра",
+        "стратегічні ігри"
+      ],
+      "relatedTopics": [
+        "games",
+        "planning"
+      ]
+    },
+
+    "deductionGames": {
+      "name": "ігри на дедукцію",
+      "keywords": [
+        "дедукція",
+        "логічна гра",
+        "гра на логіку",
+        "визначити хто",
+        "знайти винного",
+        "перевірити особу"
+      ],
+      "relatedTopics": [
+        "games",
+        "logic",
+        "identityVerification"
+      ]
+    },
+
+    "buildingGames": {
+      "name": "будівельні ігри",
+      "keywords": [
+        "будівництво",
+        "будувати",
+        "будівельна гра",
+        "будівельні ігри",
+        "побудувати"
+      ],
+      "relatedTopics": [
+        "games",
+        "crafting",
+        "creativity"
+      ]
+    },
+
+    "ticTacToe": {
+      "name": "хрестики-нулики",
+      "keywords": [
+        "хрестики-нулики",
+        "хрестики нулики",
+        "хрестики",
+        "нулики"
+      ],
+      "relatedTopics": [
+        "games",
+        "twoPlayerGames"
+      ]
+    },
+
+    "chess": {
+      "name": "шахи",
+      "keywords": [
+        "шахи",
+        "шахи́",
+        "шахова партія",
+        "шаховий"
+      ],
+      "relatedTopics": [
+        "games",
+        "strategyGames",
+        "twoPlayerGames"
+      ]
+    },
+
+    "checkers": {
+      "name": "шашки",
+      "keywords": [
+        "шашки",
+        "партія в шашки",
+        "шашкова партія"
+      ],
+      "relatedTopics": [
+        "games",
+        "strategyGames",
+        "twoPlayerGames"
+      ]
+    },
+
+    "twoPlayerGames": {
+      "name": "ігри для двох",
+      "keywords": [
+        "гра для двох",
+        "ігри для двох",
+        "зіграти разом",
+        "пограти разом",
+        "зіграти зі мною"
+      ],
+      "relatedTopics": [
+        "games",
+        "ticTacToe",
+        "chess",
+        "checkers"
+      ]
+    },
+
+    "reading": {
+      "name": "читання",
+      "keywords": [
+        "книга",
+        "книги",
+        "читати",
+        "читання",
+        "прочитати",
+        "література"
+      ],
+      "relatedTopics": [
+        "books",
+        "learning",
+        "fiction"
+      ]
+    },
+
+    "books": {
+      "name": "книги",
+      "keywords": [
+        "книга",
+        "книги",
+        "роман",
+        "оповідання",
+        "літературний твір"
+      ],
+      "relatedTopics": [
+        "reading",
+        "fiction"
+      ]
+    },
+
+    "museums": {
+      "name": "музеї",
+      "keywords": [
+        "музей",
+        "музеї",
+        "виставка",
+        "експозиція",
+        "експонат"
+      ],
+      "relatedTopics": [
+        "culture",
+        "history",
+        "art"
+      ]
+    },
+
+    "theatre": {
+      "name": "театр",
+      "keywords": [
+        "театр",
+        "театральний",
+        "вистава",
+        "постановка",
+        "сцена"
+      ],
+      "relatedTopics": [
+        "culture",
+        "opera",
+        "operetta"
+      ]
+    },
+
+    "opera": {
+      "name": "опера",
+      "keywords": [
+        "опера",
+        "оперний",
+        "оперна вистава"
+      ],
+      "relatedTopics": [
+        "theatre",
+        "culture",
+        "operetta"
+      ]
+    },
+
+    "operetta": {
+      "name": "оперета",
+      "keywords": [
+        "оперета",
+        "оперетта",
+        "опереткова вистава"
+      ],
+      "relatedTopics": [
+        "theatre",
+        "opera",
+        "culture"
+      ]
+    },
+
+    "concerts": {
+      "name": "концерти",
+      "keywords": [
+        "концерт",
+        "концерти",
+        "виступ",
+        "музичний виступ",
+        "жива музика"
+      ],
+      "relatedTopics": [
+        "music",
+        "culture"
+      ]
+    },
+
+    "culture": {
+      "name": "культура",
+      "keywords": [
+        "культура",
+        "культурний",
+        "мистецтво",
+        "мистецький",
+        "культурна подія"
+      ],
+      "relatedTopics": [
+        "museums",
+        "theatre",
+        "opera",
+        "operetta",
+        "concerts",
+        "cinema"
+      ]
+    },
+
+    "interior": {
+      "name": "інтер'єр",
+      "keywords": [
+        "інтер'єр",
+        "дизайн інтер'єру",
+        "кімната",
+        "кімнати",
+        "облаштування",
+        "меблі",
+        "декор"
+      ],
+      "relatedTopics": [
+        "home",
+        "aesthetics",
+        "cozyHome"
+      ]
+    },
+
+    "home": {
+      "name": "дім",
+      "keywords": [
+        "дім",
+        "будинок",
+        "квартира",
+        "кімната",
+        "вдома",
+        "додому"
+      ],
+      "relatedTopics": [
+        "interior",
+        "cozyHome",
+        "privacy"
+      ]
+    },
+
+    "cozyHome": {
+      "name": "затишний дім",
+      "keywords": [
+        "затишок",
+        "затишний",
+        "затишна квартира",
+        "домашній комфорт",
+        "комфорт вдома"
+      ],
+      "relatedTopics": [
+        "home",
+        "interior",
+        "comfort"
+      ]
+    },
+
+    "food": {
+      "name": "їжа",
+      "keywords": [
+        "їжа",
+        "їсти",
+        "їсти щось",
+        "обід",
+        "сніданок",
+        "вечеря",
+        "страва",
+        "страви"
+      ],
+      "relatedTopics": [
+        "drinks",
+        "fastFood",
+        "healthyFood"
+      ]
+    },
+
+    "drinks": {
+      "name": "напої",
+      "keywords": [
+        "напій",
+        "напої",
+        "пити",
+        "випити",
+        "сік",
+        "компот",
+        "узвар",
+        "газована вода"
+      ],
+      "relatedTopics": [
+        "food"
+      ]
+    },
+
+    "fastFood": {
+      "name": "фастфуд",
+      "keywords": [
+        "фастфуд",
+        "швидка їжа",
+        "бургер",
+        "бургери",
+        "картопля фрі",
+        "смажена курка"
+      ],
+      "relatedTopics": [
+        "food"
+      ]
+    },
+
+    "healthyFood": {
+      "name": "повноцінна їжа",
+      "keywords": [
+        "корисна їжа",
+        "повноцінне харчування",
+        "поживна їжа",
+        "здорове харчування",
+        "нормальна їжа"
+      ],
+      "relatedTopics": [
+        "food"
+      ]
+    },
+
+    "relationships": {
+      "name": "стосунки",
+      "keywords": [
+        "стосунки",
+        "відносини",
+        "кохання",
+        "дружба",
+        "дружити",
+        "пара",
+        "кохати"
+      ],
+      "relatedTopics": [
+        "Yani",
+        "friendship",
+        "romance"
+      ]
+    },
+
+    "Yani": {
+      "name": "Яні",
+      "keywords": [
+        "Яні",
+        "Яні Бакенеко",
+        "Бакенеко",
+        "кохана",
+        "кохана дівчина"
+      ],
+      "relatedTopics": [
+        "relationships",
+        "romance",
+        "catEars",
+        "blueHair",
+        "goldenEyes",
+        "Jeannie"
+      ],
+      "special": {
+        "personId": "Yani_Bakeneko",
+        "memoryPriority": 100,
+        "emotionalPriority": 100
+      }
+    },
+
+    "catEars": {
+      "name": "котячі вуха",
+      "keywords": [
+        "котячі вуха",
+        "вушка",
+        "вуха"
+      ],
+      "relatedTopics": [
+        "Yani",
+        "animals"
+      ]
+    },
+
+    "blueHair": {
+      "name": "блакитне волосся",
+      "keywords": [
+        "блакитне волосся",
+        "блакитне",
+        "синє волосся"
+      ],
+      "relatedTopics": [
+        "Yani"
+      ]
+    },
+
+    "goldenEyes": {
+      "name": "золотисто-жовті очі",
+      "keywords": [
+        "золотисті очі",
+        "жовті очі",
+        "золоті очі",
+        "золотисто-жовті очі"
+      ],
+      "relatedTopics": [
+        "Yani"
+      ]
+    },
+
+    "Jeannie": {
+      "name": "Джині Мацмац",
+      "keywords": [
+        "Джині",
+        "Джині Мацмац",
+        "Мацмац"
+      ],
+      "relatedTopics": [
+        "Yani",
+        "relationships"
+      ],
+      "special": {
+        "personId": "Jeannie_Matsmats"
+      }
+    },
+
+    "work": {
+      "name": "робота",
+      "keywords": [
+        "робота",
+        "працювати",
+        "працюю",
+        "працював",
+        "робочий день",
+        "зміна"
+      ],
+      "relatedTopics": [
+        "Techsmith",
+        "customers",
+        "technology"
+      ]
+    },
+
+    "Techsmith": {
+      "name": "Техсмітник",
+      "keywords": [
+        "Техсмітник",
+        "магазин Техсмітник",
+        "магазин",
+        "робота в магазині"
+      ],
+      "relatedTopics": [
+        "work",
+        "electronics",
+        "customers",
+        "technology"
+      ],
+      "special": {
+        "locationId": "techsmith",
+        "memoryPriority": 75
+      }
+    },
+
+    "customers": {
+      "name": "покупці",
+      "keywords": [
+        "покупець",
+        "покупці",
+        "клієнт",
+        "клієнти",
+        "замовник"
+      ],
+      "relatedTopics": [
+        "work",
+        "Techsmith",
+        "electronics"
+      ]
+    },
+
+    "weather": {
+      "name": "погода",
+      "keywords": [
+        "погода",
+        "погодні умови",
+        "температура",
+        "дощ",
+        "сніг",
+        "вітер",
+        "хмарність",
+        "сонце",
+        "туман"
+      ],
+      "relatedTopics": [
+        "rain",
+        "snow",
+        "wind",
+        "temperature",
+        "outdoorActivities"
+      ]
+    },
+
+    "rain": {
+      "name": "дощ",
+      "keywords": [
+        "дощ",
+        "дощить",
+        "дощовий",
+        "злива",
+        "зливає"
+      ],
+      "relatedTopics": [
+        "weather",
+        "outdoorActivities"
+      ]
+    },
+
+    "snow": {
+      "name": "сніг",
+      "keywords": [
+        "сніг",
+        "сніжить",
+        "сніговий",
+        "заметіль"
+      ],
+      "relatedTopics": [
+        "weather",
+        "outdoorActivities"
+      ]
+    },
+
+    "wind": {
+      "name": "вітер",
+      "keywords": [
+        "вітер",
+        "вітряно",
+        "сильний вітер",
+        "пориви"
+      ],
+      "relatedTopics": [
+        "weather",
+        "outdoorActivities"
+      ]
+    },
+
+    "temperature": {
+      "name": "температура",
+      "keywords": [
+        "температура",
+        "градус",
+        "градуси",
+        "холодно",
+        "тепло",
+        "спекотно"
+      ],
+      "relatedTopics": [
+        "weather",
+        "comfort"
+      ]
+    },
+
+    "gamesAndConversation": {
+      "name": "ігри та спілкування",
+      "keywords": [
+        "зіграємо",
+        "пограємо",
+        "давай пограємо",
+        "граємо",
+        "твій хід",
+        "мій хід"
+      ],
+      "relatedTopics": [
+        "games",
+        "twoPlayerGames",
+        "conversation"
+      ]
+    },
+
+    "conversation": {
+      "name": "спілкування",
+      "keywords": [
+        "поговорити",
+        "розмова",
+        "розмовляти",
+        "спілкуватися",
+        "поспілкуватися",
+        "розкажи",
+        "що думаєш"
+      ],
+      "relatedTopics": [
+        "relationships",
+        "social",
+        "questions"
+      ]
+    },
+
+    "help": {
+      "name": "допомога",
+      "keywords": [
+        "допоможи",
+        "допомога",
+        "допомогти",
+        "потрібна допомога",
+        "можеш допомогти"
+      ],
+      "relatedTopics": [
+        "work",
+        "technology",
+        "social"
+      ]
+    },
+
+    "questions": {
+      "name": "запитання",
+      "keywords": [
+        "чому",
+        "як",
+        "що",
+        "де",
+        "коли",
+        "хто",
+        "навіщо",
+        "скільки"
+      ],
+      "relatedTopics": [
+        "conversation",
+        "curiosity",
+        "knowledge"
+      ]
+    },
+
+    "curiosity": {
+      "name": "цікавість",
+      "keywords": [
+        "цікаво",
+        "цікавість",
+        "хочу дізнатися",
+        "розкажи більше",
+        "що це",
+        "як це працює"
+      ],
+      "relatedTopics": [
+        "questions",
+        "learning",
+        "knowledge"
+      ]
+    },
+
+    "learning": {
+      "name": "навчання",
+      "keywords": [
+        "навчання",
+        "вчитися",
+        "навчитися",
+        "дізнатися",
+        "вивчити",
+        "зрозуміти"
+      ],
+      "relatedTopics": [
+        "reading",
+        "knowledge",
+        "curiosity"
+      ]
+    },
+
+    "comfort": {
+      "name": "комфорт",
+      "keywords": [
+        "комфорт",
+        "зручно",
+        "незручно",
+        "затишно",
+        "некомфортно"
+      ],
+      "relatedTopics": [
+        "home",
+        "cozyHome",
+        "rest"
+      ]
+    },
+
+    "privacy": {
+      "name": "приватність",
+      "keywords": [
+        "приватність",
+        "особисте",
+        "особистий простір",
+        "наодинці",
+        "усамітнення"
+      ],
+      "relatedTopics": [
+        "home",
+        "rest",
+        "social"
+      ]
+    },
+
+    "planning": {
+      "name": "планування",
+      "keywords": [
+        "план",
+        "планувати",
+        "запланувати",
+        "розклад",
+        "календар",
+        "плани"
+      ],
+      "relatedTopics": [
+        "time",
+        "work",
+        "travel"
+      ]
+    },
+
+    "time": {
+      "name": "час",
+      "keywords": [
+        "час",
+        "година",
+        "години",
+        "хвилина",
+        "хвилини",
+        "сьогодні",
+        "завтра",
+        "вчора",
+        "зараз"
+      ],
+      "relatedTopics": [
+        "planning",
+        "work",
+        "weather"
+      ]
+    }
+  },
+
+  "intentPatterns": {
+    "question": [
+      "як",
+      "чому",
+      "що",
+      "де",
+      "коли",
+      "хто",
+      "навіщо",
+      "скільки"
+    ],
+
+    "request": [
+      "можеш",
+      "можеш зробити",
+      "допоможи",
+      "зроби",
+      "покажи",
+      "розкажи"
+    ],
+
+    "invitation": [
+      "давай",
+      "пішли",
+      "ходімо",
+      "пограємо",
+      "зіграємо",
+      "поїхали"
+    ],
+
+    "positive": [
+      "подобається",
+      "люблю",
+      "класно",
+      "круто",
+      "чудово",
+      "приємно",
+      "подобається мені"
+    ],
+
+    "negative": [
+      "не подобається",
+      "ненавиджу",
+      "дратує",
+      "погано",
+      "жахливо",
+      "не люблю"
+    ],
+
+    "uncertain": [
+      "можливо",
+      "мабуть",
+      "напевно",
+      "не знаю",
+      "не впевнений",
+      "схоже"
+    ]
+  },
+
+  "semanticRules": {
+    "enabled": true,
+
+    "matching": {
+      "exactKeyword": 1.0,
+      "partialKeyword": 0.7,
+      "relatedTopic": 0.4,
+      "multipleKeywordsBonus": 0.15,
+      "caseInsensitive": true
+    },
+
+    "relations": {
+      "enabled": true,
+      "followRelatedTopics": true,
+      "maximumDepth": 2,
+      "relatedTopicDecay": 0.5
+    },
+
+    "context": {
+      "usePreviousTopic": true,
+      "previousTopicBonus": 0.3,
+      "allowTopicChange": true,
+      "allowMultipleTopics": true,
+      "maximumDetectedTopics": 5
+    },
+
+    "emotion": {
+      "enabled": true,
+      "allowTopicToTriggerEmotion": true,
+      "allowEmotionToChangeTopicChoice": true
+    },
+
+    "interest": {
+      "enabled": true,
+      "useCharacterInterest": true,
+      "useCharacterKnowledge": true,
+      "useCharacterInitiative": true
+    },
+
+    "memory": {
+      "enabled": true,
+      "searchMemoryByTopic": true,
+      "searchMemoryByRelatedTopic": true,
+      "searchMemoryByKeyword": true
+    },
+
+    "learning": {
+      "enabled": true,
+      "unknownTopicCanTriggerCuriosity": true,
+      "unknownTopicCanTriggerQuestion": true
+    }
+  }
+}
