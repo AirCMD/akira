@@ -1,1538 +1,1879 @@
 /*
- * ЕМОЦІЙНИЙ СТАН АКІРИ
- *
- * mood.js відповідає за поточні емоції.
+ * mood.js
+ * Поточний емоційний стан Акіри.
  *
  * Важливо:
+ * - це НЕ характер;
+ * - це НЕ потреби;
+ * - це НЕ цілі;
+ * - це НЕ рішення;
+ * - це НЕ готовий текст відповіді.
  *
- * personality.json
- *     ↓
- * базова схильність характеру
- *
- * emotions.json
- *     ↓
- * набір доступних емоцій та їхні правила
- *
- * mood.js
- *     ↓
- * ПОТОЧНИЙ емоційний стан
- *
- * Поточний стан не є особистістю.
- * Він постійно змінюється.
+ * Модуль лише зберігає та оновлює поточні емоції.
  */
-
 
 class AkiraMood {
 
-  constructor(brain) {
+    constructor(brain) {
 
-    this.brain = brain;
-
-    /*
-     * Поточні значення емоцій.
-     *
-     * Наприклад:
-     *
-     * {
-     *   joy: 60,
-     *   curiosity: 72,
-     *   calm: 55
-     * }
-     */
-    this.emotions = {};
-
-    /*
-     * Причини останніх змін.
-     *
-     * Це потрібно не лише для налагодження,
-     * а й для можливого пояснення поведінки
-     * іншими модулями.
-     */
-    this.recentChanges = [];
-
-    /*
-     * Тимчасові емоційні ефекти.
-     *
-     * Наприклад:
-     *
-     * {
-     *   source: "messageFromYani",
-     *   emotion: "joy",
-     *   amount: 25,
-     *   remaining: 30
-     * }
-     */
-    this.effects = [];
-
-    /*
-     * Історія емоційних станів.
-     */
-    this.history = [];
-
-    this.maxHistory = 100;
-  }
-
-
-  // ============================================================
-  // 1. ІНІЦІАЛІЗАЦІЯ
-  // ============================================================
-
-  init() {
-
-    const source =
-      this.brain.data.emotions || {};
-
-
-    /*
-     * Шукаємо базовий набір емоцій
-     * у кількох можливих структурах.
-     */
-    let baseline = null;
-
-    if (source.baseline) {
-      baseline = source.baseline;
-    }
-
-    else if (source.current) {
-      baseline = source.current;
-    }
-
-    else if (source.emotions) {
-      baseline = source.emotions;
-    }
-
-    else {
-      baseline = source;
-    }
-
-
-    /*
-     * Беремо тільки числові емоційні значення.
-     */
-    for (
-      const [emotion, value]
-      of Object.entries(baseline)
-    ) {
-
-      if (
-        typeof value === "number"
-      ) {
-
-        this.emotions[emotion] =
-          this.clamp(value);
-      }
-
-      /*
-       * Підтримуємо структуру:
-       *
-       * joy: {
-       *   baseline: 60
-       * }
-       */
-      else if (
-        value &&
-        typeof value === "object"
-      ) {
-
-        if (
-          typeof value.baseline === "number"
-        ) {
-
-          this.emotions[emotion] =
-            this.clamp(
-              value.baseline
-            );
-        }
-
-        else if (
-          typeof value.default === "number"
-        ) {
-
-          this.emotions[emotion] =
-            this.clamp(
-              value.default
-            );
-        }
-
-        else if (
-          typeof value.current === "number"
-        ) {
-
-          this.emotions[emotion] =
-            this.clamp(
-              value.current
-            );
-        }
-      }
-    }
-
-
-    /*
-     * Якщо brain уже має збережені емоції,
-     * вони мають пріоритет.
-     */
-    if (
-      this.brain.state?.emotions &&
-      Object.keys(
-        this.brain.state.emotions
-      ).length
-    ) {
-
-      this.emotions = {
-        ...this.emotions,
-        ...this.brain.state.emotions
-      };
-    }
-
-
-    this.syncToBrain();
-
-    return this;
-  }
-
-
-  // ============================================================
-  // 2. ОТРИМАТИ ЕМОЦІЮ
-  // ============================================================
-
-  get(emotion) {
-
-    return (
-      this.emotions[emotion] ??
-      0
-    );
-  }
-
-
-  // ============================================================
-  // 3. ВСТАНОВИТИ ЕМОЦІЮ
-  // ============================================================
-
-  set(
-    emotion,
-    value,
-    reason = "unknown"
-  ) {
-
-    const previous =
-      this.get(emotion);
-
-    const next =
-      this.clamp(value);
-
-
-    this.emotions[emotion] =
-      next;
-
-
-    const change =
-      next - previous;
-
-
-    if (
-      Math.abs(change) >= 0.1
-    ) {
-
-      this.recordChange({
-        emotion,
-        previous,
-        value: next,
-        change,
-        reason
-      });
-    }
-
-
-    this.syncToBrain();
-
-    return next;
-  }
-
-
-  // ============================================================
-  // 4. ЗМІНИТИ ЕМОЦІЮ
-  // ============================================================
-
-  change(
-    emotion,
-    amount,
-    reason = "unknown",
-    options = {}
-  ) {
-
-    const previous =
-      this.get(emotion);
-
-    /*
-     * Модифікатор інтенсивності.
-     *
-     * Наприклад, дуже сильна подія може
-     * мати intensity = 1.5.
-     */
-    const intensity =
-      options.intensity ??
-      1;
-
-
-    let actualAmount =
-      amount * intensity;
-
-
-    /*
-     * Якщо вказана тривалість,
-     * ефект може зберігатися довше.
-     *
-     * Це не збільшує емоцію напряму,
-     * а створює тимчасовий ефект.
-     */
-    const duration =
-      options.duration ?? 0;
-
-
-    /*
-     * Змінюємо поточну емоцію.
-     */
-    const next =
-      this.clamp(
-        previous +
-        actualAmount
-      );
-
-
-    this.emotions[emotion] =
-      next;
-
-
-    this.recordChange({
-
-      emotion,
-
-      previous,
-
-      value: next,
-
-      change:
-        next - previous,
-
-      reason,
-
-      timestamp:
-        this.getCurrentTime()
-    });
-
-
-    /*
-     * Додаємо тимчасовий ефект.
-     */
-    if (
-      duration > 0
-    ) {
-
-      this.effects.push({
-
-        emotion,
-
-        amount:
-          actualAmount,
-
-        remaining:
-          duration,
-
-        reason
-      });
-    }
-
-
-    this.syncToBrain();
-
-    return next;
-  }
-
-
-  // ============================================================
-  // 5. ЕМОЦІЙНИЙ ЕФЕКТ
-  // ============================================================
-
-  addEffect(
-    emotion,
-    amount,
-    duration,
-    reason = "unknown"
-  ) {
-
-    this.effects.push({
-
-      emotion,
-
-      amount,
-
-      remaining:
-        Math.max(
-          1,
-          duration
-        ),
-
-      reason
-    });
-
-
-    /*
-     * Перший імпульс застосовуємо одразу.
-     */
-    this.change(
-      emotion,
-      amount,
-      reason
-    );
-  }
-
-
-  // ============================================================
-  // 6. ОНОВЛЕННЯ ЕФЕКТІВ
-  // ============================================================
-
-  updateEffects(minutes = 1) {
-
-    const active = [];
-
-    for (
-      const effect
-      of this.effects
-    ) {
-
-      effect.remaining -= minutes;
-
-
-      /*
-       * Ефект поступово згасає.
-       */
-      if (
-        effect.remaining > 0
-      ) {
+        this.brain = brain;
 
         /*
-         * Замість повного повторного
-         * застосування використовуємо
-         * малу частину сили.
+         * Поточний стан емоцій.
+         *
+         * Формат:
+         *
+         * {
+         *     joy: {
+         *         value: 60,
+         *         source: "...",
+         *         lastChanged: ...,
+         *         duration: 0
+         *     }
+         * }
          */
-        const fadeAmount =
-          effect.amount *
-          0.02 *
-          minutes;
+
+        this.emotions = {};
+
+        /*
+         * Історія змін.
+         * Не повинна нескінченно рости.
+         */
+
+        this.history = [];
+
+        this.maxHistory = 100;
+
+        /*
+         * Час останнього оновлення.
+         */
+
+        this.lastUpdate = Date.now();
+
+        /*
+         * Максимальний час між оновленнями,
+         * щоб великий стрибок часу не створював
+         * дивних значень.
+         */
+
+        this.maxDeltaHours = 24;
+
+        /*
+         * Чи ініціалізований модуль.
+         */
+
+        this.initialized = false;
+    }
 
 
-        this.change(
-          effect.emotion,
-          effect.amount > 0
-            ? fadeAmount
-            : -Math.abs(fadeAmount),
-          `продовження ефекту: ${effect.reason}`
+    /* =========================================================
+       ІНІЦІАЛІЗАЦІЯ
+       ========================================================= */
+
+    async init() {
+
+        const data =
+            this.brain?.data?.emotions;
+
+        if (!data) {
+
+            console.warn(
+                "AkiraMood: data.emotions не знайдено."
+            );
+
+            this.initialized = true;
+
+            return this;
+        }
+
+
+        /*
+         * У нашому emotions.json базові емоції
+         * знаходяться в об'єкті baseline.
+         */
+
+        const baseline =
+            data.baseline ||
+            data.emotions ||
+            data;
+
+
+        if (
+            !baseline ||
+            typeof baseline !== "object"
+        ) {
+
+            console.warn(
+                "AkiraMood: не вдалося знайти базові емоції."
+            );
+
+            this.initialized = true;
+
+            return this;
+        }
+
+
+        for (const [name, rawValue] of Object.entries(baseline)) {
+
+            /*
+             * Якщо JSON має просто:
+             *
+             * "joy": 60
+             *
+             * це нормально.
+             *
+             * Якщо пізніше буде:
+             *
+             * "joy": {
+             *     "value": 60,
+             *     "decay": 2
+             * }
+             *
+             * це теж підтримується.
+             */
+
+            const value =
+                typeof rawValue === "number"
+                    ? rawValue
+                    : rawValue?.value ?? 0;
+
+
+            this.emotions[name] = {
+
+                value:
+                    this.normalizeEmotion(value),
+
+                baseline:
+                    this.normalizeEmotion(value),
+
+                source:
+                    "baseline",
+
+                lastChanged:
+                    Date.now(),
+
+                duration:
+                    0,
+
+                decay:
+                    typeof rawValue === "object"
+                        ? rawValue?.decay ?? null
+                        : null
+            };
+        }
+
+
+        /*
+         * Важливо: baseline залишається окремо.
+         *
+         * Поточна емоція може відхилитися від нього,
+         * але характер Акіри від цього не змінюється.
+         */
+
+        this.lastUpdate =
+            Date.now();
+
+        this.initialized =
+            true;
+
+
+        return this;
+    }
+
+
+    /* =========================================================
+       НОРМАЛІЗАЦІЯ
+       ========================================================= */
+
+    normalizeEmotion(value) {
+
+        const number =
+            Number(value);
+
+
+        if (!Number.isFinite(number)) {
+            return 0;
+        }
+
+
+        return Math.max(
+            0,
+            Math.min(
+                100,
+                number
+            )
         );
-
-
-        active.push(effect);
-      }
     }
 
 
-    this.effects = active;
-  }
+    /* =========================================================
+       ОТРИМАННЯ ЕМОЦІЇ
+       ========================================================= */
+
+    get(name) {
+
+        const emotion =
+            this.emotions[name];
 
 
-  // ============================================================
-  // 7. ВПЛИВ ПОТРЕБ
-  // ============================================================
-
-  updateFromNeeds() {
-
-    const needs =
-      this.brain.state?.needs ||
-      {};
+        if (!emotion) {
+            return 0;
+        }
 
 
-    /*
-     * Енергія.
-     */
-    if (
-      needs.energy !== undefined
+        return emotion.value;
+    }
+
+
+    getData(name) {
+
+        return this.emotions[name] || null;
+    }
+
+
+    getState() {
+
+        const result = {};
+
+
+        for (
+            const [name, emotion]
+            of Object.entries(this.emotions)
+        ) {
+
+            result[name] =
+                emotion.value;
+        }
+
+
+        return result;
+    }
+
+
+    /* =========================================================
+       ВСТАНОВЛЕННЯ ЕМОЦІЇ
+       ========================================================= */
+
+    set(
+        name,
+        value,
+        source = "unknown"
     ) {
 
-      const energy =
-        Number(needs.energy);
+        const normalized =
+            this.normalizeEmotion(value);
 
 
-      if (
-        energy < 20
-      ) {
+        /*
+         * Якщо емоція ще не існувала,
+         * створюємо її.
+         */
 
-        this.change(
-          "fatigue",
-          1.5,
-          "дуже низька енергія"
+        if (!this.emotions[name]) {
+
+            this.emotions[name] = {
+
+                value:
+                    normalized,
+
+                baseline:
+                    0,
+
+                source,
+
+                lastChanged:
+                    Date.now(),
+
+                duration:
+                    0,
+
+                decay:
+                    null
+            };
+
+        } else {
+
+            const previous =
+                this.emotions[name].value;
+
+
+            this.emotions[name].value =
+                normalized;
+
+            this.emotions[name].source =
+                source;
+
+            this.emotions[name].lastChanged =
+                Date.now();
+
+
+            /*
+             * Фіксуємо лише реальну зміну.
+             */
+
+            if (
+                Math.abs(
+                    previous - normalized
+                ) >= 0.01
+            ) {
+
+                this.recordChange(
+                    name,
+                    previous,
+                    normalized,
+                    source
+                );
+            }
+        }
+
+
+        return normalized;
+    }
+
+
+    /* =========================================================
+       ЗМІНА ЕМОЦІЇ
+       ========================================================= */
+
+    change(
+        name,
+        delta,
+        source = "unknown"
+    ) {
+
+        const current =
+            this.get(name);
+
+
+        return this.set(
+            name,
+            current + Number(delta || 0),
+            source
         );
-
-        this.change(
-          "irritation",
-          0.5,
-          "дуже низька енергія"
-        );
-
-        this.change(
-          "joy",
-          -0.3,
-          "дуже низька енергія"
-        );
-      }
-
-      else if (
-        energy > 75
-      ) {
-
-        this.change(
-          "fatigue",
-          -0.8,
-          "висока енергія"
-        );
-      }
     }
 
 
-    /*
-     * Соціальна потреба.
-     */
-    if (
-      needs.social !== undefined
+    /* =========================================================
+       ЗАПИС ЗМІНИ
+       ========================================================= */
+
+    recordChange(
+        name,
+        previous,
+        current,
+        source
     ) {
 
-      const social =
-        Number(needs.social);
+        this.history.push({
 
+            emotion:
+                name,
 
-      if (
-        social < 20
-      ) {
+            previous:
+                previous,
 
-        this.change(
-          "loneliness",
-          1,
-          "низька соціальна насиченість"
-        );
-      }
+            current:
+                current,
 
-      else if (
-        social > 80
-      ) {
+            delta:
+                current - previous,
 
-        this.change(
-          "loneliness",
-          -1,
-          "висока соціальна насиченість"
-        );
-      }
-    }
+            source:
+                source,
 
-
-    /*
-     * Потреба у відпочинку.
-     */
-    if (
-      needs.rest !== undefined
-    ) {
-
-      const rest =
-        Number(needs.rest);
-
-
-      if (
-        rest < 20
-      ) {
-
-        this.change(
-          "fatigue",
-          1,
-          "низька потреба у відпочинку"
-        );
-      }
-    }
-
-
-    /*
-     * Цікавість.
-     */
-    if (
-      needs.curiosity !== undefined
-    ) {
-
-      const curiosity =
-        Number(needs.curiosity);
-
-
-      if (
-        curiosity > 75
-      ) {
-
-        this.change(
-          "curiosity",
-          0.5,
-          "висока потреба у пізнанні"
-        );
-      }
-    }
-  }
-
-
-  // ============================================================
-  // 8. ВПЛИВ ОСОБИСТОСТІ
-  // ============================================================
-
-  getPersonalityModifier(emotion) {
-
-    const personality =
-      this.brain.data.personality
-        ?.personality
-        ?.traits ||
-      {};
-
-
-    /*
-     * Особистість не задає поточну емоцію.
-     *
-     * Вона лише змінює схильність.
-     */
-
-    const map = {
-
-      curiosity:
-        personality.curiosity,
-
-      sympathy:
-        personality.empathy,
-
-      sensitivity:
-        personality.sensitivity,
-
-      calm:
-        personality.calmness,
-
-      confidence:
-        personality.confidence,
-
-      enthusiasm:
-        personality.enthusiasm,
-
-      attachment:
-        personality.attachment,
-
-      jealousy:
-        personality.jealousy,
-
-      patience:
-        personality.patience,
-
-      anger:
-        personality.impulsiveness,
-
-      anxiety:
-        100 -
-        (personality.calmness ?? 50)
-    };
-
-
-    const value =
-      map[emotion];
-
-
-    if (
-      value === undefined
-    ) {
-      return 0;
-    }
-
-
-    /*
-     * Перетворюємо 0–100
-     * у невеликий модифікатор.
-     */
-    return (
-      value - 50
-    ) * 0.02;
-  }
-
-
-  // ============================================================
-  // 9. ВПЛИВ ПОГОДИ
-  // ============================================================
-
-  updateFromWeather() {
-
-    const weather =
-      this.brain.data.weather
-        ?.current ||
-      this.brain.state
-        ?.situation
-        ?.weather;
-
-
-    if (!weather) {
-      return;
-    }
-
-
-    /*
-     * Сонячна/приємна погода.
-     */
-    if (
-      weather.comfort !== undefined &&
-      weather.comfort >= 75
-    ) {
-
-      this.change(
-        "joy",
-        0.4,
-        "комфортна погода"
-      );
-
-      this.change(
-        "calm",
-        0.2,
-        "комфортна погода"
-      );
-    }
-
-
-    /*
-     * Сильний дискомфорт.
-     */
-    if (
-      weather.comfort !== undefined &&
-      weather.comfort <= 25
-    ) {
-
-      this.change(
-        "irritation",
-        0.5,
-        "некомфортна погода"
-      );
-    }
-  }
-
-
-  // ============================================================
-  // 10. ВПЛИВ ДІЯЛЬНОСТІ
-  // ============================================================
-
-  updateFromActivity() {
-
-    const activity =
-      this.brain.state
-        ?.character
-        ?.activity;
-
-
-    if (!activity) {
-      return;
-    }
-
-
-    const effects = {
-
-      cycling: {
-        joy: 0.5,
-        pleasure: 0.5,
-        boredom: -0.5
-      },
-
-      walking: {
-        calm: 0.3,
-        joy: 0.2,
-        boredom: -0.3
-      },
-
-      reading: {
-        calm: 0.3,
-        curiosity: 0.3,
-        boredom: -0.2
-      },
-
-      gaming: {
-        pleasure: 0.3,
-        boredom: -0.5
-      },
-
-      resting: {
-        calm: 0.5,
-        fatigue: -0.5
-      },
-
-      sleeping: {
-        calm: 0.8,
-        fatigue: -1
-      },
-
-      working: {
-        achievement: 0.2,
-        fatigue: 0.3
-      },
-
-      talking: {
-        loneliness: -0.4,
-        sympathy: 0.2
-      },
-
-      thinking: {
-        curiosity: 0.2
-      }
-    };
-
-
-    const activityEffects =
-      effects[activity];
-
-
-    if (!activityEffects) {
-      return;
-    }
-
-
-    for (
-      const [emotion, amount]
-      of Object.entries(
-        activityEffects
-      )
-    ) {
-
-      this.change(
-        emotion,
-        amount,
-        `діяльність: ${activity}`
-      );
-    }
-  }
-
-
-  // ============================================================
-  // 11. ВПЛИВ СТОСУНКІВ
-  // ============================================================
-
-  reactToPerson(
-    personId,
-    event = "presence"
-  ) {
-
-    const relationship =
-      this.brain.state
-        ?.relationships
-        ?.[personId];
-
-
-    if (!relationship) {
-      return;
-    }
-
-
-    const liking =
-      relationship.liking ??
-      0;
-
-    const closeness =
-      relationship.closeness ??
-      0;
-
-    const irritation =
-      relationship.irritation ??
-      0;
-
-    const affection =
-      relationship.affection ??
-      0;
-
-
-    /*
-     * Позитивна прихильність.
-     */
-    if (
-      liking > 60 ||
-      affection > 60
-    ) {
-
-      this.change(
-        "joy",
-        0.5,
-        `контакт із ${personId}`
-      );
-
-      this.change(
-        "affection",
-        0.5,
-        `контакт із ${personId}`
-      );
-    }
-
-
-    /*
-     * Близькість підсилює реакцію.
-     */
-    if (
-      closeness > 80
-    ) {
-
-      this.change(
-        "attachment",
-        0.5,
-        `близька людина: ${personId}`
-      );
-    }
-
-
-    /*
-     * Роздратування.
-     */
-    if (
-      irritation > 60
-    ) {
-
-      this.change(
-        "irritation",
-        0.7,
-        `негативний контакт із ${personId}`
-      );
-    }
-
-
-    /*
-     * Особливий випадок Яні.
-     *
-     * Тут немає жорсткого "якщо ім'я Яні → любов".
-     * Її ефект визначається вже даними
-     * стосунків.
-     */
-    if (
-      affection > 90 &&
-      closeness > 90
-    ) {
-
-      this.change(
-        "tenderness",
-        0.7,
-        `дуже близька людина: ${personId}`
-      );
-
-      this.change(
-        "pleasure",
-        0.5,
-        `дуже близька людина: ${personId}`
-      );
-    }
-
-
-    /*
-     * Подія контакту теж може бути різною.
-     */
-    if (
-      event === "message"
-    ) {
-
-      this.change(
-        "interest",
-        0.5,
-        `повідомлення від ${personId}`
-      );
-    }
-  }
-
-
-  // ============================================================
-  // 12. РЕАКЦІЯ НА ПОДІЮ
-  // ============================================================
-
-  reactToEvent(event) {
-
-    if (!event) {
-      return;
-    }
-
-
-    /*
-     * Загальні поля події можуть містити:
-     *
-     * event.emotionalEffects
-     * event.effects
-     * event.emotions
-     */
-
-    const effects =
-      event.emotionalEffects ||
-      event.emotions ||
-      {};
-
-
-    for (
-      const [emotion, amount]
-      of Object.entries(effects)
-    ) {
-
-      if (
-        typeof amount !== "number"
-      ) {
-        continue;
-      }
-
-
-      this.change(
-        emotion,
-        amount,
-        `подія: ${event.id || event.type || "невідома"}`
-      );
-    }
-
-
-    /*
-     * Якщо подія пов'язана з людиною,
-     * окремо враховуємо стосунки.
-     */
-    if (
-      event.person
-    ) {
-
-      this.reactToPerson(
-        event.person,
-        event.subtype ||
-        event.type ||
-        "event"
-      );
-    }
-  }
-
-
-  // ============================================================
-  // 13. РЕАКЦІЯ НА СПОГАД
-  // ============================================================
-
-  reactToMemory(memory) {
-
-    if (!memory) {
-      return;
-    }
-
-
-    /*
-     * Емоційно сильний спогад може
-     * тимчасово підняти відповідну емоцію.
-     */
-    const intensity =
-      memory.emotionalIntensity ??
-      0;
-
-
-    if (
-      intensity <= 0
-    ) {
-      return;
-    }
-
-
-    for (
-      const emotion
-      of memory.emotions || []
-    ) {
-
-      /*
-       * Невеликий ефект.
-       *
-       * Сам факт згадування не повинен
-       * миттєво перетворювати стан на крайній.
-       */
-      this.change(
-        emotion,
-        intensity * 0.08,
-        "пригадування"
-      );
-    }
-
-
-    /*
-     * Важливий спогад також може
-     * трохи підняти цікавість.
-     */
-    if (
-      memory.importance >= 70
-    ) {
-
-      this.change(
-        "interest",
-        0.3,
-        "важливий спогад"
-      );
-    }
-  }
-
-
-  // ============================================================
-  // 14. ЗГАСАННЯ ЕМОЦІЙ
-  // ============================================================
-
-  decay(minutes = 1) {
-
-    const source =
-      this.brain.data.emotions ||
-      {};
-
-    /*
-     * У emotions.json можуть бути
-     * індивідуальні швидкості згасання.
-     */
-    const decayRates =
-      source.decayRates ||
-      source.decay ||
-      {};
-
-
-    for (
-      const emotion
-      of Object.keys(
-        this.emotions
-      )
-    ) {
-
-      /*
-       * Базова швидкість.
-       */
-      let rate =
-        Number(
-          decayRates[emotion]
-        );
-
-
-      if (
-        Number.isNaN(rate)
-      ) {
-        rate = 0.03;
-      }
-
-
-      /*
-       * Якщо емоція зараз дуже сильна,
-       * її зміна може бути повільнішою.
-       */
-      const current =
-        this.get(emotion);
-
-
-      const strengthProtection =
-        Math.min(
-          1,
-          current / 100
-        );
-
-
-      const actualRate =
-        rate *
-        (1 -
-          strengthProtection * 0.25);
-
-
-      /*
-       * Повертаємо емоцію до базової
-       * схильності поступово.
-       */
-      const baseline =
-        this.getBaseline(emotion);
-
-
-      if (
-        current > baseline
-      ) {
-
-        this.emotions[emotion] =
-          Math.max(
-            baseline,
-            current -
-            actualRate *
-            minutes
-          );
-      }
-
-      else if (
-        current < baseline
-      ) {
-
-        this.emotions[emotion] =
-          Math.min(
-            baseline,
-            current +
-            actualRate *
-            minutes
-          );
-      }
-    }
-
-
-    this.syncToBrain();
-  }
-
-
-  // ============================================================
-  // 15. БАЗОВА ЕМОЦІЯ
-  // ============================================================
-
-  getBaseline(emotion) {
-
-    const source =
-      this.brain.data.emotions ||
-      {};
-
-    const baseline =
-      source.baseline ||
-      source.emotions ||
-      source;
-
-
-    const value =
-      baseline?.[emotion];
-
-
-    if (
-      typeof value === "number"
-    ) {
-      return this.clamp(value);
-    }
-
-
-    if (
-      value &&
-      typeof value === "object"
-    ) {
-
-      if (
-        typeof value.baseline === "number"
-      ) {
-        return this.clamp(
-          value.baseline
-        );
-      }
-
-      if (
-        typeof value.default === "number"
-      ) {
-        return this.clamp(
-          value.default
-        );
-      }
-    }
-
-
-    return 50;
-  }
-
-
-  // ============================================================
-  // 16. ПОТОЧНИЙ СТАН
-  // ============================================================
-
-  getState() {
-
-    return {
-      ...this.emotions
-    };
-  }
-
-
-  // ============================================================
-  // 17. НАЙСИЛЬНІШІ ЕМОЦІЇ
-  // ============================================================
-
-  getDominantEmotions(
-    limit = 3
-  ) {
-
-    return Object.entries(
-      this.emotions
-    )
-      .map(
-        ([emotion, value]) => ({
-          emotion,
-          value
-        })
-      )
-      .sort(
-        (a, b) =>
-          b.value - a.value
-      )
-      .slice(0, limit);
-  }
-
-
-  // ============================================================
-  // 18. ЕМОЦІЙНІ КОНФЛІКТИ
-  // ============================================================
-
-  getConflictingEmotions() {
-
-    /*
-     * Одночасно високі суперечливі емоції
-     * — нормальна частина людської поведінки.
-     *
-     * Наприклад:
-     *
-     * affection + anxiety
-     * joy + sadness
-     * curiosity + fear
-     * anger + attachment
-     */
-
-    const conflicts = [
-
-      ["joy", "sadness"],
-
-      ["affection", "anxiety"],
-
-      ["curiosity", "fear"],
-
-      ["anger", "attachment"],
-
-      ["pleasure", "guilt"],
-
-      ["interest", "boredom"],
-
-      ["trust", "distrust"],
-
-      ["calm", "anxiety"],
-
-      ["joy", "offense"]
-    ];
-
-
-    const result = [];
-
-
-    for (
-      const [a, b]
-      of conflicts
-    ) {
-
-      const valueA =
-        this.get(a);
-
-      const valueB =
-        this.get(b);
-
-
-      if (
-        valueA >= 55 &&
-        valueB >= 55
-      ) {
-
-        result.push({
-
-          emotions: [a, b],
-
-          intensity:
-            (valueA + valueB) / 2
+            timestamp:
+                Date.now()
         });
-      }
+
+
+        /*
+         * Не дозволяємо історії
+         * нескінченно розростатися.
+         */
+
+        if (
+            this.history.length >
+            this.maxHistory
+        ) {
+
+            this.history.shift();
+        }
     }
 
 
-    return result;
-  }
+    /* =========================================================
+       ТРИГЕРИ
+       ========================================================= */
+
+    applyTrigger(trigger) {
+
+        if (!trigger) {
+            return;
+        }
 
 
-  // ============================================================
-  // 19. ЕМОЦІЙНА ВИРАЗНІСТЬ
-  // ============================================================
+        /*
+         * Варіант:
+         *
+         * {
+         *     emotion: "joy",
+         *     delta: 10,
+         *     source: "goodNews"
+         * }
+         */
 
-  getExpressionModifier() {
+        if (
+            trigger.emotion &&
+            trigger.delta !== undefined
+        ) {
 
-    const personality =
-      this.brain.data.personality
-        ?.personality
-        ?.emotionalStyle ||
-      {};
-
-
-    const expressiveness =
-      personality.emotionalExpressiveness ??
-      50;
-
-
-    return {
-      expressiveness,
-
-      /*
-       * Висока емоційна виразність →
-       * сильніше проявляє емоції в діалозі.
-       */
-      visibleIntensity:
-        expressiveness / 100
-    };
-  }
+            this.change(
+                trigger.emotion,
+                trigger.delta,
+                trigger.source ||
+                    "trigger"
+            );
+        }
 
 
-  // ============================================================
-  // 20. ЗАПИС ЗМІНИ
-  // ============================================================
+        /*
+         * Або кілька емоцій одразу:
+         *
+         * {
+         *     changes: {
+         *         joy: 10,
+         *         anxiety: -5
+         *     }
+         * }
+         */
 
-  recordChange(change) {
+        if (
+            trigger.changes &&
+            typeof trigger.changes === "object"
+        ) {
 
-    this.recentChanges.push(
-      change
-    );
+            for (
+                const [name, delta]
+                of Object.entries(trigger.changes)
+            ) {
 
-
-    if (
-      this.recentChanges.length > 50
-    ) {
-      this.recentChanges.shift();
+                this.change(
+                    name,
+                    delta,
+                    trigger.source ||
+                        "trigger"
+                );
+            }
+        }
     }
 
 
-    /*
-     * Історія зберігає не кожну дрібну
-     * зміну назавжди.
-     */
-    this.history.push({
+    /* =========================================================
+       ПОТРЕБИ → ЕМОЦІЇ
+       ========================================================= */
 
-      timestamp:
-        change.timestamp ||
-        this.getCurrentTime(),
+    applyNeedEffects() {
 
-      emotion:
-        change.emotion,
-
-      value:
-        change.value,
-
-      change:
-        change.change,
-
-      reason:
-        change.reason
-    });
+        const needs =
+            this.brain?.state?.needs ||
+            this.brain?.needs;
 
 
-    if (
-      this.history.length >
-      this.maxHistory
-    ) {
-      this.history.shift();
+        if (!needs) {
+            return;
+        }
+
+
+        /*
+         * Енергія.
+         */
+
+        const energy =
+            Number(needs.energy ?? 50);
+
+
+        if (energy < 20) {
+
+            this.change(
+                "fatigue",
+                2,
+                "lowEnergy"
+            );
+
+            this.change(
+                "irritation",
+                0.5,
+                "lowEnergy"
+            );
+
+            this.change(
+                "calm",
+                -0.5,
+                "lowEnergy"
+            );
+
+        } else if (energy > 75) {
+
+            this.change(
+                "fatigue",
+                -1,
+                "highEnergy"
+            );
+
+            this.change(
+                "joy",
+                0.3,
+                "highEnergy"
+            );
+        }
+
+
+        /*
+         * Сон.
+         */
+
+        const sleep =
+            Number(needs.sleep ?? 50);
+
+
+        if (sleep < 20) {
+
+            this.change(
+                "fatigue",
+                2,
+                "sleepDebt"
+            );
+
+            this.change(
+                "irritation",
+                0.7,
+                "sleepDebt"
+            );
+
+            this.change(
+                "calm",
+                -0.7,
+                "sleepDebt"
+            );
+
+        } else if (sleep > 75) {
+
+            this.change(
+                "fatigue",
+                -1,
+                "goodSleep"
+            );
+
+            this.change(
+                "calm",
+                0.5,
+                "goodSleep"
+            );
+        }
+
+
+        /*
+         * Соціальна потреба.
+         */
+
+        const social =
+            Number(needs.social ?? 50);
+
+
+        if (social < 15) {
+
+            this.change(
+                "loneliness",
+                1,
+                "lowSocialNeed"
+            );
+
+        } else if (social > 75) {
+
+            this.change(
+                "loneliness",
+                -1,
+                "satisfiedSocialNeed"
+            );
+        }
+
+
+        /*
+         * Розваги.
+         */
+
+        const fun =
+            Number(needs.fun ?? 50);
+
+
+        if (fun < 15) {
+
+            this.change(
+                "boredom",
+                1,
+                "lowFun"
+            );
+
+        } else if (fun > 75) {
+
+            this.change(
+                "boredom",
+                -1,
+                "highFun"
+            );
+        }
+
+
+        /*
+         * Безпека.
+         */
+
+        const safety =
+            Number(needs.safety ?? 50);
+
+
+        if (safety < 30) {
+
+            this.change(
+                "anxiety",
+                1.5,
+                "lowSafety"
+            );
+
+            this.change(
+                "fear",
+                1,
+                "lowSafety"
+            );
+        }
+
+
+        /*
+         * Цікавість.
+         */
+
+        const curiosity =
+            Number(needs.curiosity ?? 50);
+
+
+        if (curiosity > 80) {
+
+            this.change(
+                "curiosity",
+                0.8,
+                "highCuriosity"
+            );
+
+        } else if (curiosity < 20) {
+
+            this.change(
+                "curiosity",
+                -0.5,
+                "lowCuriosity"
+            );
+        }
     }
-  }
 
 
-  // ============================================================
-  // 21. ОНОВЛЕННЯ
-  // ============================================================
+    /* =========================================================
+       СТОСУНКИ → ЕМОЦІЇ
+       ========================================================= */
 
-  update(minutes = 1) {
+    applyRelationshipEffects() {
 
-    /*
-     * Спочатку короткочасні ефекти.
-     */
-    this.updateEffects(
-      minutes
-    );
+        const relationships =
+            this.brain?.state?.relationships;
 
 
-    /*
-     * Потім вплив поточного стану.
-     */
-    this.updateFromNeeds();
-
-    this.updateFromWeather();
-
-    this.updateFromActivity();
+        if (!relationships) {
+            return;
+        }
 
 
-    /*
-     * Потім поступове згасання
-     * і повернення до базових схильностей.
-     */
-    this.decay(minutes);
+        /*
+         * Стосунки не повинні постійно
+         * збільшувати емоції на кожному tick.
+         *
+         * Тому тут використовується дуже
+         * слабкий довготривалий вплив.
+         */
+
+        for (
+            const [personId, relation]
+            of Object.entries(relationships)
+        ) {
+
+            if (!relation) {
+                continue;
+            }
 
 
-    /*
-     * Зберігаємо результат.
-     */
-    this.syncToBrain();
-  }
+            const closeness =
+                Number(
+                    relation.closeness ??
+                    0
+                );
 
 
-  // ============================================================
-  // 22. СИНХРОНІЗАЦІЯ З BRAIN
-  // ============================================================
+            const liking =
+                Number(
+                    relation.liking ??
+                    0
+                );
 
-  syncToBrain() {
 
-    if (!this.brain.state) {
-      return;
+            const trust =
+                Number(
+                    relation.trust ??
+                    0
+                );
+
+
+            /*
+             * Близькість підтримує
+             * прихильність.
+             */
+
+            if (closeness > 70) {
+
+                this.change(
+                    "attachment",
+                    0.1,
+                    `relationship:${personId}`
+                );
+            }
+
+
+            /*
+             * Сильна симпатія трохи
+             * підтримує affection.
+             */
+
+            if (liking > 80) {
+
+                this.change(
+                    "affection",
+                    0.1,
+                    `relationship:${personId}`
+                );
+            }
+
+
+            /*
+             * Низька довіра може підтримувати
+             * обережність.
+             */
+
+            if (trust < 20) {
+
+                this.change(
+                    "distrust",
+                    0.1,
+                    `relationship:${personId}`
+                );
+            }
+        }
     }
 
 
-    this.brain.state.emotions = {
-      ...this.emotions
-    };
-  }
+    /* =========================================================
+       ЕМОЦІЇ З ПАМ'ЯТІ
+       ========================================================= */
+
+    applyMemoryEmotion(memory) {
+
+        if (!memory) {
+            return;
+        }
 
 
-  // ============================================================
-  // 23. ДОПОМІЖНІ ФУНКЦІЇ
-  // ============================================================
+        /*
+         * Спогад може містити:
+         *
+         * emotions: {
+         *     joy: 70,
+         *     affection: 80
+         * }
+         */
 
-  clamp(
-    value,
-    min = 0,
-    max = 100
-  ) {
+        if (
+            memory.emotions &&
+            typeof memory.emotions === "object"
+        ) {
 
-    const number =
-      Number(value);
+            for (
+                const [name, intensity]
+                of Object.entries(
+                    memory.emotions
+                )
+            ) {
+
+                /*
+                 * Спогад не повинен миттєво
+                 * встановлювати емоцію на повну силу.
+                 *
+                 * Він лише трохи повертає
+                 * відповідний емоційний стан.
+                 */
+
+                const influence =
+                    Number(intensity || 0) *
+                    0.08;
 
 
-    if (
-      Number.isNaN(number)
-    ) {
-      return min;
+                this.change(
+                    name,
+                    influence,
+                    `memory:${memory.id || "unknown"}`
+                );
+            }
+        }
+
+
+        /*
+         * Загальна емоційна інтенсивність
+         * спогаду.
+         */
+
+        const intensity =
+            Number(
+                memory.emotionalIntensity ??
+                0
+            );
+
+
+        if (intensity > 70) {
+
+            this.change(
+                "interest",
+                0.5,
+                "emotionalMemory"
+            );
+        }
     }
 
 
-    return Math.min(
-      max,
-      Math.max(
-        min,
-        number
-      )
-    );
-  }
+    /* =========================================================
+       ДЕКАЙ ЕМОЦІЙ
+       ========================================================= */
+
+    decay(hours = 1) {
+
+        const safeHours =
+            Math.max(
+                0,
+                Math.min(
+                    this.maxDeltaHours,
+                    Number(hours) || 0
+                )
+            );
 
 
-  getCurrentTime() {
+        if (safeHours <= 0) {
+            return;
+        }
 
-    if (
-      this.brain?.state?.world
-    ) {
 
-      return (
-        this.brain.state.world.date +
-        "T" +
-        this.brain.state.world.time
-      );
+        for (
+            const [name, emotion]
+            of Object.entries(
+                this.emotions
+            )
+        ) {
+
+            const current =
+                emotion.value;
+
+
+            const baseline =
+                emotion.baseline;
+
+
+            /*
+             * Якщо в JSON заданий
+             * власний decay — використовуємо його.
+             *
+             * Інакше стандартний дуже повільний
+             * рух назад до baseline.
+             */
+
+            const configuredDecay =
+                Number(
+                    emotion.decay
+                );
+
+
+            const rate =
+                Number.isFinite(
+                    configuredDecay
+                )
+                    ? configuredDecay
+                    : 2;
+
+
+            /*
+             * Емоції не повинні миттєво
+             * повертатися до базового рівня.
+             */
+
+            const difference =
+                baseline - current;
+
+
+            const movement =
+                difference *
+                (rate / 100) *
+                safeHours;
+
+
+            /*
+             * Дуже слабке згасання.
+             */
+
+            const next =
+                current + movement;
+
+
+            if (
+                Math.abs(
+                    next - current
+                ) > 0.01
+            ) {
+
+                this.set(
+                    name,
+                    next,
+                    "emotionalDecay"
+                );
+            }
+
+
+            emotion.duration +=
+                safeHours;
+        }
     }
 
 
-    return new Date()
-      .toISOString();
-  }
+    /* =========================================================
+       ОНОВЛЕННЯ
+       ========================================================= */
+
+    update(hours = null) {
+
+        if (!this.initialized) {
+            return;
+        }
+
+
+        let deltaHours =
+            hours;
+
+
+        /*
+         * Якщо brain передав hours —
+         * використовуємо їх.
+         *
+         * Інакше визначаємо реальний
+         * час між оновленнями.
+         */
+
+        if (
+            deltaHours === null ||
+            deltaHours === undefined
+        ) {
+
+            const now =
+                Date.now();
+
+
+            deltaHours =
+                (
+                    now -
+                    this.lastUpdate
+                ) /
+                3600000;
+
+
+            this.lastUpdate =
+                now;
+        }
+
+
+        deltaHours =
+            Math.max(
+                0,
+                Math.min(
+                    this.maxDeltaHours,
+                    Number(deltaHours) || 0
+                )
+            );
+
+
+        if (deltaHours <= 0) {
+            return;
+        }
+
+
+        /*
+         * Спочатку емоції трохи
+         * повертаються до свого baseline.
+         */
+
+        this.decay(
+            deltaHours
+        );
+
+
+        /*
+         * Потім поточні потреби
+         * можуть трохи змінити стан.
+         */
+
+        this.applyNeedEffects();
+
+
+        /*
+         * І довготривалі стосунки.
+         */
+
+        this.applyRelationshipEffects();
+
+
+        /*
+         * Після всіх змін нормалізуємо
+         * значення.
+         */
+
+        this.normalizeAll();
+
+
+        this.lastUpdate =
+            Date.now();
+    }
+
+
+    /* =========================================================
+       НОРМАЛІЗАЦІЯ ВСІХ ЕМОЦІЙ
+       ========================================================= */
+
+    normalizeAll() {
+
+        for (
+            const emotion
+            of Object.values(
+                this.emotions
+            )
+        ) {
+
+            emotion.value =
+                this.normalizeEmotion(
+                    emotion.value
+                );
+        }
+    }
+
+
+    /* =========================================================
+       НАЙСИЛЬНІШІ ЕМОЦІЇ
+       ========================================================= */
+
+    getDominantEmotions(limit = 5) {
+
+        return Object.entries(
+            this.emotions
+        )
+
+            .map(
+                ([name, data]) => ({
+                    name,
+                    value:
+                        data.value
+                })
+            )
+
+            .sort(
+                (a, b) =>
+                    b.value -
+                    a.value
+            )
+
+            .slice(
+                0,
+                limit
+            );
+    }
+
+
+    /* =========================================================
+       ПРОТИЛЕЖНІ / СУПЕРЕЧЛИВІ ЕМОЦІЇ
+       ========================================================= */
+
+    getConflictingEmotions() {
+
+        /*
+         * Це не означає, що емоції
+         * реально взаємовиключні.
+         *
+         * Навпаки — вони можуть
+         * існувати одночасно.
+         */
+
+        const conflicts = [];
+
+
+        const pairs = [
+
+            ["joy", "sadness"],
+
+            ["calm", "anxiety"],
+
+            ["trust", "distrust"],
+
+            ["pleasure", "disappointment"],
+
+            ["affection", "anger"],
+
+            ["affection", "fear"],
+
+            ["interest", "boredom"],
+
+            ["confidence", "embarrassment"]
+
+        ];
+
+
+        for (
+            const [first, second]
+            of pairs
+        ) {
+
+            const firstValue =
+                this.get(first);
+
+            const secondValue =
+                this.get(second);
+
+
+            /*
+             * Обидві емоції мають бути
+             * достатньо сильними.
+             */
+
+            if (
+                firstValue >= 55 &&
+                secondValue >= 35
+            ) {
+
+                conflicts.push({
+
+                    first,
+                    firstValue,
+
+                    second,
+                    secondValue
+                });
+            }
+        }
+
+
+        return conflicts;
+    }
+
+
+    /* =========================================================
+       ПРОФІЛЬ ВИРАЖЕННЯ
+       ========================================================= */
+
+    getExpressionProfile() {
+
+        const dominant =
+            this.getDominantEmotions(5);
+
+
+        const result = {
+
+            intensity: 0,
+
+            expressiveness: 50,
+
+            emotions: dominant,
+
+            likelyExpressions: [],
+
+            restrained: false
+        };
+
+
+        /*
+         * Середня інтенсивність
+         * найсильніших емоцій.
+         */
+
+        if (dominant.length) {
+
+            const sum =
+                dominant.reduce(
+                    (total, emotion) =>
+                        total +
+                        emotion.value,
+                    0
+                );
+
+
+            result.intensity =
+                sum /
+                dominant.length;
+        }
+
+
+        /*
+         * Виразність залежить
+         * від personality.emotionalStyle.
+         */
+
+        const emotionalStyle =
+            this.brain?.data
+                ?.personality
+                ?.personality
+                ?.emotionalStyle;
+
+
+        if (emotionalStyle) {
+
+            result.expressiveness =
+                Number(
+                    emotionalStyle
+                        .emotionalExpressiveness
+                    ?? 50
+                );
+        }
+
+
+        /*
+         * Низька виразність не означає,
+         * що емоції слабкі.
+         */
+
+        result.expressiveness =
+            Math.max(
+                0,
+                Math.min(
+                    100,
+                    result.expressiveness
+                )
+            );
+
+
+        /*
+         * Визначаємо можливі зовнішні прояви.
+         *
+         * Це не готові репліки.
+         */
+
+        for (
+            const emotion
+            of dominant
+        ) {
+
+            if (
+                emotion.value < 45
+            ) {
+                continue;
+            }
+
+
+            switch (
+                emotion.name
+            ) {
+
+                case "joy":
+
+                    result.likelyExpressions
+                        .push("пожвавлення");
+
+                    break;
+
+
+                case "sadness":
+
+                    result.likelyExpressions
+                        .push("стриманість");
+
+                    break;
+
+
+                case "anger":
+
+                    result.likelyExpressions
+                        .push("різкість");
+
+                    break;
+
+
+                case "interest":
+
+                    result.likelyExpressions
+                        .push("уважність");
+
+                    break;
+
+
+                case "curiosity":
+
+                    result.likelyExpressions
+                        .push("зацікавленість");
+
+                    break;
+
+
+                case "surprise":
+
+                    result.likelyExpressions
+                        .push("здивування");
+
+                    break;
+
+
+                case "anxiety":
+
+                    result.likelyExpressions
+                        .push("обережність");
+
+                    break;
+
+
+                case "calm":
+
+                    result.likelyExpressions
+                        .push("спокійний тон");
+
+                    break;
+
+
+                case "affection":
+
+                    result.likelyExpressions
+                        .push("тепліша реакція");
+
+                    break;
+
+
+                case "boredom":
+
+                    result.likelyExpressions
+                        .push("коротші відповіді");
+
+                    break;
+
+
+                case "embarrassment":
+
+                    result.likelyExpressions
+                        .push("ніяковіння");
+
+                    break;
+            }
+        }
+
+
+        /*
+         * Якщо емоції сильні,
+         * але виразність низька —
+         * персонаж може відчувати багато,
+         * але показувати мало.
+         */
+
+        result.restrained =
+            result.expressiveness < 45;
+
+
+        /*
+         * Прибираємо дублікати.
+
+         */
+
+        result.likelyExpressions =
+            [
+                ...new Set(
+                    result.likelyExpressions
+                )
+            ];
+
+
+        return result;
+    }
+
+
+    /* =========================================================
+       ВАЛЕНТНІСТЬ
+       ========================================================= */
+
+    getValence() {
+
+        const positive = [
+
+            "joy",
+            "pleasure",
+            "interest",
+            "curiosity",
+            "admiration",
+            "relief",
+            "trust",
+            "sympathy",
+            "affection",
+            "attachment",
+            "tenderness",
+            "gratitude",
+            "pride"
+
+        ];
+
+
+        const negative = [
+
+            "sadness",
+            "anger",
+            "fear",
+            "disgust",
+            "disappointment",
+            "offense",
+            "guilt",
+            "shame",
+            "envy",
+            "jealousy",
+            "anxiety",
+            "loneliness",
+            "boredom",
+            "distrust"
+
+        ];
+
+
+        let positiveValue = 0;
+        let negativeValue = 0;
+
+
+        for (
+            const name
+            of positive
+        ) {
+
+            positiveValue +=
+                this.get(name);
+        }
+
+
+        for (
+            const name
+            of negative
+        ) {
+
+            negativeValue +=
+                this.get(name);
+        }
+
+
+        const total =
+            positiveValue +
+            negativeValue;
+
+
+        if (total <= 0) {
+            return 0;
+        }
+
+
+        /*
+         * Результат:
+         *
+         * -100 = дуже негативно
+         *   0  = нейтрально
+         * +100 = дуже позитивно
+         */
+
+        return (
+            (
+                positiveValue -
+                negativeValue
+            ) /
+            total
+        ) * 100;
+    }
+
+
+    /* =========================================================
+       ЗБУДЖЕНІСТЬ
+       ========================================================= */
+
+    getArousal() {
+
+        const highArousal = [
+
+            "anger",
+            "fear",
+            "surprise",
+            "joy",
+            "anxiety",
+            "enthusiasm",
+            "interest",
+            "curiosity"
+
+        ];
+
+
+        const lowArousal = [
+
+            "calm",
+            "sadness",
+            "boredom",
+            "relief",
+            "sleepiness"
+
+        ];
+
+
+        let high = 0;
+        let low = 0;
+
+
+        for (
+            const name
+            of highArousal
+        ) {
+
+            high +=
+                this.get(name);
+        }
+
+
+        for (
+            const name
+            of lowArousal
+        ) {
+
+            low +=
+                this.get(name);
+        }
+
+
+        const total =
+            high + low;
+
+
+        if (total <= 0) {
+            return 50;
+        }
+
+
+        /*
+         * 0 = дуже низька збудженість
+         * 100 = дуже висока
+         */
+
+        return (
+            high /
+            total
+        ) * 100;
+    }
+
+
+    /* =========================================================
+       ПОВЕДІНКОВІ МОДИФІКАТОРИ
+       ========================================================= */
+
+    getBehaviorModifiers() {
+
+        const joy =
+            this.get("joy");
+
+        const sadness =
+            this.get("sadness");
+
+        const anger =
+            this.get("anger");
+
+        const fear =
+            this.get("fear");
+
+        const interest =
+            this.get("interest");
+
+        const curiosity =
+            this.get("curiosity");
+
+        const anxiety =
+            this.get("anxiety");
+
+        const calm =
+            this.get("calm");
+
+        const boredom =
+            this.get("boredom");
+
+        const affection =
+            this.get("affection");
+
+        const fatigue =
+            this.get("fatigue");
+
+
+        return {
+
+            /*
+             * Наскільки охоче взаємодіє.
+             */
+
+            socialActivity:
+                this.calculateModifier(
+                    joy +
+                    interest +
+                    affection +
+                    calm -
+                    anxiety -
+                    sadness
+                ),
+
+
+            /*
+             * Бажання говорити.
+             */
+
+            talkativeness:
+                this.calculateModifier(
+                    joy +
+                    interest +
+                    curiosity -
+                    sadness -
+                    boredom -
+                    fatigue
+                ),
+
+
+            /*
+             * Ініціатива.
+             */
+
+            initiative:
+                this.calculateModifier(
+                    joy +
+                    curiosity +
+                    interest -
+                    anxiety -
+                    fatigue
+                ),
+
+
+            /*
+             * Обережність.
+             */
+
+            caution:
+                this.calculateModifier(
+                    anxiety +
+                    fear +
+                    distrust
+                ),
+
+
+            /*
+             * Терпіння.
+             */
+
+            patience:
+                this.calculateModifier(
+                    calm +
+                    joy -
+                    anger -
+                    fatigue
+                ),
+
+
+            /*
+             * Потреба змінити заняття.
+             */
+
+            noveltySeeking:
+                this.calculateModifier(
+                    curiosity +
+                    boredom +
+                    interest
+                ),
+
+
+            /*
+             * Ймовірність короткої відповіді.
+             */
+
+            shortResponse:
+                this.calculateModifier(
+                    boredom +
+                    fatigue +
+                    sadness +
+                    anxiety
+                ),
+
+
+            /*
+             * Емоційна виразність.
+             */
+
+            expressiveness:
+                this.getExpressionProfile()
+                    .expressiveness
+        };
+    }
+
+
+    calculateModifier(value) {
+
+        /*
+         * Вхідні суми можуть бути >100,
+         * тому переводимо їх приблизно
+         * у діапазон -1...+1.
+         */
+
+        const normalized =
+            Math.max(
+                -100,
+                Math.min(
+                    100,
+                    Number(value) || 0
+                )
+            );
+
+
+        return normalized / 100;
+    }
+
+
+    /* =========================================================
+       ОСТАННІ ЗМІНИ
+       ========================================================= */
+
+    getRecentChanges(limit = 10) {
+
+        return this.history
+            .slice(-limit)
+            .reverse();
+    }
+
+
+    /* =========================================================
+       СКИДАННЯ ДО BASELINE
+       ========================================================= */
+
+    resetToBaseline() {
+
+        for (
+            const emotion
+            of Object.values(
+                this.emotions
+            )
+        ) {
+
+            emotion.value =
+                emotion.baseline;
+
+            emotion.source =
+                "baselineReset";
+
+            emotion.lastChanged =
+                Date.now();
+
+            emotion.duration =
+                0;
+        }
+
+
+        this.lastUpdate =
+            Date.now();
+    }
+
+
+    /* =========================================================
+       ЗБЕРЕЖЕННЯ СТАНУ
+       ========================================================= */
+
+    getSerializableState() {
+
+        return {
+
+            emotions:
+                JSON.parse(
+                    JSON.stringify(
+                        this.emotions
+                    )
+                ),
+
+            history:
+                this.history.slice(
+                    -this.maxHistory
+                ),
+
+            lastUpdate:
+                this.lastUpdate
+        };
+    }
+
+
+    /* =========================================================
+       ВІДНОВЛЕННЯ СТАНУ
+       ========================================================= */
+
+    loadState(state) {
+
+        if (!state) {
+            return;
+        }
+
+
+        if (
+            state.emotions &&
+            typeof state.emotions === "object"
+        ) {
+
+            this.emotions =
+                JSON.parse(
+                    JSON.stringify(
+                        state.emotions
+                    )
+                );
+        }
+
+
+        if (
+            Array.isArray(
+                state.history
+            )
+        ) {
+
+            this.history =
+                state.history.slice(
+                    -this.maxHistory
+                );
+        }
+
+
+        if (
+            Number.isFinite(
+                state.lastUpdate
+            )
+        ) {
+
+            this.lastUpdate =
+                state.lastUpdate;
+        }
+
+
+        this.normalizeAll();
+    }
 }
 
 
-// ============================================================
-// ЕКСПОРТ
-// ============================================================
+/*
+ * Робимо клас доступним
+ * для brain.js та інших модулів.
+ */
 
-if (
-  typeof window !== "undefined"
-) {
-
-  window.AkiraMood =
+window.AkiraMood =
     AkiraMood;
-}
