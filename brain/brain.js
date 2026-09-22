@@ -1,219 +1,213 @@
-/*
- * Akira Brain
- * Центральний рушій стану та автономної поведінки персонажа.
- *
- * brain.js НЕ:
- * - генерує текст;
- * - не містить характер Акіри;
- * - не містить конкретних реплік;
- * - не вирішує все одним "mood" числом.
- *
- * brain.js:
- * - завантажує дані;
- * - створює підсистеми;
- * - підтримує поточний стан;
- * - просуває час;
- * - оновлює потреби, емоції та пам'ять;
- * - запускає події;
- * - передає ситуацію decision.js;
- * - виконує обрану дію;
- * - зберігає стан.
- */
+// brain.js
+// Центральний координатор програмного мозку Акіри.
+// Не містить характеру, реплік або конкретних правил персонажа.
+// Працює як зв'язка між даними та окремими рушіями.
 
 class AkiraBrain {
 
-    constructor(options = {}) {
+    constructor(config = {}) {
 
-        this.options = {
-            dataPath: "data/",
-            autoStart: false,
+        this.config = {
+            dataPath: config.dataPath || "./data/",
+            saveKey: config.saveKey || "akira_brain_state_v3",
 
-            // 1 реальна секунда = 1 змодельована хвилина
-            simulationMinutesPerRealSecond: 1,
+            // 1 реальна секунда = 1 симульована хвилина.
+            // Пізніше це можна винести в world.json.
+            simulationSpeed:
+                Number(config.simulationSpeed) || 1,
 
-            tickInterval: 1000,
+            tickInterval:
+                Number(config.tickInterval) || 1000,
 
-            saveInterval: 30000,
-
-            ...options
+            autoStart:
+                config.autoStart ?? false
         };
 
         this.data = {};
 
-        this.state = {
-            initialized: false,
-            running: false,
-
-            world: {
-                date: null,
-                time: null,
-                day: null,
-                season: null,
-                location: "home"
-            },
-
-            activity: {
-                id: "idle",
-                startedAt: null,
-                duration: 0,
-                remaining: 0
-            },
-
-            energy: 80,
-            fatigue: 10,
-            socialEnergy: 65,
-            boredom: 10,
-            focus: 60,
-
-            needs: {},
-
-            emotions: {},
-
-            relationships: {},
-
-            goals: [],
-
-            currentGoal: null,
-
-            currentAction: null,
-
-            recentActions: [],
-            recentEvents: [],
-
-            conversation: {
-                active: false,
-                topic: null,
-                person: null,
-                lastInput: null,
-                lastResponse: null
-            },
-
-            situation: {
-                time: null,
-                date: null,
-                season: null,
-                weather: null,
-                location: null,
-                activity: null,
-
-                energy: 80,
-                fatigue: 10,
-                socialEnergy: 65,
-                boredom: 10,
-                focus: 60,
-
-                needs: {},
-                emotions: {},
-                relationships: {},
-
-                currentGoal: null,
-                recentAction: null,
-                recentEvent: null
-            }
-        };
+        this.state = this.createInitialState();
 
         this.memory = null;
         this.mood = null;
         this.decision = null;
         this.dialogue = null;
 
+        this.running = false;
+        this.initialized = false;
+
         this.timer = null;
-        this.saveTimer = null;
-
-        this.lastTick = null;
-        this.lastSave = null;
-
-        this.listeners = {};
-
-        this._isTicking = false;
-    }
-
-
-    /* =========================================================
-       EVENTS
-       ========================================================= */
-
-    on(eventName, callback) {
-
-        if (!this.listeners[eventName]) {
-            this.listeners[eventName] = [];
-        }
-
-        this.listeners[eventName].push(callback);
-    }
-
-
-    emit(eventName, data = null) {
-
-        const listeners = this.listeners[eventName];
-
-        if (!listeners) {
-            return;
-        }
-
-        for (const callback of listeners) {
-
-            try {
-                callback(data);
-            } catch (error) {
-                console.error(
-                    `[AkiraBrain] Event listener error: ${eventName}`,
-                    error
-                );
-            }
-        }
-    }
-
-
-    /* =========================================================
-       INITIALIZATION
-       ========================================================= */
-
-    async init() {
-
-        if (this.state.initialized) {
-            return this;
-        }
-
-        console.log("[AkiraBrain] Initializing...");
-
-        await this.loadAllData();
-
-        this.initializeWorld();
-        this.initializeState();
-        this.initializeRelationships();
-        this.initializeGoals();
-
-        this.createSystems();
-
-        this.loadSavedState();
-
-        this.syncSituation();
-
-        this.state.initialized = true;
 
         this.lastTick = Date.now();
-        this.lastSave = Date.now();
+        this.lastDecision = 0;
+        this.lastEventCheck = 0;
+        this.lastMemoryUpdate = 0;
 
-        this.emit("initialized", this);
+        this.actionHistory = [];
+        this.eventHistory = [];
+        this.dialogueHistory = [];
 
-        console.log("[AkiraBrain] Initialized.");
-
-        if (this.options.autoStart) {
-            this.start();
-        }
-
-        return this;
+        this.listeners = {};
     }
 
 
-    /* =========================================================
-       DATA LOADING
-       ========================================================= */
+    // =========================================================
+    // ПОЧАТКОВИЙ СТАН
+    // =========================================================
 
-    async loadAllData() {
+    createInitialState() {
+
+        return {
+
+            initialized: false,
+
+            // -------------------------------------------------
+            // Світ
+            // -------------------------------------------------
+
+            world: {
+                date: null,
+                time: null,
+                day: null,
+                season: null,
+                location: "home",
+                weather: null
+            },
+
+            // -------------------------------------------------
+            // Поточна дія
+            // -------------------------------------------------
+
+            activity: "idle",
+
+            action: null,
+
+            actionStartedAt: null,
+
+            actionEndsAt: null,
+
+            // -------------------------------------------------
+            // Фізичний стан
+            // -------------------------------------------------
+
+            energy: 80,
+
+            fatigue: 20,
+
+            focus: 70,
+
+            physicalComfort: 70,
+
+            // -------------------------------------------------
+            // Соціальний стан
+            // -------------------------------------------------
+
+            socialEnergy: 60,
+
+            socialNeed: 45,
+
+            availability: "available",
+
+            currentPerson: null,
+
+            // -------------------------------------------------
+            // Поведінковий стан
+            // -------------------------------------------------
+
+            boredom: 20,
+
+            curiosity: 65,
+
+            initiative: 55,
+
+            // -------------------------------------------------
+            // Емоції
+            // -------------------------------------------------
+
+            emotions: {},
+
+            // -------------------------------------------------
+            // Потреби
+            // -------------------------------------------------
+
+            needs: {},
+
+            // -------------------------------------------------
+            // Цілі
+            // -------------------------------------------------
+
+            goals: {
+                active: [],
+                current: null
+            },
+
+            // -------------------------------------------------
+            // Стосунки
+            // -------------------------------------------------
+
+            relationships: {},
+
+            // -------------------------------------------------
+            // Розмова
+            // -------------------------------------------------
+
+            conversation: {
+
+                active: false,
+
+                personId: null,
+
+                topic: null,
+
+                topics: [],
+
+                lastInput: null,
+
+                lastResponse: null,
+
+                startedAt: null,
+
+                lastInteractionAt: null
+            },
+
+            // -------------------------------------------------
+            // Події
+            // -------------------------------------------------
+
+            recentEvents: [],
+
+            currentEvent: null,
+
+            // -------------------------------------------------
+            // Останні дії
+            // -------------------------------------------------
+
+            recentActions: [],
+
+            // -------------------------------------------------
+            // Поточна ситуація
+            // -------------------------------------------------
+
+            situation: {},
+
+            // -------------------------------------------------
+            // Службове
+            // -------------------------------------------------
+
+            lastUpdate: null,
+
+            version: 3
+        };
+    }
+
+
+    // =========================================================
+    // ЗАВАНТАЖЕННЯ ДАНИХ
+    // =========================================================
+
+    async loadData() {
 
         const files = [
+
             "character",
             "personality",
             "interests",
@@ -240,649 +234,616 @@ class AkiraBrain {
             "dialogue_templates"
         ];
 
-        const results = await Promise.all(
-            files.map(async (name) => {
+        const results = {};
 
-                const url = `${this.options.dataPath}${name}.json`;
+        for (const file of files) {
 
-                try {
+            try {
 
-                    const response = await fetch(url, {
-                        cache: "no-cache"
-                    });
-
-                    if (!response.ok) {
-                        throw new Error(
-                            `HTTP ${response.status}: ${url}`
-                        );
-                    }
-
-                    const data = await response.json();
-
-                    return {
-                        name,
-                        data
-                    };
-
-                } catch (error) {
-
-                    console.error(
-                        `[AkiraBrain] Failed to load ${url}`,
-                        error
+                const response =
+                    await fetch(
+                        `${this.config.dataPath}${file}.json`
                     );
 
-                    return {
-                        name,
-                        data: null,
-                        error
-                    };
+                if (!response.ok) {
+                    throw new Error(
+                        `${response.status} ${response.statusText}`
+                    );
                 }
-            })
-        );
 
-        for (const result of results) {
+                results[file] =
+                    await response.json();
 
-            this.data[result.name] = result.data;
+            } catch (error) {
 
-            if (result.error) {
                 console.warn(
-                    `[AkiraBrain] Data unavailable: ${result.name}`
+                    `Не вдалося завантажити ${file}.json`,
+                    error
                 );
+
+                results[file] = {};
             }
         }
+
+        this.data = results;
+
+        return this.data;
     }
 
 
-    /* =========================================================
-       WORLD
-       ========================================================= */
+    // =========================================================
+    // ІНІЦІАЛІЗАЦІЯ
+    // =========================================================
+
+    async init() {
+
+        if (this.initialized) {
+            return this;
+        }
+
+        await this.loadData();
+
+        this.initializeWorld();
+        this.initializeRelationships();
+        this.initializeNeeds();
+        this.initializeGoals();
+
+        this.initializeMemory();
+        this.initializeMood();
+        this.initializeDecision();
+        this.initializeDialogue();
+
+        this.loadSavedState();
+
+        this.state.initialized = true;
+        this.initialized = true;
+
+        this.lastTick = Date.now();
+
+        this.emit("initialized", this.state);
+
+        if (this.config.autoStart) {
+            this.start();
+        }
+
+        return this;
+    }
+
+
+    // =========================================================
+    // ПОЧАТКОВИЙ СВІТ
+    // =========================================================
 
     initializeWorld() {
-
-        const world = this.data.world || {};
-
-        const current =
-            world.current ||
-            world.timeState ||
-            world.simulation ||
-            {};
-
-        this.state.world.date =
-            current.date ||
-            world.currentDate ||
-            "2026-09-22";
-
-        this.state.world.time =
-            current.time ||
-            world.currentTime ||
-            "16:00";
-
-        this.state.world.day =
-            current.day ||
-            current.weekday ||
-            world.currentDay ||
-            "Tuesday";
-
-        this.state.world.season =
-            current.season ||
-            world.currentSeason ||
-            "autumn";
-
-        this.state.world.location =
-            current.location ||
-            world.currentLocation ||
-            "home";
-    }
-
-
-    getWorldTime() {
-        return this.state.world.time;
-    }
-
-
-    getWorldDate() {
-        return this.state.world.date;
-    }
-
-
-    getCurrentTimestamp() {
-
-        return {
-            date: this.state.world.date,
-            time: this.state.world.time
-        };
-    }
-
-
-    /* =========================================================
-       STATE INITIALIZATION
-       ========================================================= */
-
-    initializeState() {
-
-        const stateData =
-            this.data.states?.current ||
-            this.data.states?.initial ||
-            {};
-
-        const needsData =
-            this.data.needs?.current ||
-            this.data.needs?.baseline ||
-            this.data.needs ||
-            {};
-
-        const emotionsData =
-            this.data.emotions?.current ||
-            this.data.emotions?.baseline ||
-            this.data.emotions?.initial ||
-            {};
-
-        this.state.energy =
-            stateData.energy ??
-            needsData.energy ??
-            80;
-
-        this.state.fatigue =
-            stateData.fatigue ??
-            10;
-
-        this.state.socialEnergy =
-            stateData.socialEnergy ??
-            65;
-
-        this.state.boredom =
-            stateData.boredom ??
-            10;
-
-        this.state.focus =
-            stateData.focus ??
-            60;
-
-        this.state.needs =
-            this.extractNumericObject(needsData);
-
-        this.state.emotions =
-            this.extractNumericObject(emotionsData);
-    }
-
-
-    extractNumericObject(source) {
-
-        const result = {};
-
-        if (!source || typeof source !== "object") {
-            return result;
-        }
-
-        for (const [key, value] of Object.entries(source)) {
-
-            if (typeof value === "number") {
-                result[key] = value;
-                continue;
-            }
-
-            if (
-                value &&
-                typeof value === "object" &&
-                typeof value.value === "number"
-            ) {
-                result[key] = value.value;
-            }
-        }
-
-        return result;
-    }
-
-
-    /* =========================================================
-       RELATIONSHIPS
-       ========================================================= */
-
-    initializeRelationships() {
-
-        const people = this.data.people;
-
-        if (!people) {
-            return;
-        }
-
-        const source =
-            people.people ||
-            people.characters ||
-            people.relationships ||
-            people;
-
-        if (!source || typeof source !== "object") {
-            return;
-        }
-
-        for (const [id, person] of Object.entries(source)) {
-
-            if (!person || typeof person !== "object") {
-                continue;
-            }
-
-            this.state.relationships[id] = {
-                id,
-
-                name:
-                    person.name ||
-                    person.fullName ||
-                    id,
-
-                type:
-                    person.relationship?.type ||
-                    person.relationshipType ||
-                    person.type ||
-                    "acquaintance",
-
-                closeness:
-                    this.getNumber(
-                        person.relationship?.closeness,
-                        person.closeness,
-                        0
-                    ),
-
-                trust:
-                    this.getNumber(
-                        person.relationship?.trust,
-                        person.trust,
-                        0
-                    ),
-
-                respect:
-                    this.getNumber(
-                        person.relationship?.respect,
-                        person.respect,
-                        0
-                    ),
-
-                liking:
-                    this.getNumber(
-                        person.relationship?.liking,
-                        person.liking,
-                        0
-                    ),
-
-                affection:
-                    this.getNumber(
-                        person.relationship?.affection,
-                        person.affection,
-                        0
-                    ),
-
-                attraction:
-                    this.getNumber(
-                        person.relationship?.attraction,
-                        person.attraction,
-                        0
-                    ),
-
-                jealousy:
-                    this.getNumber(
-                        person.relationship?.jealousy,
-                        person.jealousy,
-                        0
-                    ),
-
-                irritation:
-                    this.getNumber(
-                        person.relationship?.irritation,
-                        person.irritation,
-                        0
-                    ),
-
-                desireForContact:
-                    this.getNumber(
-                        person.relationship?.desireForContact,
-                        person.desireForContact,
-                        0
-                    ),
-
-                desireToKnowMore:
-                    this.getNumber(
-                        person.relationship?.desireToKnowMore,
-                        person.desireToKnowMore,
-                        0
-                    )
-            };
-        }
-    }
-
-
-    /* =========================================================
-       GOALS
-       ========================================================= */
-
-    initializeGoals() {
-
-        const goals = this.data.goals;
-
-        if (!goals) {
-            return;
-        }
-
-        const source =
-            goals.active ||
-            goals.current ||
-            goals.goals ||
-            [];
-
-        if (Array.isArray(source)) {
-
-            this.state.goals = source.map(goal => ({
-                ...goal
-            }));
-
-        } else if (typeof source === "object") {
-
-            this.state.goals = Object.entries(source)
-                .map(([id, goal]) => ({
-                    id,
-                    ...goal
-                }));
-        }
-
-        this.updateCurrentGoal();
-    }
-
-
-    updateCurrentGoal() {
-
-        if (!Array.isArray(this.state.goals)) {
-            this.state.currentGoal = null;
-            return;
-        }
-
-        const active = this.state.goals
-            .filter(goal => {
-                if (goal.active === false) {
-                    return false;
-                }
-
-                if (goal.completed === true) {
-                    return false;
-                }
-
-                return true;
-            })
-            .sort((a, b) => {
-
-                const scoreA =
-                    this.goalPriority(a);
-
-                const scoreB =
-                    this.goalPriority(b);
-
-                return scoreB - scoreA;
-            });
-
-        this.state.currentGoal =
-            active.length > 0
-                ? active[0]
-                : null;
-    }
-
-
-    goalPriority(goal) {
-
-        if (!goal) {
-            return 0;
-        }
-
-        return (
-            (Number(goal.importance) || 0) * 0.35 +
-            (Number(goal.urgency) || 0) * 0.30 +
-            (Number(goal.motivation) || 0) * 0.20 +
-            (Number(goal.emotionalValue) || 0) * 0.15
-        );
-    }
-
-
-    /* =========================================================
-       SYSTEMS
-       ========================================================= */
-
-    createSystems() {
-
-        if (
-            window.AkiraMemory &&
-            !this.memory
-        ) {
-            this.memory =
-                new window.AkiraMemory(this);
-
-            if (typeof this.memory.init === "function") {
-                this.memory.init();
-            }
-        }
-
-
-        if (
-            window.AkiraMood &&
-            !this.mood
-        ) {
-            this.mood =
-                new window.AkiraMood(this);
-
-            if (typeof this.mood.init === "function") {
-                this.mood.init();
-            }
-        }
-
-
-        if (
-            window.AkiraDecision &&
-            !this.decision
-        ) {
-            this.decision =
-                new window.AkiraDecision(this);
-
-            if (typeof this.decision.init === "function") {
-                this.decision.init();
-            }
-        }
-
-
-        if (
-            window.AkiraDialogue &&
-            !this.dialogue
-        ) {
-            this.dialogue =
-                new window.AkiraDialogue(this);
-        }
-
-
-        if (!this.memory) {
-            console.warn(
-                "[AkiraBrain] memory.js is not loaded."
-            );
-        }
-
-        if (!this.mood) {
-            console.warn(
-                "[AkiraBrain] mood.js is not loaded."
-            );
-        }
-
-        if (!this.decision) {
-            console.warn(
-                "[AkiraBrain] decision.js is not loaded."
-            );
-        }
-
-        if (!this.dialogue) {
-            console.warn(
-                "[AkiraBrain] dialogue.js is not loaded."
-            );
-        }
-    }
-
-
-    /* =========================================================
-       SIMULATION CLOCK
-       ========================================================= */
-
-    advanceTime(minutes) {
-
-        if (!Number.isFinite(minutes) || minutes <= 0) {
-            return;
-        }
-
-        let totalMinutes =
-            this.timeToMinutes(
-                this.state.world.time
-            );
-
-        totalMinutes += minutes;
-
-        let daysPassed = 0;
-
-        while (totalMinutes >= 1440) {
-            totalMinutes -= 1440;
-            daysPassed++;
-        }
-
-        this.state.world.time =
-            this.minutesToTime(totalMinutes);
-
-        if (daysPassed > 0) {
-            this.advanceDate(daysPassed);
-        }
-
-        this.updateDayName();
-    }
-
-
-    timeToMinutes(time) {
-
-        if (typeof time !== "string") {
-            return 0;
-        }
-
-        const parts = time.split(":");
-
-        if (parts.length < 2) {
-            return 0;
-        }
-
-        const hours =
-            Number(parts[0]) || 0;
-
-        const minutes =
-            Number(parts[1]) || 0;
-
-        return (
-            Math.max(0, Math.min(23, hours)) * 60 +
-            Math.max(0, Math.min(59, minutes))
-        );
-    }
-
-
-    minutesToTime(minutes) {
-
-        minutes =
-            Math.max(
-                0,
-                Math.min(1439, Math.floor(minutes))
-            );
-
-        const hours =
-            Math.floor(minutes / 60);
-
-        const mins =
-            minutes % 60;
-
-        return `${String(hours).padStart(2, "0")}:${String(mins).padStart(2, "0")}`;
-    }
-
-
-    advanceDate(days) {
-
-        if (!this.state.world.date) {
-            return;
-        }
-
-        const date =
-            new Date(
-                `${this.state.world.date}T00:00:00`
-            );
-
-        if (Number.isNaN(date.getTime())) {
-            return;
-        }
-
-        date.setDate(
-            date.getDate() + days
-        );
-
-        this.state.world.date =
-            date.toISOString().slice(0, 10);
-    }
-
-
-    updateDayName() {
-
-        const date =
-            new Date(
-                `${this.state.world.date}T00:00:00`
-            );
-
-        if (Number.isNaN(date.getTime())) {
-            return;
-        }
-
-        const names = [
-            "Sunday",
-            "Monday",
-            "Tuesday",
-            "Wednesday",
-            "Thursday",
-            "Friday",
-            "Saturday"
-        ];
-
-        this.state.world.day =
-            names[date.getDay()];
-    }
-
-
-    /* =========================================================
-       WORLD UPDATE
-       ========================================================= */
-
-    updateWorld(minutes) {
-
-        this.advanceTime(minutes);
 
         const world =
             this.data.world || {};
 
         const current =
             world.current ||
-            world.simulation ||
+            world.time ||
             {};
 
-        if (current.season) {
-            this.state.world.season =
-                current.season;
+        this.state.world = {
+
+            date:
+                current.date ||
+                world.date ||
+                this.getToday(),
+
+            time:
+                current.time ||
+                world.time ||
+                "16:00",
+
+            day:
+                current.day ||
+                world.day ||
+                this.getDayName(),
+
+            season:
+                current.season ||
+                world.season ||
+                "autumn",
+
+            location:
+                current.location ||
+                world.location ||
+                "home",
+
+            weather:
+                this.data.weather?.current ||
+                null
+        };
+    }
+
+
+    // =========================================================
+    // СТОСУНКИ
+    // =========================================================
+
+    initializeRelationships() {
+
+        const people =
+            this.data.people || {};
+
+        const source =
+            people.people ||
+            people.characters ||
+            people;
+
+        const relationships = {};
+
+        for (
+            const [personId, person]
+            of Object.entries(source)
+        ) {
+
+            if (!person || typeof person !== "object") {
+                continue;
+            }
+
+            relationships[personId] = {
+
+                type:
+                    person.relationship?.type ||
+                    person.type ||
+                    "acquaintance",
+
+                closeness:
+                    this.number(
+                        person.relationship?.closeness ??
+                        person.closeness,
+                        0
+                    ),
+
+                trust:
+                    this.number(
+                        person.relationship?.trust ??
+                        person.trust,
+                        0
+                    ),
+
+                respect:
+                    this.number(
+                        person.relationship?.respect ??
+                        person.respect,
+                        0
+                    ),
+
+                liking:
+                    this.number(
+                        person.relationship?.liking ??
+                        person.liking,
+                        0
+                    ),
+
+                affection:
+                    this.number(
+                        person.relationship?.affection ??
+                        person.affection,
+                        0
+                    ),
+
+                attraction:
+                    this.number(
+                        person.relationship?.attraction ??
+                        person.attraction,
+                        0
+                    ),
+
+                familiarity:
+                    this.number(
+                        person.relationship?.familiarity ??
+                        person.familiarity,
+                        0
+                    ),
+
+                interestInLife:
+                    this.number(
+                        person.relationship?.interestInLife,
+                        0
+                    ),
+
+                desireForContact:
+                    this.number(
+                        person.relationship?.desireForContact,
+                        0
+                    ),
+
+                desireToKnowMore:
+                    this.number(
+                        person.relationship?.desireToKnowMore,
+                        0
+                    )
+            };
         }
 
-        if (current.location) {
-            this.state.world.location =
-                current.location;
+        this.state.relationships = relationships;
+    }
+
+
+    // =========================================================
+    // ПОТРЕБИ
+    // =========================================================
+
+    initializeNeeds() {
+
+        const needs =
+            this.data.needs || {};
+
+        const source =
+            needs.current ||
+            needs.needs ||
+            needs;
+
+        const result = {};
+
+        for (
+            const [name, value]
+            of Object.entries(source)
+        ) {
+
+            if (
+                typeof value === "number"
+            ) {
+
+                result[name] =
+                    this.clamp(value);
+
+            } else if (
+                value &&
+                typeof value === "object"
+            ) {
+
+                result[name] =
+                    this.clamp(
+                        this.number(
+                            value.value ??
+                            value.current ??
+                            value.level,
+                            50
+                        )
+                    );
+            }
+        }
+
+        this.state.needs = result;
+    }
+
+
+    // =========================================================
+    // ЦІЛІ
+    // =========================================================
+
+    initializeGoals() {
+
+        const goals =
+            this.data.goals || {};
+
+        const source =
+            goals.active ||
+            goals.goals ||
+            [];
+
+        if (Array.isArray(source)) {
+
+            this.state.goals.active =
+                source.map(goal =>
+                    ({ ...goal })
+                );
+
+        } else {
+
+            this.state.goals.active =
+                Object.entries(source)
+                    .map(([id, goal]) => ({
+                        id,
+                        ...goal
+                    }));
+        }
+
+        this.state.goals.current =
+            this.state.goals.active[0] || null;
+    }
+
+
+    // =========================================================
+    // МОДУЛІ
+    // =========================================================
+
+    initializeMemory() {
+
+        if (
+            typeof window.AkiraMemory !==
+            "function"
+        ) {
+            console.warn(
+                "AkiraMemory ще не підключений."
+            );
+            return;
+        }
+
+        this.memory =
+            new window.AkiraMemory(this);
+
+        this.memory.init?.();
+    }
+
+
+    initializeMood() {
+
+        if (
+            typeof window.AkiraMood !==
+            "function"
+        ) {
+            console.warn(
+                "AkiraMood ще не підключений."
+            );
+            return;
+        }
+
+        this.mood =
+            new window.AkiraMood(this);
+
+        this.mood.init?.();
+    }
+
+
+    initializeDecision() {
+
+        if (
+            typeof window.AkiraDecision !==
+            "function"
+        ) {
+            console.warn(
+                "AkiraDecision ще не підключений."
+            );
+            return;
+        }
+
+        this.decision =
+            new window.AkiraDecision(this);
+
+        this.decision.init?.();
+    }
+
+
+    initializeDialogue() {
+
+        if (
+            typeof window.AkiraDialogue !==
+            "function"
+        ) {
+            console.warn(
+                "AkiraDialogue ще не підключений."
+            );
+            return;
+        }
+
+        this.dialogue =
+            new window.AkiraDialogue(this);
+    }
+
+
+    // =========================================================
+    // ЗАПУСК
+    // =========================================================
+
+    start() {
+
+        if (this.running) {
+            return;
+        }
+
+        if (!this.initialized) {
+
+            console.warn(
+                "Спочатку потрібно виконати brain.init()."
+            );
+
+            return;
+        }
+
+        this.running = true;
+
+        this.lastTick = Date.now();
+
+        this.timer =
+            setInterval(
+                () => this.tick(),
+                this.config.tickInterval
+            );
+
+        this.emit("started");
+    }
+
+
+    stop() {
+
+        if (this.timer) {
+            clearInterval(this.timer);
+            this.timer = null;
+        }
+
+        this.running = false;
+
+        this.emit("stopped");
+    }
+
+
+    // =========================================================
+    // ГОЛОВНИЙ ТАКТ
+    // =========================================================
+
+    tick() {
+
+        if (!this.initialized) {
+            return;
+        }
+
+        const now = Date.now();
+
+        const elapsedRealSeconds =
+            Math.max(
+                0,
+                (now - this.lastTick) / 1000
+            );
+
+        this.lastTick = now;
+
+        const simulatedMinutes =
+            elapsedRealSeconds *
+            this.config.simulationSpeed;
+
+        this.advanceWorld(
+            simulatedMinutes
+        );
+
+        this.updateNeeds(
+            simulatedMinutes
+        );
+
+        this.updateMood(
+            simulatedMinutes
+        );
+
+        this.updateMemory(
+            simulatedMinutes
+        );
+
+        this.processEvents(
+            simulatedMinutes
+        );
+
+        this.updateAction(
+            simulatedMinutes
+        );
+
+        this.evaluateSituation();
+
+        this.considerAutonomousDecision();
+
+        this.state.lastUpdate =
+            Date.now();
+
+        this.emit(
+            "tick",
+            this.getPublicState()
+        );
+    }
+
+
+    // =========================================================
+    // ЧАС
+    // =========================================================
+
+    advanceWorld(minutes) {
+
+        if (!Number.isFinite(minutes)) {
+            return;
+        }
+
+        const world =
+            this.state.world;
+
+        if (!world.time) {
+            world.time = "00:00";
+        }
+
+        let [hours, mins] =
+            world.time
+                .split(":")
+                .map(Number);
+
+        mins += minutes;
+
+        while (mins >= 60) {
+            mins -= 60;
+            hours++;
+        }
+
+        while (hours >= 24) {
+            hours -= 24;
+            this.advanceCalendarDay();
+        }
+
+        world.time =
+            `${String(
+                Math.floor(hours)
+            ).padStart(2, "0")}:${
+                String(
+                    Math.floor(mins)
+                ).padStart(2, "0")
+            }`;
+    }
+
+
+    advanceCalendarDay() {
+
+        const date =
+            new Date(
+                this.state.world.date ||
+                this.getToday()
+            );
+
+        date.setDate(
+            date.getDate() + 1
+        );
+
+        this.state.world.date =
+            date.toISOString()
+                .slice(0, 10);
+
+        this.state.world.day =
+            date.toLocaleDateString(
+                "en-US",
+                { weekday: "long" }
+            );
+
+        this.updateSeason(date);
+    }
+
+
+    updateSeason(date) {
+
+        const month =
+            date.getMonth() + 1;
+
+        if (
+            month === 12 ||
+            month <= 2
+        ) {
+            this.state.world.season =
+                "winter";
+
+        } else if (
+            month <= 5
+        ) {
+            this.state.world.season =
+                "spring";
+
+        } else if (
+            month <= 8
+        ) {
+            this.state.world.season =
+                "summer";
+
+        } else {
+            this.state.world.season =
+                "autumn";
         }
     }
 
 
-    /* =========================================================
-       NEEDS
-       ========================================================= */
+    // =========================================================
+    // ПОТРЕБИ
+    // =========================================================
 
     updateNeeds(minutes) {
 
         if (!this.state.needs) {
-            this.state.needs = {};
+            return;
         }
 
         const needsData =
@@ -896,166 +857,65 @@ class AkiraBrain {
         const hours =
             minutes / 60;
 
-        for (const [need, value] of Object.entries(drift)) {
+        for (
+            const [need, value]
+            of Object.entries(
+                this.state.needs
+            )
+        ) {
 
-            if (typeof value !== "number") {
+            const rate =
+                this.number(
+                    drift[need],
+                    0
+                );
+
+            if (!rate) {
                 continue;
             }
 
-            if (
-                typeof this.state.needs[need] !== "number"
-            ) {
-                this.state.needs[need] = 50;
-            }
-
-            this.state.needs[need] +=
-                value * hours;
-
             this.state.needs[need] =
                 this.clamp(
-                    this.state.needs[need],
-                    0,
-                    100
+                    value + rate * hours
                 );
         }
-
-
-        /*
-         * Основні фізичні показники.
-         * Це не заміна needs.js — лише місток
-         * між симуляцією часу та станом brain.
-         */
-
-        const sleep =
-            this.getNeed("sleep", 80);
-
-        const hunger =
-            this.getNeed("hunger", 20);
-
-        const thirst =
-            this.getNeed("thirst", 20);
-
-        if (sleep < 40) {
-            this.state.fatigue +=
-                minutes * 0.04;
-        }
-
-        if (sleep < 20) {
-            this.state.fatigue +=
-                minutes * 0.08;
-        }
-
-        if (hunger > 70) {
-            this.state.energy -=
-                minutes * 0.015;
-        }
-
-        if (thirst > 70) {
-            this.state.energy -=
-                minutes * 0.02;
-        }
-
-        this.state.fatigue =
-            this.clamp(
-                this.state.fatigue,
-                0,
-                100
-            );
-
-        this.state.energy =
-            this.clamp(
-                this.state.energy,
-                0,
-                100
-            );
     }
 
 
-    getNeed(name, fallback = 50) {
+    // =========================================================
+    // ЕМОЦІЇ
+    // =========================================================
 
-        const value =
-            this.state.needs?.[name];
-
-        return typeof value === "number"
-            ? value
-            : fallback;
-    }
-
-
-    /* =========================================================
-       EMOTIONS
-       ========================================================= */
-
-    updateEmotions(minutes) {
+    updateMood(minutes) {
 
         if (!this.mood) {
             return;
         }
 
-        /*
-         * Уся логіка поточних емоцій знаходиться
-         * в mood.js.
-         *
-         * brain.js лише передає час.
-         */
+        if (
+            typeof this.mood.update ===
+            "function"
+        ) {
 
-        try {
-
-            if (typeof this.mood.update === "function") {
-                this.mood.update(minutes);
-            }
-
-        } catch (error) {
-
-            console.error(
-                "[AkiraBrain] Mood update failed:",
-                error
-            );
+            this.mood.update({
+                minutes,
+                state: this.state,
+                world: this.state.world
+            });
         }
 
-
-        this.syncEmotionState();
-    }
-
-
-    syncEmotionState() {
-
-        if (!this.mood) {
-            return;
-        }
-
-        try {
-
-            if (
-                typeof this.mood.getState === "function"
-            ) {
-
-                const state =
-                    this.mood.getState();
-
-                if (state && typeof state === "object") {
-
-                    this.state.emotions =
-                        this.extractNumericObject(
-                            state.emotions ||
-                            state
-                        );
-                }
-            }
-
-        } catch (error) {
-
-            console.warn(
-                "[AkiraBrain] Could not sync mood state.",
-                error
-            );
+        if (
+            typeof this.mood.syncToBrain ===
+            "function"
+        ) {
+            this.mood.syncToBrain();
         }
     }
 
 
-    /* =========================================================
-       MEMORY
-       ========================================================= */
+    // =========================================================
+    // ПАМ'ЯТЬ
+    // =========================================================
 
     updateMemory(minutes) {
 
@@ -1063,41 +923,23 @@ class AkiraBrain {
             return;
         }
 
-        try {
+        if (
+            typeof this.memory.update ===
+            "function"
+        ) {
 
-            if (
-                typeof this.memory.update === "function"
-            ) {
-                this.memory.update(
-                    minutes / 60
-                );
-            }
-
-        } catch (error) {
-
-            console.error(
-                "[AkiraBrain] Memory update failed:",
-                error
+            this.memory.update(
+                minutes / 60
             );
         }
     }
 
 
-    /* =========================================================
-       EVENTS
-       ========================================================= */
+    // =========================================================
+    // ПОДІЇ
+    // =========================================================
 
-    processEvents() {
-
-        /*
-         * events.js ще немає окремим модулем.
-         * Тому зараз brain тільки читає
-         * зовнішні/заплановані події, якщо вони
-         * описані у world/events.json.
-         *
-         * Окремий Event Engine краще підключити
-         * пізніше, не роздуваючи brain.js.
-         */
+    processEvents(minutes) {
 
         const events =
             this.data.events;
@@ -1106,743 +948,111 @@ class AkiraBrain {
             return;
         }
 
-        const currentTime =
-            this.timeToMinutes(
-                this.state.world.time
-            );
+        const now =
+            Date.now();
 
-        const scheduled =
-            events.scheduled ||
-            events.current ||
-            [];
-
-        if (!Array.isArray(scheduled)) {
+        // Не перевіряємо події буквально
+        // на кожній мілісекунді.
+        if (
+            now - this.lastEventCheck <
+            5000
+        ) {
             return;
         }
 
-        for (const event of scheduled) {
+        this.lastEventCheck = now;
 
-            if (!event || !event.time) {
-                continue;
-            }
+        const generator =
+            events.generate ||
+            events.generation ||
+            null;
 
-            const eventTime =
-                this.timeToMinutes(
-                    event.time
-                );
-
-            if (
-                Math.abs(
-                    eventTime - currentTime
-                ) < 1
-            ) {
-
-                this.recordEvent(event);
-            }
-        }
-    }
-
-
-    recordEvent(event) {
-
-        if (!event) {
+        if (!generator) {
             return;
         }
 
-        const entry = {
-            id:
-                event.id ||
-                `event_${Date.now()}`,
-
-            type:
-                event.type ||
-                "world",
-
-            title:
-                event.title ||
-                event.name ||
-                null,
-
-            timestamp:
-                this.getCurrentTimestamp(),
-
-            data: event
-        };
-
-        this.state.recentEvents.unshift(
-            entry
-        );
-
-        this.state.recentEvents =
-            this.state.recentEvents.slice(
-                0,
-                30
-            );
-
+        // Поки що це лише підготовчий шар.
+        // Реальний генератор подій буде окремим.
         this.emit(
-            "event",
-            entry
-        );
-
-
-        if (this.mood) {
-
-            try {
-
-                if (
-                    typeof this.mood.reactToEvent ===
-                    "function"
-                ) {
-                    this.mood.reactToEvent(
-                        event
-                    );
-                }
-
-            } catch (error) {
-
-                console.warn(
-                    "[AkiraBrain] Event emotion reaction failed.",
-                    error
-                );
+            "eventCheck",
+            {
+                minutes,
+                generator
             }
-        }
-
-
-        if (this.memory) {
-
-            try {
-
-                if (
-                    typeof this.memory.recordMemoryEvent ===
-                    "function"
-                ) {
-                    this.memory.recordMemoryEvent(
-                        event
-                    );
-                }
-
-            } catch (error) {
-
-                console.warn(
-                    "[AkiraBrain] Event memory recording failed.",
-                    error
-                );
-            }
-        }
-    }
-
-
-    /* =========================================================
-       SITUATION
-       ========================================================= */
-
-    syncSituation() {
-
-        this.updateCurrentGoal();
-
-        this.state.situation = {
-
-            time:
-                this.state.world.time,
-
-            date:
-                this.state.world.date,
-
-            season:
-                this.state.world.season,
-
-            day:
-                this.state.world.day,
-
-            weather:
-                this.getCurrentWeather(),
-
-            location:
-                this.state.world.location,
-
-            activity:
-                this.state.activity.id,
-
-            energy:
-                this.state.energy,
-
-            fatigue:
-                this.state.fatigue,
-
-            socialEnergy:
-                this.state.socialEnergy,
-
-            boredom:
-                this.state.boredom,
-
-            focus:
-                this.state.focus,
-
-            needs:
-                {
-                    ...this.state.needs
-                },
-
-            emotions:
-                {
-                    ...this.state.emotions
-                },
-
-            relationships:
-                this.state.relationships,
-
-            currentGoal:
-                this.state.currentGoal,
-
-            recentAction:
-                this.state.recentActions[0] ||
-                null,
-
-            recentEvent:
-                this.state.recentEvents[0] ||
-                null
-        };
-    }
-
-
-    evaluateSituation() {
-
-        this.syncSituation();
-
-        return {
-            ...this.state.situation
-        };
-    }
-
-
-    getCurrentWeather() {
-
-        const weather =
-            this.data.weather;
-
-        if (!weather) {
-            return null;
-        }
-
-        return (
-            weather.current ||
-            weather.state ||
-            weather
         );
     }
 
 
-    /* =========================================================
-       DECISION
-       ========================================================= */
+    // =========================================================
+    // ПОТОЧНА ДІЯ
+    // =========================================================
 
-    decide(context = {}) {
+    updateAction(minutes) {
 
-        if (!this.decision) {
-            console.warn(
-                "[AkiraBrain] Decision system unavailable."
-            );
-
-            return null;
-        }
-
-        const situation =
-            this.evaluateSituation();
-
-        const decisionContext = {
-            ...situation,
-            ...context
-        };
-
-        try {
-
-            const result =
-                this.decision.decide(
-                    decisionContext
-                );
-
-            if (result) {
-                this.state.currentAction =
-                    result;
-            }
-
-            return result;
-
-        } catch (error) {
-
-            console.error(
-                "[AkiraBrain] Decision failed:",
-                error
-            );
-
-            return null;
-        }
-    }
-
-
-    /* =========================================================
-       ACTION EXECUTION
-       ========================================================= */
-
-    executeAction(action) {
+        const action =
+            this.state.action;
 
         if (!action) {
-            return null;
+            return;
         }
 
-        const actionId =
-            action.actionId ||
-            action.id ||
-            action.type ||
-            "doNothing";
+        if (
+            action.endsAt &&
+            Date.now() >= action.endsAt
+        ) {
 
-        const duration =
-            Number(action.duration) ||
-            5;
+            this.finishAction();
+
+            return;
+        }
+
+        // Поступове виснаження/відновлення
+        // залишаємо decision/activity logic,
+        // а brain лише координує.
+    }
 
 
-        const startedAt =
-            this.getCurrentTimestamp();
+    finishAction() {
 
+        const action =
+            this.state.action;
 
-        this.state.currentAction = {
+        if (!action) {
+            return;
+        }
+
+        this.actionHistory.push({
             ...action,
-
-            actionId,
-
-            startedAt,
-
-            duration,
-
-            remaining: duration
-        };
-
-
-        this.state.activity = {
-            id: actionId,
-
-            startedAt,
-
-            duration,
-
-            remaining: duration
-        };
-
-
-        this.applyActionEffects(
-            actionId,
-            action,
-            duration
-        );
-
-
-        this.state.recentActions.unshift({
-
-            actionId,
-
-            timestamp:
-                startedAt,
-
-            duration,
-
-            targetPerson:
-                action.targetPerson ||
-                null,
-
-            reason:
-                action.reason ||
-                null
+            finishedAt: Date.now()
         });
 
-
-        this.state.recentActions =
-            this.state.recentActions.slice(
-                0,
-                30
-            );
-
-
-        this.emit(
-            "action",
-            this.state.currentAction
-        );
-
-
-        return this.state.currentAction;
-    }
-
-
-    applyActionEffects(
-        actionId,
-        action,
-        duration
-    ) {
-
-        const minutes =
-            Math.max(
-                1,
-                Number(duration) || 1
-            );
-
-
-        /*
-         * Базові фізичні ефекти.
-         *
-         * Детальні ефекти діяльностей мають
-         * залишатися в activities.json.
-         */
-
-        const activity =
-            this.findActivity(actionId);
-
-
-        if (activity) {
-
-            const effects =
-                activity.effects ||
-                activity.stateEffects ||
-                {};
-
-
-            this.applyNumericEffects(
-                effects,
-                minutes
-            );
+        if (
+            this.actionHistory.length >
+            50
+        ) {
+            this.actionHistory.shift();
         }
 
-
-        /*
-         * Загальні fallback-ефекти.
-         */
-
-        switch (actionId) {
-
-            case "sleep":
-
-                this.state.energy +=
-                    minutes * 0.7;
-
-                this.state.fatigue -=
-                    minutes * 0.8;
-
-                this.setNeedDelta(
-                    "sleep",
-                    -minutes * 0.8
-                );
-
-                break;
-
-
-            case "eat":
-
-                this.state.energy +=
-                    minutes * 0.3;
-
-                this.setNeedDelta(
-                    "hunger",
-                    -minutes * 1.2
-                );
-
-                break;
-
-
-            case "drink":
-
-                this.setNeedDelta(
-                    "thirst",
-                    -minutes * 1.5
-                );
-
-                break;
-
-
-            case "rest":
-
-                this.state.fatigue -=
-                    minutes * 0.4;
-
-                this.state.energy +=
-                    minutes * 0.15;
-
-                break;
-
-
-            case "walk":
-            case "cycle":
-
-                this.state.energy -=
-                    minutes * 0.18;
-
-                this.state.fatigue +=
-                    minutes * 0.10;
-
-                this.state.boredom -=
-                    minutes * 0.12;
-
-                break;
-
-
-            case "talkToSomeone":
-
-                this.state.socialEnergy -=
-                    minutes * 0.08;
-
-                this.state.boredom -=
-                    minutes * 0.10;
-
-                break;
-
-
-            case "talkToYani":
-
-                this.state.socialEnergy -=
-                    minutes * 0.05;
-
-                this.state.boredom -=
-                    minutes * 0.15;
-
-                break;
-
-
-            case "read":
-
-                this.state.focus +=
-                    minutes * 0.05;
-
-                this.state.boredom -=
-                    minutes * 0.08;
-
-                break;
-
-
-            case "playGame":
-
-                this.state.boredom -=
-                    minutes * 0.18;
-
-                this.state.focus +=
-                    minutes * 0.03;
-
-                break;
-
-
-            case "checkSocialNetwork":
-
-                this.state.boredom -=
-                    minutes * 0.08;
-
-                break;
-
-
-            case "doNothing":
-
-                this.state.boredom +=
-                    minutes * 0.03;
-
-                break;
-        }
-
-
-        this.state.energy =
-            this.clamp(
-                this.state.energy,
-                0,
-                100
-            );
-
-        this.state.fatigue =
-            this.clamp(
-                this.state.fatigue,
-                0,
-                100
-            );
-
-        this.state.socialEnergy =
-            this.clamp(
-                this.state.socialEnergy,
-                0,
-                100
-            );
-
-        this.state.boredom =
-            this.clamp(
-                this.state.boredom,
-                0,
-                100
-            );
-
-        this.state.focus =
-            this.clamp(
-                this.state.focus,
-                0,
-                100
-            );
-    }
-
-
-    findActivity(actionId) {
-
-        const data =
-            this.data.activities;
-
-        if (!data) {
-            return null;
-        }
-
-        const source =
-            data.activities ||
-            data.actions ||
-            data;
-
-        if (Array.isArray(source)) {
-
-            return source.find(
-                activity =>
-                    activity &&
-                    (
-                        activity.id === actionId ||
-                        activity.actionId === actionId
-                    )
-            ) || null;
-        }
-
-        if (typeof source === "object") {
-
-            if (source[actionId]) {
-                return {
-                    id: actionId,
-                    ...source[actionId]
-                };
-            }
-        }
-
-        return null;
-    }
-
-
-    applyNumericEffects(
-        effects,
-        minutes
-    ) {
-
-        if (!effects || typeof effects !== "object") {
-            return;
-        }
-
-        for (const [key, value] of Object.entries(effects)) {
-
-            if (typeof value !== "number") {
-                continue;
-            }
-
-            if (key === "energy") {
-                this.state.energy +=
-                    value * minutes;
-            }
-
-            else if (key === "fatigue") {
-                this.state.fatigue +=
-                    value * minutes;
-            }
-
-            else if (key === "socialEnergy") {
-                this.state.socialEnergy +=
-                    value * minutes;
-            }
-
-            else if (key === "boredom") {
-                this.state.boredom +=
-                    value * minutes;
-            }
-
-            else if (key === "focus") {
-                this.state.focus +=
-                    value * minutes;
-            }
-
-            else {
-                this.setNeedDelta(
-                    key,
-                    value * minutes
-                );
-            }
-        }
-    }
-
-
-    setNeedDelta(
-        need,
-        delta
-    ) {
-
-        if (!this.state.needs) {
-            this.state.needs = {};
-        }
+        this.state.recentActions
+            .push(action.actionId);
 
         if (
-            typeof this.state.needs[need] !==
-            "number"
+            this.state.recentActions.length >
+            10
         ) {
-            this.state.needs[need] = 50;
+            this.state.recentActions.shift();
         }
 
-        this.state.needs[need] =
-            this.clamp(
-                this.state.needs[need] + delta,
-                0,
-                100
-            );
-    }
+        this.state.action = null;
 
+        this.state.activity =
+            "idle";
 
-    /* =========================================================
-       ACTION PROGRESS
-       ========================================================= */
+        this.state.actionStartedAt =
+            null;
 
-    updateCurrentAction(minutes) {
-
-        const activity =
-            this.state.activity;
-
-        if (!activity) {
-            return;
-        }
-
-        if (
-            !activity.id ||
-            activity.id === "idle"
-        ) {
-            return;
-        }
-
-        activity.remaining -= minutes;
-
-        if (activity.remaining <= 0) {
-
-            const finished =
-                this.state.currentAction;
-
-            this.finishAction(
-                finished
-            );
-        }
-    }
-
-
-    finishAction(action) {
-
-        if (!action) {
-            return;
-        }
-
-        this.state.activity = {
-            id: "idle",
-            startedAt: null,
-            duration: 0,
-            remaining: 0
-        };
-
-        this.state.currentAction = null;
+        this.state.actionEndsAt =
+            null;
 
         this.emit(
             "actionFinished",
@@ -1851,290 +1061,395 @@ class AkiraBrain {
     }
 
 
-    /* =========================================================
-       AUTONOMOUS TICK
-       ========================================================= */
+    // =========================================================
+    // АВТОНОМНЕ РІШЕННЯ
+    // =========================================================
 
-    async tick() {
+    considerAutonomousDecision() {
+
+        if (!this.decision) {
+            return;
+        }
+
+        // Поки персонаж виконує дію,
+        // не потрібно кожну секунду
+        // змушувати його приймати нове рішення.
+        if (this.state.action) {
+            return;
+        }
+
+        const now =
+            Date.now();
+
+        const cooldown =
+            this.getDecisionCooldown();
 
         if (
-            !this.state.initialized ||
-            this._isTicking
+            now - this.lastDecision <
+            cooldown
         ) {
             return;
         }
 
-        this._isTicking = true;
+        this.lastDecision = now;
 
-        try {
+        const situation =
+            this.evaluateSituation();
 
-            const now = Date.now();
+        const result =
+            this.decision.decide(
+                situation
+            );
 
-            const elapsed =
-                this.lastTick
-                    ? now - this.lastTick
-                    : this.options.tickInterval;
+        if (
+            result &&
+            result.type === "action"
+        ) {
 
-            this.lastTick = now;
-
-
-            let minutes =
-                (
-                    elapsed / 1000
-                ) *
-                this.options.simulationMinutesPerRealSecond;
-
-
-            /*
-             * Захист від величезкого стрибка часу,
-             * якщо вкладку залишили відкритою після
-             * довгої паузи.
-             */
-
-            minutes =
-                this.clamp(
-                    minutes,
-                    0,
-                    60
-                );
+            this.executeAction(result);
+        }
+    }
 
 
-            this.updateWorld(minutes);
+    getDecisionCooldown() {
 
-            this.updateCurrentAction(minutes);
+        const activity =
+            this.data.activities || {};
 
-            this.updateNeeds(minutes);
+        const autonomous =
+            activity.autonomous ||
+            activity.autonomy ||
+            {};
 
-            this.updateEmotions(minutes);
+        const min =
+            this.number(
+                autonomous.minDecisionInterval,
+                5
+            );
 
-            this.updateMemory(minutes);
+        const max =
+            this.number(
+                autonomous.maxDecisionInterval,
+                30
+            );
 
-            this.processEvents();
+        const minutes =
+            min +
+            Math.random() *
+            Math.max(0, max - min);
 
-            this.updateBoredom(minutes);
-
-            this.syncSituation();
-
-
-            /*
-             * Якщо дія завершилась — Акіра може
-             * вибрати наступну.
-             */
-
-            if (
-                !this.state.currentAction
-            ) {
-
-                const action =
-                    this.decide();
-
-                if (action) {
-                    this.executeAction(
-                        action
-                    );
-                }
-            }
+        return minutes * 1000;
+    }
 
 
-            this.syncSituation();
+    // =========================================================
+    // СИТУАЦІЯ
+    // =========================================================
+
+    evaluateSituation() {
+
+        const mood =
+            this.mood
+                ?.getState?.() || {};
+
+        const dominant =
+            this.mood
+                ?.getDominantEmotions?.() || [];
+
+        const modifiers =
+            this.mood
+                ?.getBehaviorModifiers?.() || {};
+
+        this.state.situation = {
+
+            date:
+                this.state.world.date,
+
+            time:
+                this.state.world.time,
+
+            day:
+                this.state.world.day,
+
+            season:
+                this.state.world.season,
+
+            location:
+                this.state.world.location,
+
+            weather:
+                this.state.world.weather,
+
+            activity:
+                this.state.activity,
+
+            action:
+                this.state.action,
+
+            energy:
+                this.state.energy,
+
+            fatigue:
+                this.state.fatigue,
+
+            focus:
+                this.state.focus,
+
+            socialEnergy:
+                this.state.socialEnergy,
+
+            boredom:
+                this.state.boredom,
+
+            curiosity:
+                this.state.curiosity,
+
+            initiative:
+                this.state.initiative,
+
+            availability:
+                this.state.availability,
+
+            needs:
+                this.state.needs,
+
+            goals:
+                this.state.goals,
+
+            relationships:
+                this.state.relationships,
+
+            emotions: mood,
+
+            dominantEmotions:
+                dominant,
+
+            behaviorModifiers:
+                modifiers,
+
+            currentEvent:
+                this.state.currentEvent,
+
+            recentActions:
+                this.state.recentActions,
+
+            recentEvents:
+                this.state.recentEvents
+        };
+
+        return this.state.situation;
+    }
+
+
+    // =========================================================
+    // ВИКОНАННЯ ДІЇ
+    // =========================================================
+
+    executeAction(action) {
+
+        if (!action) {
+            return null;
+        }
+
+        if (
+            action.actionId ===
+            "doNothing"
+        ) {
+
+            this.state.activity =
+                "idle";
 
             this.emit(
-                "tick",
-                this.state
+                "action",
+                action
             );
 
-
-            if (
-                Date.now() - this.lastSave >=
-                this.options.saveInterval
-            ) {
-
-                this.saveState();
-
-                this.lastSave =
-                    Date.now();
-            }
-
-        } catch (error) {
-
-            console.error(
-                "[AkiraBrain] Tick error:",
-                error
-            );
-
-        } finally {
-
-            this._isTicking = false;
-        }
-    }
-
-
-    updateBoredom(minutes) {
-
-        const fun =
-            this.getNeed(
-                "fun",
-                55
-            );
-
-        const social =
-            this.getNeed(
-                "social",
-                45
-            );
-
-        if (fun < 30) {
-
-            this.state.boredom +=
-                minutes * 0.03;
+            return action;
         }
 
-        if (social < 25) {
-
-            this.state.boredom +=
-                minutes * 0.02;
-        }
-
-        this.state.boredom =
-            this.clamp(
-                this.state.boredom,
-                0,
-                100
-            );
-    }
-
-
-    /* =========================================================
-       START / STOP
-       ========================================================= */
-
-    start() {
-
-        if (this.state.running) {
-            return;
-        }
-
-        if (!this.state.initialized) {
-            console.warn(
-                "[AkiraBrain] Call init() before start()."
+        const duration =
+            this.number(
+                action.duration,
+                10
             );
 
-            return;
-        }
+        const now =
+            Date.now();
 
-        this.state.running = true;
-        this.lastTick = Date.now();
+        this.state.action = {
+            ...action,
 
-        this.timer =
-            setInterval(
-                () => this.tick(),
-                this.options.tickInterval
+            startedAt: now,
+
+            endsAt:
+                now +
+                duration * 60 * 1000
+        };
+
+        this.state.activity =
+            this.getActivityState(
+                action
             );
+
+        this.state.actionStartedAt =
+            now;
+
+        this.state.actionEndsAt =
+            this.state.action.endsAt;
+
+        if (
+            action.targetPerson
+        ) {
+
+            this.state.currentPerson =
+                action.targetPerson;
+        }
 
         this.emit(
-            "started",
-            this.state
+            "action",
+            this.state.action
         );
 
-        console.log(
-            "[AkiraBrain] Simulation started."
+        return this.state.action;
+    }
+
+
+    getActivityState(action) {
+
+        const id =
+            action.actionId || "";
+
+        const map = {
+
+            sleep: "sleeping",
+
+            eat: "eating",
+
+            drink: "drinking",
+
+            rest: "resting",
+
+            walk: "walking",
+
+            cycle: "cycling",
+
+            read: "reading",
+
+            listenToMusic: "listening",
+
+            playGame: "gaming",
+
+            work: "working",
+
+            talkToSomeone: "talking",
+
+            talkToYani: "talking",
+
+            think: "thinking",
+
+            organizeDesk: "organizing"
+        };
+
+        return (
+            map[id] ||
+            action.category ||
+            "active"
         );
     }
 
 
-    stop() {
+    // =========================================================
+    // ДІАЛОГ
+    // =========================================================
 
-        if (!this.state.running) {
-            return;
-        }
-
-        clearInterval(
-            this.timer
-        );
-
-        this.timer = null;
-
-        this.state.running = false;
-
-        this.saveState();
-
-        this.emit(
-            "stopped",
-            this.state
-        );
-
-        console.log(
-            "[AkiraBrain] Simulation stopped."
-        );
-    }
-
-
-    /* =========================================================
-       CONVERSATION
-       ========================================================= */
-
-    async respond(input, context = {}) {
+    respond(input, context = {}) {
 
         if (!this.dialogue) {
 
-            console.warn(
-                "[AkiraBrain] Dialogue system unavailable."
-            );
-
             return {
-                type: "silence",
-                text: ""
+                type: "text",
+                text:
+                    "Я зараз не можу нормально сформулювати відповідь.",
+                timestamp: Date.now()
             };
         }
+
+        const response =
+            this.dialogue.respond(
+                input,
+                {
+                    ...context,
+
+                    personId:
+                        context.personId ||
+                        this.state.currentPerson,
+
+                    relationship:
+                        context.relationship ||
+                        this.getCurrentRelationship()
+                }
+            );
+
+        this.state.conversation.active =
+            true;
 
         this.state.conversation.lastInput =
             input;
 
-        try {
+        this.state.conversation.lastResponse =
+            response;
 
-            const result =
-                await this.dialogue.respond(
-                    input,
-                    {
-                        ...context,
+        this.state.conversation.lastInteractionAt =
+            Date.now();
 
-                        situation:
-                            this.evaluateSituation()
-                    }
-                );
+        if (response.topic) {
 
-            if (result) {
-
-                this.state.conversation.lastResponse =
-                    result.text ||
-                    "";
-
-                this.emit(
-                    "response",
-                    result
-                );
-            }
-
-            return result;
-
-        } catch (error) {
-
-            console.error(
-                "[AkiraBrain] Dialogue failed:",
-                error
-            );
-
-            return {
-                type: "silence",
-                text: ""
-            };
+            this.state.conversation.topic =
+                response.topic;
         }
+
+        this.dialogueHistory.push({
+            input,
+            response,
+            timestamp: Date.now()
+        });
+
+        if (
+            this.dialogueHistory.length >
+            50
+        ) {
+            this.dialogueHistory.shift();
+        }
+
+        this.emit(
+            "dialogue",
+            response
+        );
+
+        return response;
     }
 
 
-    /* =========================================================
-       STATE SAVE / LOAD
-       ========================================================= */
+    getCurrentRelationship() {
+
+        const personId =
+            this.state.currentPerson;
+
+        if (!personId) {
+            return null;
+        }
+
+        return (
+            this.state.relationships?.[
+                personId
+            ] || null
+        );
+    }
+
+
+    // =========================================================
+    // ЗБЕРЕЖЕННЯ
+    // =========================================================
 
     saveState() {
 
@@ -2142,94 +1457,32 @@ class AkiraBrain {
 
             const saveData = {
 
-                version: 1,
+                state: this.state,
+
+                actionHistory:
+                    this.actionHistory.slice(-50),
+
+                eventHistory:
+                    this.eventHistory.slice(-50),
+
+                dialogueHistory:
+                    this.dialogueHistory.slice(-50),
 
                 savedAt:
-                    new Date().toISOString(),
-
-                world:
-                    this.state.world,
-
-                activity:
-                    this.state.activity,
-
-                energy:
-                    this.state.energy,
-
-                fatigue:
-                    this.state.fatigue,
-
-                socialEnergy:
-                    this.state.socialEnergy,
-
-                boredom:
-                    this.state.boredom,
-
-                focus:
-                    this.state.focus,
-
-                needs:
-                    this.state.needs,
-
-                emotions:
-                    this.state.emotions,
-
-                relationships:
-                    this.state.relationships,
-
-                goals:
-                    this.state.goals,
-
-                currentGoal:
-                    this.state.currentGoal,
-
-                currentAction:
-                    this.state.currentAction,
-
-                recentActions:
-                    this.state.recentActions,
-
-                recentEvents:
-                    this.state.recentEvents,
-
-                conversation:
-                    this.state.conversation
+                    Date.now()
             };
 
-
             localStorage.setItem(
-                "akira_brain_state_v3",
-                JSON.stringify(
-                    saveData
-                )
+                this.config.saveKey,
+                JSON.stringify(saveData)
             );
-
-
-            /*
-             * Окремі системи можуть мати
-             * власні механізми збереження.
-             */
-
-            if (
-                this.memory &&
-                typeof this.memory.save === "function"
-            ) {
-                this.memory.save();
-            }
-
-
-            this.emit(
-                "saved",
-                saveData
-            );
-
 
             return true;
 
         } catch (error) {
 
-            console.error(
-                "[AkiraBrain] Save failed:",
+            console.warn(
+                "Не вдалося зберегти стан Акіри.",
                 error
             );
 
@@ -2244,7 +1497,7 @@ class AkiraBrain {
 
             const raw =
                 localStorage.getItem(
-                    "akira_brain_state_v3"
+                    this.config.saveKey
                 );
 
             if (!raw) {
@@ -2254,121 +1507,66 @@ class AkiraBrain {
             const saved =
                 JSON.parse(raw);
 
-            if (!saved || typeof saved !== "object") {
-                return false;
-            }
+            if (
+                saved.state &&
+                typeof saved.state ===
+                "object"
+            ) {
 
+                this.state = {
+                    ...this.state,
+                    ...saved.state,
 
-            /*
-             * Не завантажуємо blindly весь state.
-             * Дані JSON залишаються джерелом
-             * базової конфігурації.
-             */
+                    world: {
+                        ...this.state.world,
+                        ...saved.state.world
+                    },
 
-            if (saved.world) {
-                this.state.world = {
-                    ...this.state.world,
-                    ...saved.world
+                    conversation: {
+                        ...this.state.conversation,
+                        ...saved.state.conversation
+                    },
+
+                    goals: {
+                        ...this.state.goals,
+                        ...saved.state.goals
+                    }
                 };
-            }
-
-            if (saved.activity) {
-                this.state.activity = {
-                    ...this.state.activity,
-                    ...saved.activity
-                };
-            }
-
-            if (typeof saved.energy === "number") {
-                this.state.energy =
-                    saved.energy;
-            }
-
-            if (typeof saved.fatigue === "number") {
-                this.state.fatigue =
-                    saved.fatigue;
             }
 
             if (
-                typeof saved.socialEnergy ===
-                "number"
+                Array.isArray(
+                    saved.actionHistory
+                )
             ) {
-                this.state.socialEnergy =
-                    saved.socialEnergy;
+                this.actionHistory =
+                    saved.actionHistory;
             }
 
-            if (typeof saved.boredom === "number") {
-                this.state.boredom =
-                    saved.boredom;
+            if (
+                Array.isArray(
+                    saved.eventHistory
+                )
+            ) {
+                this.eventHistory =
+                    saved.eventHistory;
             }
 
-            if (typeof saved.focus === "number") {
-                this.state.focus =
-                    saved.focus;
+            if (
+                Array.isArray(
+                    saved.dialogueHistory
+                )
+            ) {
+                this.dialogueHistory =
+                    saved.dialogueHistory;
             }
-
-            if (saved.needs) {
-                this.state.needs =
-                    {
-                        ...this.state.needs,
-                        ...saved.needs
-                    };
-            }
-
-            if (saved.emotions) {
-                this.state.emotions =
-                    {
-                        ...this.state.emotions,
-                        ...saved.emotions
-                    };
-            }
-
-            if (saved.relationships) {
-                this.state.relationships =
-                    saved.relationships;
-            }
-
-            if (Array.isArray(saved.goals)) {
-                this.state.goals =
-                    saved.goals;
-            }
-
-            if (saved.currentGoal) {
-                this.state.currentGoal =
-                    saved.currentGoal;
-            }
-
-            if (Array.isArray(saved.recentActions)) {
-                this.state.recentActions =
-                    saved.recentActions;
-            }
-
-            if (Array.isArray(saved.recentEvents)) {
-                this.state.recentEvents =
-                    saved.recentEvents;
-            }
-
-            if (saved.conversation) {
-                this.state.conversation =
-                    {
-                        ...this.state.conversation,
-                        ...saved.conversation
-                    };
-            }
-
-
-            this.emit(
-                "loaded",
-                saved
-            );
-
 
             return true;
 
         } catch (error) {
 
             console.warn(
-                "[AkiraBrain] Could not load saved state.",
+                "Не вдалося завантажити збережений стан.",
                 error
             );
 
@@ -2377,80 +1575,185 @@ class AkiraBrain {
     }
 
 
-    resetState() {
+    // =========================================================
+    // ПУБЛІЧНИЙ СТАН
+    // =========================================================
 
-        localStorage.removeItem(
-            "akira_brain_state_v3"
-        );
+    getPublicState() {
 
-        location.reload();
+        return {
+            initialized:
+                this.initialized,
+
+            running:
+                this.running,
+
+            world:
+                { ...this.state.world },
+
+            activity:
+                this.state.activity,
+
+            action:
+                this.state.action,
+
+            energy:
+                this.state.energy,
+
+            fatigue:
+                this.state.fatigue,
+
+            socialEnergy:
+                this.state.socialEnergy,
+
+            boredom:
+                this.state.boredom,
+
+            curiosity:
+                this.state.curiosity,
+
+            availability:
+                this.state.availability,
+
+            currentPerson:
+                this.state.currentPerson,
+
+            conversation:
+                {
+                    ...this.state.conversation
+                }
+        };
     }
 
 
-    /* =========================================================
-       HELPERS
-       ========================================================= */
+    // =========================================================
+    // ПОДІЇ ДЛЯ UI
+    // =========================================================
 
-    getNumber(...values) {
+    on(event, callback) {
 
-        for (const value of values) {
-
-            if (
-                typeof value === "number" &&
-                Number.isFinite(value)
-            ) {
-                return value;
-            }
+        if (
+            typeof callback !==
+            "function"
+        ) {
+            return;
         }
 
-        return 0;
+        if (!this.listeners[event]) {
+            this.listeners[event] = [];
+        }
+
+        this.listeners[event].push(
+            callback
+        );
+    }
+
+
+    off(event, callback) {
+
+        if (!this.listeners[event]) {
+            return;
+        }
+
+        this.listeners[event] =
+            this.listeners[event]
+                .filter(
+                    listener =>
+                        listener !== callback
+                );
+    }
+
+
+    emit(event, data) {
+
+        const listeners =
+            this.listeners[event];
+
+        if (!listeners) {
+            return;
+        }
+
+        for (
+            const listener
+            of listeners
+        ) {
+
+            try {
+                listener(data);
+            } catch (error) {
+
+                console.error(
+                    `Помилка обробника "${event}"`,
+                    error
+                );
+            }
+        }
+    }
+
+
+    // =========================================================
+    // ДОПОМІЖНІ
+    // =========================================================
+
+    number(value, fallback = 0) {
+
+        const n =
+            Number(value);
+
+        return Number.isFinite(n)
+            ? n
+            : fallback;
     }
 
 
     clamp(
         value,
-        min,
-        max
+        min = 0,
+        max = 100
     ) {
 
         return Math.max(
             min,
             Math.min(
                 max,
-                Number(value) || 0
+                this.number(value, min)
             )
         );
     }
 
 
-    getState() {
+    getToday() {
 
-        return this.state;
+        return new Date()
+            .toISOString()
+            .slice(0, 10);
     }
 
 
-    getData(name) {
+    getDayName() {
 
-        return this.data[name];
+        return new Date()
+            .toLocaleDateString(
+                "en-US",
+                {
+                    weekday: "long"
+                }
+            );
     }
 }
 
 
-/* =========================================================
-   GLOBAL INSTANCE
-   ========================================================= */
+// =============================================================
+// ГЛОБАЛЬНИЙ ЕКЗЕМПЛЯР
+// =============================================================
 
-window.AkiraBrain = AkiraBrain;
-
-window.akiraBrain =
-    new AkiraBrain({
-        autoStart: false
-    });
+window.AkiraBrain =
+    AkiraBrain;
 
 
-/* =========================================================
-   AUTO INITIALIZATION
-   ========================================================= */
+// =============================================================
+// АВТОМАТИЧНА ІНІЦІАЛІЗАЦІЯ
+// =============================================================
 
 document.addEventListener(
     "DOMContentLoaded",
@@ -2458,22 +1761,24 @@ document.addEventListener(
 
         try {
 
-            await window.akiraBrain.init();
+            const brain =
+                new AkiraBrain({
+                    autoStart: false
+                });
 
-            /*
-             * Навмисно НЕ запускаємо симуляцію автоматично.
-             *
-             * Поки що:
-             *
-             * akiraBrain.start()
-             *
-             * має запускатися окремо.
-             */
+            window.akiraBrain =
+                brain;
+
+            await brain.init();
+
+            console.log(
+                "Акіра: мозок ініціалізовано."
+            );
 
         } catch (error) {
 
             console.error(
-                "[AkiraBrain] Initialization failed:",
+                "Не вдалося запустити мозок Акіри:",
                 error
             );
         }
