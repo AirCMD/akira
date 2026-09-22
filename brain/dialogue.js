@@ -433,6 +433,33 @@ class AkiraDialogue {
             if (pattern.test(normalized)) return identityIntent;
         }
 
+        // Зовнішність, догляд, одяг і особисті межі.
+        // Ці intent-и стоять вище звичайних topics, щоб "волосся" або "родимки"
+        // не перехоплювалися випадковою тематичною відповіддю.
+        const appearancePatterns = [
+            [/^(як\s+ти\s+виглядаєш|опиши\s+(свою\s+)?зовнішність|яка\s+в\s+тебе\s+зовнішність)[\s?!.,]*$/iu, "ask_appearance"],
+            [/^(якого\s+кольору\s+в\s+тебе\s+очі|які\s+в\s+тебе\s+очі|який\s+колір\s+твоїх\s+очей)[\s?!.,]*$/iu, "ask_eyes"],
+            [/^(яке\s+в\s+тебе\s+волосся|якого\s+кольору\s+в\s+тебе\s+волосся|яка\s+в\s+тебе\s+зачіска)[\s?!.,]*$/iu, "ask_hair"],
+            [/^(який\s+у\s+тебе\s+зріст|якого\s+ти\s+зросту|скільки\s+в\s+тобі\s+зросту)[\s?!.,]*$/iu, "ask_height"],
+            [/^(яка\s+в\s+тебе\s+статура|яке\s+в\s+тебе\s+тіло)[\s?!.,]*$/iu, "ask_build"],
+            [/^(ти\s+любиш\s+(довге|коротке)\s+волосся|яку\s+довжину\s+волосся\s+ти\s+любиш|тобі\s+подобається\s+коротке\s+волосся)[\s?!.,]*$/iu, "ask_hair_preference"],
+            [/^(тобі\s+треба\s+підстригтися|ти\s+хочеш\s+підстригтися|коли\s+будеш\s+стригтися)[\s?!.,]*$/iu, "ask_haircut_need"],
+            [/^(коли\s+ти\s+(востаннє|останній\s+раз)\s+стригся)[\s?!.,]*$/iu, "ask_last_haircut"],
+            [/^(у\s+що\s+ти\s+(зараз\s+)?одягнений|що\s+на\s+тобі\s+(зараз\s+)?одягнено)[\s?!.,]*$/iu, "ask_outfit"],
+            [/^(ти\s+(зараз\s+)?у\s+навушниках|в\s+тебе\s+(зараз\s+)?є\s+навушники)[\s?!.,]*$/iu, "ask_earbuds"],
+            [/^(що\s+ти\s+вдягнеш\s+на\s+(прогулянку|вулицю)|як\s+ти\s+вдягнешся\s+на\s+(прогулянку|вулицю))[\s?!.,]*$/iu, "ask_outdoor_outfit"],
+            [/(родимк.*лоб|лоб.*родимк)/iu, "ask_moles_forehead"],
+            [/(родимк.*(щок|облич)|((щок|облич).*родимк))/iu, "ask_moles_cheek"],
+            [/^(де\s+в\s+тебе\s+родимки|скільки\s+в\s+тебе\s+родимок|розкажи\s+про\s+(свої\s+)?родимки)[\s?!.,]*$/iu, "ask_moles_general"]
+        ];
+        for (const [pattern, appearanceIntent] of appearancePatterns) {
+            if (pattern.test(normalized)) return appearanceIntent;
+        }
+
+        if (/^(чому|а\s+чому|чому\s+ні|чому\s+не\s+хочеш)[\s?!.,]*$/iu.test(normalized) && this.brain.state?.conversation?.lastBoundaryTopic) {
+            return "ask_boundary_why";
+        }
+
         const askFutureActivityPatterns = [
             /^(ти\s+)?(ще\s+)?будеш\s+.*(велосипед|покат|катат|гулят|прогулян)/iu,
             /^(ти\s+)?(плануєш|збираєшся|хочеш)\s+.*(велосипед|покат|катат|гулят|прогулян)/iu
@@ -1315,8 +1342,8 @@ class AkiraDialogue {
             case "ask_full_name":
                 return character.fullName ? `Мене звати ${character.fullName}.` : (character.firstName ? `Мене звати ${character.firstName}.` : "Повне ім'я в моєму профілі поки не задане.");
             case "ask_age": {
-                const age = character.age ?? null;
-                if (Number.isFinite(Number(age))) return `Мені ${Number(age)} років.`;
+                const age = character.age;
+                if (age !== null && age !== undefined && age !== "" && Number.isFinite(Number(age))) return `Мені ${Number(age)} років.`;
                 if (character.birthDate) {
                     const born = new Date(character.birthDate);
                     if (!Number.isNaN(born.getTime())) {
@@ -1338,11 +1365,95 @@ class AkiraDialogue {
                 if (character.hometown) return `Я родом з ${character.hometown}.`;
                 return "Місто, звідки я родом, у моєму профілі поки не задане.";
             case "ask_occupation":
-                return occupation ? `Я працюю ${occupation}.` : "Моя професія в профілі поки не задана.";
+                return occupation ? `За професією я ${occupation}.` : "Моя професія в профілі поки не задана.";
             case "ask_workplace":
                 return workplaceName ? `Я працюю в «${workplaceName}».` : "Місце роботи в профілі поки не задане.";
             default:
                 return null;
+        }
+    }
+
+    composeAppearanceAnswer(intent, profile) {
+        const identity = this.brain.data?.character?.identity || {};
+        const appearance = identity.appearance || {};
+        const appearanceEngine = this.brain.appearance;
+        const appearanceData = this.brain.data?.appearance?.appearance || {};
+        const hairStatus = appearanceEngine?.getHairStatus?.() || {};
+        const outfit = appearanceEngine?.getOutfit?.() || null;
+
+        const setBoundary = (topic) => {
+            this.brain.state.conversation.lastBoundaryTopic = topic;
+            this.brain.state.conversation.lastBoundaryAt = Date.now();
+        };
+        const clearBoundary = () => {
+            if (intent !== "ask_boundary_why") {
+                this.brain.state.conversation.lastBoundaryTopic = null;
+                this.brain.state.conversation.lastBoundaryAt = null;
+            }
+        };
+        const boundaryReply = (topic) => {
+            setBoundary(topic);
+            const cfg = appearanceData.boundaries?.[topic] || {};
+            const emotions = profile?.emotions?.values || {};
+            const fatigue = Number(profile?.state?.fatigue || 0);
+            const irritated = Number(emotions.irritation || emotions.anger || 0) >= 45;
+            const pool = irritated ? (cfg.irritated || cfg.neutral) : fatigue >= 65 ? (cfg.tired || cfg.neutral) : cfg.neutral;
+            if (!Array.isArray(pool) || !pool.length) return "Я не хочу обговорювати цю частину моєї зовнішності.";
+            const repeat = this.brain.state.conversation.boundaryRepeatCount || 0;
+            this.brain.state.conversation.boundaryRepeatCount = repeat + 1;
+            return pool[Math.min(repeat, pool.length - 1) % pool.length];
+        };
+
+        if (intent === "ask_boundary_why") {
+            const topic = this.brain.state?.conversation?.lastBoundaryTopic;
+            if (!topic) return null;
+            const reasons = appearanceData.boundaryReason || ["Моя зовнішність не предмет для обговорень."];
+            return reasons[0] || "Моя зовнішність не предмет для обговорень.";
+        }
+        if (intent === "ask_moles_forehead") return boundaryReply("moles_forehead");
+        if (intent === "ask_moles_cheek") return boundaryReply("moles_cheek");
+        if (intent === "ask_moles_general") {
+            setBoundary("moles_general");
+            return "Я не хочу обговорювати мої родимки.";
+        }
+
+        clearBoundary();
+        switch (intent) {
+            case "ask_appearance":
+                return `Я худої статури, зростом ${appearance.heightCm || 182} см. У мене блакитні очі й коротке чорне волосся.`;
+            case "ask_eyes":
+                return appearance.eyes?.color ? `У мене ${appearance.eyes.color === "блакитний" ? "блакитні" : appearance.eyes.color} очі.` : null;
+            case "ask_hair":
+                return "У мене чорне коротке волосся. Я не люблю заростати.";
+            case "ask_height":
+                return appearance.heightCm ? `Мій зріст — ${appearance.heightCm} см.` : null;
+            case "ask_build":
+                return "Я худої статури.";
+            case "ask_hair_preference":
+                return "Я надаю перевагу короткому волоссю. Не люблю заростати, тому намагаюся вчасно стригтися.";
+            case "ask_haircut_need":
+                if (hairStatus.wantsHaircut) return "Схоже, вже час підстригтися. Я не люблю, коли волосся відростає занадто сильно.";
+                if (hairStatus.currentLength === "growing") return "Волосся вже трохи відросло, але поки не критично. Я все одно довго заростати не люблю.";
+                return "Поки ні. Волосся ще достатньо коротке.";
+            case "ask_last_haircut":
+                return hairStatus.lastHaircutDate ? `Останній раз я стригся ${hairStatus.lastHaircutDate}.` : "Я не пам'ятаю точної дати останньої стрижки.";
+            case "ask_earbuds":
+                return this.brain.state.appearance?.earbuds ? "Так, зараз у мене у вухах чорні навушники-краплі." : "Ні, зараз я без навушників.";
+            case "ask_outfit": {
+                if (!outfit) return "Зараз я не можу точно сказати, у що одягнений.";
+                const parts=[];
+                if (outfit.outerwear) parts.push(`${outfit.outerwear.color} ${outfit.outerwear.type} з капюшоном`);
+                if (outfit.sweater) parts.push(`${outfit.sweater.color} светр${outfit.sweater.print ? " з принтом" : ""}`);
+                if (!parts.length) return "Зараз я вдома, тому одягнувся просто й зручно.";
+                return `Зараз на мені ${parts.join(" і ")}.`;
+            }
+            case "ask_outdoor_outfit": {
+                const weather=this.brain.state.world?.weather || {};
+                const temp=Number(weather.temperature ?? 18);
+                if (temp <= 16) return "Якщо піду надвір, вдягну светр і коричневу куртку з капюшоном. У прохолодну погоду мені так зручніше.";
+                return "Якщо піду надвір, вдягну щось легше й зручне. До конкретних кольорів я не прив'язаний.";
+            }
+            default: return null;
         }
     }
 
@@ -1373,6 +1484,10 @@ class AkiraDialogue {
         if (intent === "ask_state") return [this.composeStateAnswer(profile)];
         if (intent === "ask_activity") return [this.composeActivityAnswer(profile)];
         if (intent === "ask_future_activity") return [this.composeFutureActivityAnswer(profile)];
+        if (["ask_appearance","ask_eyes","ask_hair","ask_height","ask_build","ask_hair_preference","ask_haircut_need","ask_last_haircut","ask_outfit","ask_earbuds","ask_outdoor_outfit","ask_moles_forehead","ask_moles_cheek","ask_moles_general","ask_boundary_why"].includes(intent)) {
+            const appearanceReply = this.composeAppearanceAnswer(intent, profile);
+            if (appearanceReply) return [appearanceReply];
+        }
         if (intent.startsWith("ask_") && ["ask_name","ask_surname","ask_full_name","ask_age","ask_hometown","ask_country","ask_residence","ask_occupation","ask_workplace"].includes(intent)) {
             const identityReply = this.composeIdentityAnswer(intent);
             if (identityReply) return [identityReply];

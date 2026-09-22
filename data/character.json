@@ -3,11 +3,9 @@
     "firstName": "Акіра",
     "lastName": "Бакенеко",
     "fullName": "Акіра Бакенеко",
-
     "species": "human",
     "gender": "male",
     "genderIdentity": "чоловік",
-
     "residence": {
       "country": "Аерія",
       "city": "Демо",
@@ -17,6 +15,30 @@
         "apartment": 17,
         "floor": 2,
         "side": "сонячний"
+      }
+    },
+    "appearance": {
+      "heightCm": 182,
+      "build": "худа",
+      "eyes": {
+        "color": "блакитний"
+      },
+      "hair": {
+        "color": "чорний",
+        "length": "коротке"
+      },
+      "distinctiveMarks": {
+        "foreheadMole": {
+          "count": 1,
+          "side": "праворуч",
+          "discussionBoundary": "moles_forehead"
+        },
+        "leftCheekMoles": {
+          "count": 2,
+          "side": "ліва",
+          "near": "вухо",
+          "discussionBoundary": "moles_cheek"
+        }
       }
     }
   }

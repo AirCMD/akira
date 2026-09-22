@@ -1,0 +1,85 @@
+{
+  "appearance": {
+    "hair": {
+      "preferredLength": "short",
+      "currentLength": "short",
+      "dislikesOvergrownHair": true,
+      "haircutMotivation": 90,
+      "growth": {
+        "noticeAfterDays": 21,
+        "wantsHaircutAfterDays": 35,
+        "strongNeedAfterDays": 49
+      }
+    },
+    "accessories": {
+      "blackEarbuds": {
+        "type": "навушники-краплі",
+        "color": "чорний",
+        "frequency": 82,
+        "usuallyWhenOutside": true
+      }
+    },
+    "wardrobe": {
+      "stylePrinciples": [
+        "комфорт",
+        "практичність",
+        "не виглядати стрьомно"
+      ],
+      "colorRestriction": false,
+      "coolSpringAutumn": {
+        "outerwear": {
+          "type": "куртка",
+          "color": "коричневий",
+          "hood": true,
+          "filling": "бавовна"
+        },
+        "sweaters": {
+          "commonColors": [
+            "сірий",
+            "бежевий",
+            "червоний",
+            "чорний"
+          ],
+          "printsAllowed": true,
+          "printRule": "не стрьомний"
+        }
+      }
+    },
+    "boundaries": {
+      "moles_forehead": {
+        "topic": "родимки на лобі",
+        "private": true,
+        "neutral": [
+          "Я не хочу говорити на тему моїх родимок на лобі.",
+          "Я не хочу обговорювати родимку на моєму лобі."
+        ],
+        "irritated": [
+          "Я вже сказав, що не хочу говорити про родимку на лобі.",
+          "Не хочу обговорювати мою родимку на лобі."
+        ],
+        "tired": [
+          "Не хочу зараз говорити про родимку на лобі."
+        ]
+      },
+      "moles_cheek": {
+        "topic": "родимки на щоці",
+        "private": true,
+        "neutral": [
+          "Я не хочу відповідати на питання щодо родимок моєї щоки.",
+          "Я б не хотів обговорювати родимки на моїй щоці."
+        ],
+        "irritated": [
+          "Я не хочу обговорювати родимки на моїй щоці. Давай залишимо цю тему.",
+          "Я вже дав зрозуміти, що не хочу говорити про родимки на щоці."
+        ],
+        "tired": [
+          "Не хочу зараз говорити про родимки на щоці."
+        ]
+      }
+    },
+    "boundaryReason": [
+      "Моя зовнішність не предмет для обговорень.",
+      "Я не хочу пояснювати це детальніше. Моя зовнішність не предмет для обговорень."
+    ]
+  }
+}
