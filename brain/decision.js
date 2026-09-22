@@ -1,492 +1,462 @@
 /*
- * РУШІЙ РІШЕНЬ АКІРИ
+ * ============================================================
+ * DECISION.JS
+ * Система прийняття рішень Акіри
+ * ============================================================
  *
- * decision.js
+ * decision.js відповідає за питання:
  *
- * Відповідає за вибір ДІЇ.
+ * "Що Акіра може захотіти / мусити / вирішити
+ *  зробити прямо зараз?"
  *
  * Він НЕ:
- *   - генерує текст;
- *   - змінює особистість;
- *   - вирішує, що Акіра "повинен" хотіти;
- *   - визначає його моральність.
+ * - змінює особистість;
+ * - генерує діалог;
+ * - створює текст;
+ * - сам керує емоціями;
+ * - має знати конкретно про Яні;
  *
- * Він порівнює доступні дії з поточним станом персонажа.
+ * Він отримує інформацію від інших систем.
  *
- * Джерела:
- *   потреби
- *   емоції
- *   цілі
- *   інтереси
- *   уподобання
- *   звички
- *   стосунки
- *   пам'ять
- *   навички
- *   знання
- *   погода
- *   світ
- *   поточний стан
- *   нещодавні дії
- *   випадковість
+ *                   brain
+ *                     │
+ *       ┌─────────────┼──────────────┐
+ *       ↓             ↓              ↓
+ *    needs          mood         memory
+ *       │             │              │
+ *       └─────────────┼──────────────┘
+ *                     ↓
+ *                 decision
+ *                     ↓
+ *                  action
  *
- * Важливо:
- * одна й та сама дія може бути хорошою
- * в один момент і зовсім недоречною в інший.
+ * Рішення складається з кількох факторів.
+ *
+ * Один фактор не повинен повністю визначати поведінку.
+ * ============================================================
  */
 
-
 class AkiraDecision {
-
   constructor(brain) {
-
     this.brain = brain;
 
-    /*
-     * Останнє рішення.
-     */
-    this.lastDecision = null;
-
-    /*
-     * Історія рішень.
-     */
+    this.actions = {};
     this.history = [];
 
     this.maxHistory = 100;
 
-    /*
-     * Невелика випадковість потрібна для того,
-     * щоб поведінка не була механічно однаковою.
-     */
-    this.randomness = 18;
+    this.initialized = false;
 
     /*
-     * Скільки останніх дій враховуємо
-     * при покаранні повторення.
+     * Випадковість потрібна для того,
+     * щоб персонаж не перетворився на калькулятор.
      */
-    this.recentActionLimit = 8;
+    this.randomness = 0.12;
+
+    /*
+     * Наскільки сильно недавня дія штрафує
+     * повторення тієї самої дії.
+     */
+    this.repetitionPenalty = 0.35;
+
+    /*
+     * Максимальна кількість кандидатів,
+     * які аналізуємо за один цикл.
+     */
+    this.maxCandidates = 40;
   }
 
 
-  // ============================================================
-  // 1. ОСНОВНИЙ ВИБІР
-  // ============================================================
+  /*
+   * ==========================================================
+   * ІНІЦІАЛІЗАЦІЯ
+   * ==========================================================
+   */
 
-  decide(context = {}) {
+  init() {
+    this.loadActions();
 
-    const actions =
-      this.getAvailableActions(context);
+    this.initialized = true;
 
+    return this;
+  }
+
+
+  /*
+   * ==========================================================
+   * ЗАВАНТАЖЕННЯ ДІЙ
+   * ==========================================================
+   *
+   * activities.json описує,
+   * що персонаж ВМІЄ робити.
+   *
+   * decision.js вирішує,
+   * що він хоче/має робити зараз.
+   */
+
+  loadActions() {
+    const data =
+      this.brain?.data?.activities || {};
+
+    let source =
+      data.activities ||
+      data.actions ||
+      data;
+
+    /*
+     * Якщо JSON має вкладену структуру,
+     * намагаємося її знайти.
+     */
 
     if (
-      !actions.length
+      source &&
+      typeof source === "object" &&
+      !Array.isArray(source)
     ) {
+      Object.entries(source).forEach(
+        ([id, action]) => {
+          if (!action || typeof action !== "object") {
+            return;
+          }
 
-      return this.createNothingDecision(
-        "немає доступних дій"
+          /*
+           * Відсікаємо службові поля.
+           */
+          if (
+            [
+              "autonomy",
+              "rules",
+              "decision",
+              "system",
+              "effects"
+            ].includes(id)
+          ) {
+            return;
+          }
+
+          this.actions[id] = {
+            id,
+            ...action
+          };
+        }
       );
     }
 
-
-    const candidates = [];
-
-
-    for (
-      const action
-      of actions
-    ) {
-
-      const evaluation =
-        this.evaluateAction(
-          action,
-          context
-        );
-
-
-      candidates.push(
-        evaluation
-      );
-    }
-
-
     /*
-     * Сортуємо від найбільш імовірної
-     * до найменш імовірної дії.
-     */
-    candidates.sort(
-      (a, b) =>
-        b.score - a.score
-    );
-
-
-    /*
-     * Дозволяємо випадковість.
+     * Якщо activities.json має незручну структуру
+     * або поки не містить дій, використовуємо
+     * універсальний резервний набір.
      *
-     * Не завжди обираємо абсолютний максимум.
+     * Це НЕ персонажні переваги.
+     * Лише доступні типи дій.
      */
-    const selected =
-      this.selectCandidate(
-        candidates
-      );
 
+    const fallbackActions = {
+      sleep: {
+        category: "basic",
+        duration: 60,
+        requires: {
+          energy: "low"
+        }
+      },
 
-    const decision = {
+      eat: {
+        category: "basic",
+        duration: 20
+      },
 
-      action:
-        selected.action,
+      drink: {
+        category: "basic",
+        duration: 5
+      },
 
-      target:
-        selected.target ??
-        null,
+      rest: {
+        category: "basic",
+        duration: 30
+      },
 
-      duration:
-        selected.duration ??
-        null,
+      work: {
+        category: "work",
+        duration: 60
+      },
 
-      score:
-        selected.score,
+      walk: {
+        category: "outdoor",
+        duration: 30
+      },
 
-      factors:
-        selected.factors,
+      cycle: {
+        category: "outdoor",
+        duration: 45
+      },
 
-      alternatives:
-        candidates
-          .slice(0, 5)
-          .map(
-            candidate => ({
-              action:
-                candidate.action,
+      read: {
+        category: "leisure",
+        duration: 30
+      },
 
-              score:
-                candidate.score
-            })
-          ),
+      listenToMusic: {
+        category: "leisure",
+        duration: 30
+      },
 
-      timestamp:
-        this.getCurrentTime()
+      playGame: {
+        category: "leisure",
+        duration: 30
+      },
+
+      talkToSomeone: {
+        category: "social",
+        duration: 20
+      },
+
+      talkToYani: {
+        category: "social",
+        duration: 30
+      },
+
+      visitMuseum: {
+        category: "culture",
+        duration: 90
+      },
+
+      visitPlanetarium: {
+        category: "culture",
+        duration: 90
+      },
+
+      visitTheatre: {
+        category: "culture",
+        duration: 120
+      },
+
+      visitConcert: {
+        category: "culture",
+        duration: 120
+      },
+
+      goToCinema: {
+        category: "culture",
+        duration: 120
+      },
+
+      boatRide: {
+        category: "outdoor",
+        duration: 60
+      },
+
+      fishing: {
+        category: "outdoor",
+        duration: 120
+      },
+
+      lookAtFlowers: {
+        category: "leisure",
+        duration: 15
+      },
+
+      observeAnimals: {
+        category: "leisure",
+        duration: 20
+      },
+
+      stargazing: {
+        category: "leisure",
+        duration: 30
+      },
+
+      checkPhone: {
+        category: "routine",
+        duration: 5
+      },
+
+      checkSocialNetwork: {
+        category: "social",
+        duration: 15
+      },
+
+      organizeDesk: {
+        category: "routine",
+        duration: 15
+      },
+
+      think: {
+        category: "mental",
+        duration: 15
+      },
+
+      rememberSomeone: {
+        category: "mental",
+        duration: 5
+      },
+
+      doNothing: {
+        category: "idle",
+        duration: 10
+      }
     };
 
-
-    this.lastDecision =
-      decision;
-
-
-    this.recordDecision(
-      decision
+    Object.entries(fallbackActions).forEach(
+      ([id, action]) => {
+        if (!this.actions[id]) {
+          this.actions[id] = {
+            id,
+            ...action
+          };
+        }
+      }
     );
-
-
-    return decision;
   }
 
 
-  // ============================================================
-  // 2. ДОСТУПНІ ДІЇ
-  // ============================================================
+  /*
+   * ==========================================================
+   * ГОЛОВНЕ РІШЕННЯ
+   * ==========================================================
+   */
 
-  getAvailableActions(
-    context = {}
-  ) {
-
-    const data =
-      this.brain.data.activities;
-
-
-    /*
-     * Якщо activities.json має каталог actions,
-     * беремо його.
-     */
-    let actions =
-      data?.actions;
-
-
-    /*
-     * Підтримуємо також activities.
-     */
-    if (
-      !actions
-    ) {
-
-      actions =
-        data?.activities;
+  decide(context = null) {
+    if (!this.initialized) {
+      this.init();
     }
 
+    const situation =
+      context ||
+      this.brain.evaluateSituation();
 
     /*
-     * Якщо JSON ще не підключений,
-     * використовуємо базовий набір.
-     *
-     * Це тимчасовий запасний варіант.
+     * 1. Формуємо список доступних кандидатів.
      */
-    if (
-      !actions
-    ) {
+    const candidates =
+      this.buildCandidates(situation);
 
-      actions = {
-
-        sleep: {
-          enabled: true
-        },
-
-        eat: {
-          enabled: true
-        },
-
-        drink: {
-          enabled: true
-        },
-
-        rest: {
-          enabled: true
-        },
-
-        work: {
-          enabled: true
-        },
-
-        walk: {
-          enabled: true
-        },
-
-        cycle: {
-          enabled: true
-        },
-
-        read: {
-          enabled: true
-        },
-
-        listenToMusic: {
-          enabled: true
-        },
-
-        playGame: {
-          enabled: true
-        },
-
-        checkSocialNetwork: {
-          enabled: true
-        },
-
-        writePost: {
-          enabled: true
-        },
-
-        talkToSomeone: {
-          enabled: true
-        },
-
-        talkToYani: {
-          enabled: true
-        },
-
-        visitMuseum: {
-          enabled: true
-        },
-
-        visitPlanetarium: {
-          enabled: true
-        },
-
-        visitTheatre: {
-          enabled: true
-        },
-
-        visitConcert: {
-          enabled: true
-        },
-
-        goToCinema: {
-          enabled: true
-        },
-
-        boatRide: {
-          enabled: true
-        },
-
-        fishing: {
-          enabled: true
-        },
-
-        craftWithClay: {
-          enabled: true
-        },
-
-        lookAtFlowers: {
-          enabled: true
-        },
-
-        observeAnimals: {
-          enabled: true
-        },
-
-        stargazing: {
-          enabled: true
-        },
-
-        checkCalendar: {
-          enabled: true
-        },
-
-        checkPhone: {
-          enabled: true
-        },
-
-        lookOutWindow: {
-          enabled: true
-        },
-
-        organizeDesk: {
-          enabled: true
-        },
-
-        think: {
-          enabled: true
-        },
-
-        rememberSomeone: {
-          enabled: true
-        },
-
-        nothing: {
-          enabled: true
-        }
-      };
-    }
-
-
-    const result = [];
-
-
-    for (
-      const [id, definition]
-      of Object.entries(actions)
-    ) {
-
-      if (
-        definition === false
-      ) {
-        continue;
-      }
-
-
-      if (
-        definition?.enabled === false
-      ) {
-        continue;
-      }
-
-
-      /*
-       * Перетворюємо запис JSON
-       * на єдиний формат.
-       */
-      result.push({
-
-        action:
-          id,
-
-        ...(
-          typeof definition === "object"
-            ? definition
-            : {}
+    /*
+     * 2. Розраховуємо оцінки.
+     */
+    const scored =
+      candidates.map(action =>
+        this.scoreAction(
+          action,
+          situation
         )
-      });
-    }
-
+      );
 
     /*
-     * Завжди залишаємо можливість
-     * нічого не робити.
+     * 3. Сортуємо, але не просто беремо
+     * абсолютний максимум.
      */
+    scored.sort(
+      (a, b) => b.score - a.score
+    );
+
+    /*
+     * 4. Вибір із верхньої частини.
+     *
+     * Це створює варіативність:
+     *
+     * найкраща дія має найбільшу ймовірність,
+     * але друга/третя теж іноді можуть перемогти.
+     */
+    const selected =
+      this.selectWithVariation(scored);
+
+    /*
+     * 5. Записуємо рішення.
+     */
+    this.recordDecision(
+      selected,
+      scored,
+      situation
+    );
+
+    return selected;
+  }
+
+
+  /*
+   * ==========================================================
+   * ФОРМУВАННЯ КАНДИДАТІВ
+   * ==========================================================
+   */
+
+  buildCandidates(situation) {
+    const candidates = [];
+
+    Object.values(this.actions).forEach(action => {
+      if (!action || !action.id) {
+        return;
+      }
+
+      if (
+        !this.isAvailable(
+          action,
+          situation
+        )
+      ) {
+        return;
+      }
+
+      candidates.push(action);
+    });
+
+    /*
+     * Додаємо "нічого не робити".
+     *
+     * Воно має бути справжнім кандидатом,
+     * а не аварійною заглушкою.
+     */
+
     if (
-      !result.some(
-        item =>
-          item.action === "nothing"
+      !candidates.some(
+        action => action.id === "doNothing"
       )
     ) {
-
-      result.push({
-        action: "nothing",
-        enabled: true
+      candidates.push({
+        id: "doNothing",
+        category: "idle",
+        duration: 10
       });
     }
 
-
-    /*
-     * Фільтрація контекстом.
-     */
-    return result.filter(
-      action =>
-        this.isActionPossible(
-          action,
-          context
-        )
+    return candidates.slice(
+      0,
+      this.maxCandidates
     );
   }
 
 
-  // ============================================================
-  // 3. ЧИ МОЖЛИВА ДІЯ
-  // ============================================================
+  /*
+   * ==========================================================
+   * ДОСТУПНІСТЬ ДІЇ
+   * ==========================================================
+   */
 
-  isActionPossible(
-    action,
-    context
-  ) {
-
-    const id =
-      action.action;
-
-
+  isAvailable(action, situation) {
     /*
      * Сон.
      */
     if (
-      id === "sleep"
+      action.id === "sleep" &&
+      situation.activity === "sleeping"
     ) {
-
-      /*
-       * Якщо персонаж уже спить,
-       * повторно вибирати sleep не треба.
-       */
-      if (
-        this.getActivity() ===
-        "sleeping"
-      ) {
-        return false;
-      }
+      return false;
     }
-
 
     /*
      * Робота.
+     *
+     * Поза робочим часом не забороняємо категорично:
+     * іноді Акіра може залишитися доробити щось.
+     *
+     * Але scoreAction сильно зменшить оцінку.
      */
-    if (
-      id === "work" ||
-      id === "working"
-    ) {
-
-      if (
-        !this.isWorkTime()
-      ) {
-        return false;
-      }
-    }
-
 
     /*
-     * Дії поза домом.
+     * Активності на вулиці.
      */
-    const outdoorActions = [
-
+    const outdoor = [
       "walk",
       "cycle",
-      "visitMuseum",
-      "visitPlanetarium",
-      "visitTheatre",
-      "visitConcert",
-      "goToCinema",
       "boatRide",
       "fishing",
       "lookAtFlowers",
@@ -494,1511 +464,997 @@ class AkiraDecision {
       "stargazing"
     ];
 
-
     if (
-      outdoorActions.includes(id)
+      outdoor.includes(action.id) &&
+      this.isDangerousWeather(situation)
     ) {
-
       /*
-       * Якщо світ або стан забороняє
-       * вихід — дія недоступна.
+       * Не повністю забороняємо,
+       * якщо action дозволяє погану погоду.
        */
-      if (
-        context.outdoorAvailable === false
-      ) {
+      if (!action.allWeather) {
         return false;
       }
     }
-
 
     /*
-     * Стежимо за фізичним станом.
+     * Якщо персонаж спить,
+     * більшість звичайних дій недоступна.
      */
     if (
-      context.physicalActivityBlocked
+      situation.activity === "sleeping" &&
+      action.id !== "sleep"
     ) {
-
-      const demanding = [
-
-        "cycle",
-        "boatRide",
-        "fishing",
-        "walk"
-      ];
-
-
-      if (
-        demanding.includes(id)
-      ) {
-        return false;
-      }
+      return false;
     }
-
 
     return true;
   }
 
 
-  // ============================================================
-  // 4. ОЦІНКА ДІЇ
-  // ============================================================
+  /*
+   * ==========================================================
+   * ОЦІНКА ДІЇ
+   * ==========================================================
+   *
+   * Загальна оцінка:
+   *
+   * score =
+   *
+   * needs
+   * + goals
+   * + emotions
+   * + interests
+   * + preferences
+   * + habits
+   * + weather
+   * + time
+   * + relationships
+   * + curiosity
+   * + novelty
+   * + context
+   * - repetition
+   *
+   * Це НЕ рейтинг "наскільки дія хороша".
+   *
+   * Це приблизна сила поточного потягу
+   * до конкретної дії.
+   */
 
-  evaluateAction(
-    action,
-    context = {}
-  ) {
+  scoreAction(action, situation) {
+    const factors = {};
 
-    const id =
-      action.action;
+    factors.needs =
+      this.scoreNeeds(
+        action,
+        situation
+      );
 
+    factors.goals =
+      this.scoreGoals(
+        action,
+        situation
+      );
+
+    factors.emotions =
+      this.scoreEmotions(
+        action,
+        situation
+      );
+
+    factors.interests =
+      this.scoreInterests(
+        action,
+        situation
+      );
+
+    factors.preferences =
+      this.scorePreferences(
+        action,
+        situation
+      );
+
+    factors.habits =
+      this.scoreHabits(
+        action,
+        situation
+      );
+
+    factors.weather =
+      this.scoreWeather(
+        action,
+        situation
+      );
+
+    factors.time =
+      this.scoreTime(
+        action,
+        situation
+      );
+
+    factors.relationships =
+      this.scoreRelationships(
+        action,
+        situation
+      );
+
+    factors.curiosity =
+      this.scoreCuriosity(
+        action,
+        situation
+      );
+
+    factors.novelty =
+      this.scoreNovelty(
+        action,
+        situation
+      );
+
+    factors.state =
+      this.scoreCurrentState(
+        action,
+        situation
+      );
+
+    factors.repetition =
+      this.scoreRepetition(
+        action,
+        situation
+      );
+
+    /*
+     * Ваги.
+     *
+     * Потреби та цілі сильніші за випадкову цікавість.
+     */
+    const weights = {
+      needs: 1.35,
+      goals: 1.25,
+      emotions: 0.85,
+      interests: 0.90,
+      preferences: 0.75,
+      habits: 0.45,
+      weather: 0.65,
+      time: 0.70,
+      relationships: 0.90,
+      curiosity: 0.55,
+      novelty: 0.35,
+      state: 0.90,
+      repetition: 1.00
+    };
 
     let score = 0;
 
-
-    const factors = {};
-
-
-    /*
-     * ----------------------------------------------------------
-     * ПОТРЕБИ
-     * ----------------------------------------------------------
-     */
-
-    const needsScore =
-      this.evaluateNeeds(
-        id
-      );
-
-
-    score +=
-      needsScore.total;
-
-
-    factors.needs =
-      needsScore;
-
+    Object.entries(factors).forEach(
+      ([name, value]) => {
+        score +=
+          value *
+          (weights[name] ?? 1);
+      }
+    );
 
     /*
-     * ----------------------------------------------------------
-     * ЕМОЦІЇ
-     * ----------------------------------------------------------
+     * Невелика випадковість.
      */
+    const randomRange =
+      Math.abs(score) *
+      this.randomness;
 
-    const emotionScore =
-      this.evaluateEmotions(
-        id
-      );
+    const randomOffset =
+      (Math.random() * 2 - 1) *
+      randomRange;
 
-
-    score +=
-      emotionScore.total;
-
-
-    factors.emotions =
-      emotionScore;
-
+    score += randomOffset;
 
     /*
-     * ----------------------------------------------------------
-     * ЦІЛІ
-     * ----------------------------------------------------------
+     * Нормалізуємо.
      */
-
-    const goalScore =
-      this.evaluateGoals(
-        id
-      );
-
-
-    score +=
-      goalScore.total;
-
-
-    factors.goals =
-      goalScore;
-
-
-    /*
-     * ----------------------------------------------------------
-     * ІНТЕРЕСИ
-     * ----------------------------------------------------------
-     */
-
-    const interestScore =
-      this.evaluateInterests(
-        id,
-        action
-      );
-
-
-    score +=
-      interestScore.total;
-
-
-    factors.interests =
-      interestScore;
-
-
-    /*
-     * ----------------------------------------------------------
-     * УПОДОБАННЯ
-     * ----------------------------------------------------------
-     */
-
-    const preferenceScore =
-      this.evaluatePreferences(
-        id,
-        action
-      );
-
-
-    score +=
-      preferenceScore.total;
-
-
-    factors.preferences =
-      preferenceScore;
-
-
-    /*
-     * ----------------------------------------------------------
-     * ЗВИЧКИ
-     * ----------------------------------------------------------
-     */
-
-    const habitScore =
-      this.evaluateHabits(
-        id,
-        context
-      );
-
-
-    score +=
-      habitScore.total;
-
-
-    factors.habits =
-      habitScore;
-
-
-    /*
-     * ----------------------------------------------------------
-     * СТОСУНКИ
-     * ----------------------------------------------------------
-     */
-
-    const relationshipScore =
-      this.evaluateRelationships(
-        id,
-        action
-      );
-
-
-    score +=
-      relationshipScore.total;
-
-
-    factors.relationships =
-      relationshipScore;
-
-
-    /*
-     * ----------------------------------------------------------
-     * ПОГОДА
-     * ----------------------------------------------------------
-     */
-
-    const weatherScore =
-      this.evaluateWeather(
-        id
-      );
-
-
-    score +=
-      weatherScore.total;
-
-
-    factors.weather =
-      weatherScore;
-
-
-    /*
-     * ----------------------------------------------------------
-     * ЧАС
-     * ----------------------------------------------------------
-     */
-
-    const timeScore =
-      this.evaluateTime(
-        id
-      );
-
-
-    score +=
-      timeScore.total;
-
-
-    factors.time =
-      timeScore;
-
-
-    /*
-     * ----------------------------------------------------------
-     * МІСЦЕ
-     * ----------------------------------------------------------
-     */
-
-    const locationScore =
-      this.evaluateLocation(
-        id
-      );
-
-
-    score +=
-      locationScore.total;
-
-
-    factors.location =
-      locationScore;
-
-
-    /*
-     * ----------------------------------------------------------
-     * НОВИЗНА
-     * ----------------------------------------------------------
-     */
-
-    const noveltyScore =
-      this.evaluateNovelty(
-        id
-      );
-
-
-    score +=
-      noveltyScore.total;
-
-
-    factors.novelty =
-      noveltyScore;
-
-
-    /*
-     * ----------------------------------------------------------
-     * НЕЩОДАВНІ ПОВТОРИ
-     * ----------------------------------------------------------
-     */
-
-    const repetitionScore =
-      this.evaluateRepetition(
-        id
-      );
-
-
-    score +=
-      repetitionScore.total;
-
-
-    factors.repetition =
-      repetitionScore;
-
-
-    /*
-     * ----------------------------------------------------------
-     * ЕНЕРГІЯ
-     * ----------------------------------------------------------
-     */
-
-    const energyScore =
-      this.evaluateEnergy(
-        id
-      );
-
-
-    score +=
-      energyScore.total;
-
-
-    factors.energy =
-      energyScore;
-
-
-    /*
-     * ----------------------------------------------------------
-     * ВИПАДКОВІСТЬ
-     * ----------------------------------------------------------
-     */
-
-    const randomScore =
-      this.randomVariation();
-
-
-    score +=
-      randomScore;
-
-
-    factors.random =
-      randomScore;
-
-
-    /*
-     * Базовий пріоритет дії.
-     */
-    const base =
-      Number(
-        action.priority ??
-        action.basePriority ??
-        0
-      );
-
-
-    score +=
-      base;
-
-
-    factors.base =
-      base;
-
-
-    /*
-     * Межі.
-     *
-     * Це не рейтинг персонажа,
-     * а технічний бал конкретного рішення.
-     */
-    score =
-      Math.round(
-        score * 100
-      ) / 100;
-
+    score = this.clamp(
+      score,
+      -100,
+      100
+    );
 
     return {
-
-      action: id,
-
-      target:
-        action.target ??
-        this.findNaturalTarget(id),
-
-      duration:
-        action.duration ??
-        this.estimateDuration(id),
+      ...action,
 
       score,
 
-      factors
+      factors,
+
+      reason:
+        this.generateReason(
+          action,
+          factors,
+          situation
+        )
     };
   }
 
 
-  // ============================================================
-  // 5. ПОТРЕБИ
-  // ============================================================
+  /*
+   * ==========================================================
+   * ПОТРЕБИ
+   * ==========================================================
+   */
 
-  evaluateNeeds(action) {
-
+  scoreNeeds(action, situation) {
     const needs =
-      this.brain.state?.needs ||
-      {};
+      situation.needs || {};
 
+    let score = 0;
 
-    let total = 0;
-
-    const factors = {};
-
-
-    const hunger =
-      Number(
-        needs.hunger ?? 0
-      );
-
-
-    const thirst =
-      Number(
-        needs.thirst ?? 0
-      );
-
+    /*
+     * Сон / енергія.
+     */
 
     const energy =
       Number(
-        needs.energy ?? 50
+        needs.energy ??
+        situation.energy ??
+        50
       );
-
 
     const sleep =
       Number(
         needs.sleep ?? 50
       );
 
+    if (action.id === "sleep") {
+      score +=
+        (100 - energy) * 0.65;
 
-    const rest =
-      Number(
-        needs.rest ?? 50
-      );
-
-
-    const social =
-      Number(
-        needs.social ?? 50
-      );
-
-
-    const fun =
-      Number(
-        needs.fun ?? 50
-      );
-
-
-    const curiosity =
-      Number(
-        needs.curiosity ?? 50
-      );
-
-
-    const comfort =
-      Number(
-        needs.comfort ?? 50
-      );
-
+      score +=
+        (100 - sleep) * 0.35;
+    }
 
     /*
      * Їжа.
      */
-    if (
-      action === "eat"
-    ) {
+    if (action.id === "eat") {
+      const hunger =
+        Number(needs.hunger ?? 20);
 
-      const value =
-        hunger * 0.45;
-
-      total += value;
-
-      factors.hunger =
-        value;
+      score += hunger * 0.90;
     }
-
 
     /*
      * Напій.
      */
-    if (
-      action === "drink"
-    ) {
+    if (action.id === "drink") {
+      const thirst =
+        Number(needs.thirst ?? 20);
 
-      const value =
-        thirst * 0.45;
-
-      total += value;
-
-      factors.thirst =
-        value;
+      score += thirst * 0.90;
     }
-
-
-    /*
-     * Сон.
-     */
-    if (
-      action === "sleep"
-    ) {
-
-      const value =
-        (
-          (100 - sleep) +
-          (100 - energy)
-        ) * 0.35;
-
-      total += value;
-
-      factors.sleep =
-        value;
-    }
-
 
     /*
      * Відпочинок.
      */
-    if (
-      action === "rest"
-    ) {
+    if (action.id === "rest") {
+      const rest =
+        Number(needs.rest ?? 50);
 
-      const value =
-        (
-          (100 - rest) +
-          (100 - energy)
-        ) * 0.25;
+      score +=
+        (100 - rest) * 0.55;
 
-      total += value;
-
-      factors.rest =
-        value;
+      score +=
+        Number(
+          situation.fatigue ?? 0
+        ) * 0.45;
     }
-
 
     /*
-     * Соціальна взаємодія.
+     * Соціальна потреба.
      */
-    const socialActions = [
-
-      "talkToSomeone",
-      "talkToYani",
-      "checkSocialNetwork",
-      "writePost"
-    ];
-
-
     if (
-      socialActions.includes(
-        action
-      )
+      action.category === "social" ||
+      action.id === "talkToSomeone" ||
+      action.id === "talkToYani"
     ) {
+      const social =
+        Number(needs.social ?? 50);
 
-      const value =
-        social * 0.25;
-
-      total += value;
-
-      factors.social =
-        value;
+      score +=
+        (social - 50) * 0.70;
     }
-
 
     /*
      * Розваги.
      */
-    const funActions = [
-
-      "playGame",
-      "listenToMusic",
-      "goToCinema",
-      "walk",
-      "cycle",
-      "visitTheatre",
-      "visitConcert"
-    ];
-
-
     if (
-      funActions.includes(
-        action
-      )
+      [
+        "playGame",
+        "listenToMusic",
+        "goToCinema",
+        "visitTheatre",
+        "visitConcert",
+        "walk",
+        "cycle"
+      ].includes(action.id)
     ) {
+      const fun =
+        Number(needs.fun ?? 50);
 
-      const value =
-        fun * 0.20;
-
-      total += value;
-
-      factors.fun =
-        value;
+      score +=
+        (fun - 45) * 0.55;
     }
-
 
     /*
      * Цікавість.
      */
-    const curiosityActions = [
-
-      "read",
-      "visitMuseum",
-      "visitPlanetarium",
-      "think",
-      "stargazing",
-      "checkSocialNetwork",
-      "explore"
-    ];
-
-
     if (
-      curiosityActions.includes(
-        action
-      )
+      [
+        "read",
+        "visitMuseum",
+        "visitPlanetarium",
+        "stargazing",
+        "think",
+        "checkSocialNetwork",
+        "explore"
+      ].includes(action.id)
     ) {
+      const curiosity =
+        Number(needs.curiosity ?? 50);
 
-      const value =
-        curiosity * 0.22;
-
-      total += value;
-
-      factors.curiosity =
-        value;
+      score +=
+        (curiosity - 45) * 0.45;
     }
-
 
     /*
-     * Комфорт.
+     * Приватність.
      */
     if (
-      action === "rest" ||
-      action === "organizeDesk" ||
-      action === "listenToMusic"
+      [
+        "rest",
+        "read",
+        "listenToMusic",
+        "think",
+        "organizeDesk",
+        "doNothing"
+      ].includes(action.id)
     ) {
+      const privacy =
+        Number(needs.privacy ?? 50);
 
-      const value =
-        comfort * 0.12;
-
-      total += value;
-
-      factors.comfort =
-        value;
+      score +=
+        (privacy - 50) * 0.30;
     }
 
-
-    return {
-      total,
-      factors
-    };
+    return score;
   }
 
 
-  // ============================================================
-  // 6. ЕМОЦІЇ
-  // ============================================================
+  /*
+   * ==========================================================
+   * ЦІЛІ
+   * ==========================================================
+   */
 
-  evaluateEmotions(action) {
-
-    const mood =
-      this.brain.mood;
-
-
-    if (!mood) {
-
-      return {
-        total: 0,
-        factors: {}
-      };
-    }
-
-
-    const effects = {
-
-      cycling: {
-        joy: 0.18,
-        boredom: -0.20,
-        pleasure: 0.12
-      },
-
-      walk: {
-        calm: 0.15,
-        boredom: -0.16
-      },
-
-      reading: {
-        calm: 0.12,
-        curiosity: 0.18,
-        boredom: -0.10
-      },
-
-      planetarium: {
-        curiosity: 0.28,
-        interest: 0.25,
-        pleasure: 0.20
-      },
-
-      museum: {
-        curiosity: 0.22,
-        interest: 0.20
-      },
-
-      music: {
-        pleasure: 0.16,
-        calm: 0.14
-      },
-
-      gaming: {
-        pleasure: 0.14,
-        boredom: -0.18
-      },
-
-      talkToYani: {
-        affection: 0.25,
-        attachment: 0.20,
-        loneliness: -0.18,
-        joy: 0.16
-      },
-
-      talkToSomeone: {
-        loneliness: -0.15,
-        sympathy: 0.12
-      },
-
-      rest: {
-        fatigue: -0.25,
-        calm: 0.20
-      },
-
-      sleep: {
-        fatigue: -0.35,
-        anxiety: -0.15,
-        calm: 0.20
-      }
-    };
-
-
-    const normalized =
-      action === "listenToMusic"
-        ? "music"
-        : action === "playGame"
-          ? "gaming"
-          : action;
-
-
-    const map =
-      effects[normalized] ||
-      {};
-
-
-    let total = 0;
-
-    const factors = {};
-
-
-    for (
-      const [emotion, coefficient]
-      of Object.entries(map)
-    ) {
-
-      const value =
-        mood.get(emotion) *
-        coefficient;
-
-
-      total += value;
-
-      factors[emotion] =
-        value;
-    }
-
-
-    /*
-     * Якщо дія суперечить поточній емоції,
-     * вона може отримати штраф.
-     *
-     * Наприклад:
-     * сильна втома → довга прогулянка менш імовірна.
-     */
-    const fatigue =
-      mood.get("fatigue");
-
-
-    if (
-      fatigue > 75
-    ) {
-
-      const demanding = [
-
-        "cycle",
-        "walk",
-        "fishing",
-        "boatRide"
-      ];
-
-
-      if (
-        demanding.includes(
-          action
-        )
-      ) {
-
-        total -=
-          (fatigue - 75) *
-          0.30;
-
-        factors.fatiguePenalty =
-          -(fatigue - 75) *
-          0.30;
-      }
-    }
-
-
-    return {
-      total,
-      factors
-    };
-  }
-
-
-  // ============================================================
-  // 7. ЦІЛІ
-  // ============================================================
-
-  evaluateGoals(action) {
-
+  scoreGoals(action, situation) {
     const goals =
-      this.brain.state?.goals ||
-      [];
+      Array.isArray(
+        this.brain?.state?.goals
+      )
+        ? this.brain.state.goals
+        : [];
 
+    let score = 0;
 
-    let total = 0;
-
-    const factors = {};
-
-
-    /*
-     * Підтримуємо як масив,
-     * так і об'єкт activeGoals.
-     */
-    const activeGoals =
-      Array.isArray(goals)
-        ? goals
-        : (
-          goals.activeGoals ||
-          []
-        );
-
-
-    for (
-      const goal
-      of activeGoals
-    ) {
-
-      if (
-        !goal ||
-        goal.status === "completed" ||
-        goal.active === false
-      ) {
-        continue;
+    goals.forEach(goal => {
+      if (!goal) {
+        return;
       }
 
+      const actions =
+        Array.isArray(goal.actions)
+          ? goal.actions
+          : [];
 
       const possibleActions =
-        goal.possibleActions ||
-        goal.actions ||
-        [];
+        Array.isArray(goal.possibleActions)
+          ? goal.possibleActions
+          : [];
 
+      const matches =
+        actions.includes(action.id) ||
+        possibleActions.includes(action.id);
 
-      if (
-        !possibleActions.includes(
-          action
-        )
-      ) {
-        continue;
+      if (!matches) {
+        return;
       }
-
 
       const importance =
         Number(
           goal.importance ?? 50
         );
 
-
       const urgency =
         Number(
-          goal.urgency ?? 50
+          goal.urgency ?? 30
         );
-
 
       const motivation =
         Number(
           goal.motivation ?? 50
         );
 
-
       const progress =
         Number(
           goal.progress ?? 0
         );
-
 
       const flexibility =
         Number(
           goal.flexibility ?? 50
         );
 
+      /*
+       * Незавершена важлива ціль
+       * додає мотивації.
+       */
+      score +=
+        importance * 0.40;
 
-      const value =
-        importance * 0.20 +
-        urgency * 0.16 +
-        motivation * 0.14 +
-        (100 - progress) * 0.05 +
-        (100 - flexibility) * 0.03;
+      score +=
+        urgency * 0.35;
 
+      score +=
+        motivation * 0.35;
 
-      total += value;
+      /*
+       * Якщо ціль майже виконана,
+       * відповідна дія може стати важливішою.
+       */
+      if (progress > 70) {
+        score +=
+          (progress - 70) * 0.25;
+      }
 
+      /*
+       * Гнучкість дозволяє легше відкласти ціль,
+       * тому трохи зменшуємо її тиск.
+       */
+      score -=
+        flexibility * 0.08;
+    });
 
-      factors[
-        goal.id ||
-        goal.name ||
-        "goal"
-      ] =
-        value;
-    }
-
-
-    return {
-      total,
-      factors
-    };
+    return score;
   }
 
 
-  // ============================================================
-  // 8. ІНТЕРЕСИ
-  // ============================================================
+  /*
+   * ==========================================================
+   * ЕМОЦІЇ
+   * ==========================================================
+   */
 
-  evaluateInterests(
-    action,
-    definition
-  ) {
+  scoreEmotions(action, situation) {
+    const emotions =
+      situation.emotions || {};
+
+    const modifiers =
+      situation.behaviorModifiers || {};
+
+    let score = 0;
+
+    /*
+     * Загальний поведінковий вплив.
+     */
+
+    if (
+      action.category === "social"
+    ) {
+      score +=
+        (modifiers.socialInitiative - 50) *
+        0.55;
+    }
+
+    if (
+      action.category === "outdoor" ||
+      action.category === "exploration"
+    ) {
+      score +=
+        (modifiers.exploration - 50) *
+        0.45;
+    }
+
+    if (
+      action.category === "leisure"
+    ) {
+      score +=
+        (modifiers.activityDrive - 50) *
+        0.35;
+    }
+
+    /*
+     * Конкретні емоційні тенденції.
+     */
+
+    const joy =
+      Number(emotions.joy ?? 0);
+
+    const sadness =
+      Number(emotions.sadness ?? 0);
+
+    const anxiety =
+      Number(emotions.anxiety ?? 0);
+
+    const boredom =
+      Number(emotions.boredom ?? 0);
+
+    const curiosity =
+      Number(emotions.curiosity ?? 0);
+
+    const calm =
+      Number(emotions.calm ?? 0);
+
+    if (action.id === "doNothing") {
+      score +=
+        calm * 0.10;
+
+      score +=
+        sadness * 0.04;
+
+      score +=
+        anxiety * 0.06;
+    }
+
+    if (
+      [
+        "read",
+        "listenToMusic",
+        "walk",
+        "visitMuseum",
+        "visitPlanetarium",
+        "think"
+      ].includes(action.id)
+    ) {
+      score +=
+        curiosity * 0.12;
+    }
+
+    if (
+      [
+        "checkPhone",
+        "checkSocialNetwork",
+        "playGame",
+        "walk",
+        "cycle",
+        "talkToSomeone"
+      ].includes(action.id)
+    ) {
+      score +=
+        boredom * 0.10;
+    }
+
+    if (
+      [
+        "rest",
+        "read",
+        "listenToMusic",
+        "doNothing"
+      ].includes(action.id)
+    ) {
+      score +=
+        anxiety * 0.06;
+
+      score +=
+        calm * 0.05;
+    }
+
+    if (
+      [
+        "talkToSomeone",
+        "talkToYani",
+        "checkSocialNetwork"
+      ].includes(action.id)
+    ) {
+      score +=
+        joy * 0.07;
+    }
+
+    if (
+      action.category === "social"
+    ) {
+      score -=
+        sadness * 0.06;
+    }
+
+    return score;
+  }
+
+
+  /*
+   * ==========================================================
+   * ІНТЕРЕСИ
+   * ==========================================================
+   */
+
+  scoreInterests(action, situation) {
+    const interestsData =
+      this.brain?.data?.interests || {};
 
     const interests =
-      this.brain.data.interests ||
-      {};
+      interestsData.interests ||
+      interestsData;
 
-
-    let total = 0;
-
-    const factors = {};
-
+    let score = 0;
 
     /*
-     * Зв'язок дія → тема.
+     * action.interestTopics може бути заданий
+     * безпосередньо в activities.json.
      */
-    const actionTopics = {
-
-      cycle: ["cycling"],
-
-      walk: [
-        "cityWalks",
-        "city",
-        "parks"
-      ],
-
-      read: [
-        "reading",
-        "books"
-      ],
-
-      visitMuseum: [
-        "museums",
-        "culture"
-      ],
-
-      visitPlanetarium: [
-        "planetarium",
-        "space",
-        "astronomy"
-      ],
-
-      stargazing: [
-        "space",
-        "astronomy"
-      ],
-
-      goToCinema: [
-        "cinema"
-      ],
-
-      playGame: [
-        "games"
-      ],
-
-      talkToYani: [
-        "relationships",
-        "Yani"
-      ],
-
-      lookAtFlowers: [
-        "flowers"
-      ],
-
-      observeAnimals: [
-        "animals"
-      ],
-
-      fishing: [
-        "fishing"
-      ],
-
-      boatRide: [
-        "boatRides"
-      ],
-
-      visitTheatre: [
-        "theatre"
-      ],
-
-      visitConcert: [
-        "concerts"
-      ],
-
-      craftWithClay: [
-        "clayCrafting"
-      ]
-    };
-
 
     const topics =
-      actionTopics[action] ||
-      definition.topics ||
-      [];
+      Array.isArray(action.interestTopics)
+        ? action.interestTopics
+        : [];
 
-
-    for (
-      const topic
-      of topics
-    ) {
-
-      const data =
+    topics.forEach(topic => {
+      const interest =
         interests[topic];
 
-
-      if (!data) {
-        continue;
+      if (!interest) {
+        return;
       }
 
+      if (
+        typeof interest === "number"
+      ) {
+        score +=
+          interest * 0.25;
 
-      const interest =
-        Number(
-          data.interest ??
-          data.value ??
-          0
-        );
+        return;
+      }
 
+      if (
+        typeof interest.interest === "number"
+      ) {
+        score +=
+          interest.interest * 0.25;
+      }
 
-      const initiative =
-        Number(
-          data.initiative ??
-          0
-        );
+      if (
+        typeof interest.liking === "number"
+      ) {
+        score +=
+          interest.liking * 0.15;
+      }
 
+      if (
+        typeof interest.initiative === "number"
+      ) {
+        score +=
+          interest.initiative * 0.10;
+      }
+    });
 
-      const frequency =
-        Number(
-          data.frequency ??
-          0
-        );
-
-
-      const novelty =
-        Number(
-          data.novelty ??
-          0
-        );
-
-
-      const value =
-        interest * 0.18 +
-        initiative * 0.10 +
-        frequency * 0.04 +
-        novelty * 0.05;
-
-
-      total += value;
-
-
-      factors[topic] =
-        value;
-    }
-
-
-    return {
-      total,
-      factors
+    /*
+     * Резервне зіставлення дії з інтересом.
+     */
+    const map = {
+      cycle: ["cycling"],
+      walk: ["cityWalks"],
+      read: ["reading"],
+      visitMuseum: ["museums"],
+      visitPlanetarium: ["planetarium", "space"],
+      visitTheatre: ["theatre"],
+      visitConcert: ["concerts"],
+      goToCinema: ["cinema"],
+      boatRide: ["boatRides"],
+      fishing: ["fishing"],
+      lookAtFlowers: ["flowers"],
+      observeAnimals: ["animals"],
+      stargazing: ["space", "astronomy"],
+      playGame: ["games"],
+      listenToMusic: ["music"],
+      craftWithClay: ["clayCrafting"]
     };
+
+    const mapped =
+      map[action.id] || [];
+
+    mapped.forEach(topic => {
+      const interest =
+        interests[topic];
+
+      if (!interest) {
+        return;
+      }
+
+      if (
+        typeof interest === "number"
+      ) {
+        score +=
+          interest * 0.25;
+      } else {
+        score +=
+          Number(
+            interest.interest ?? 0
+          ) * 0.22;
+
+        score +=
+          Number(
+            interest.liking ?? 0
+          ) * 0.13;
+
+        score +=
+          Number(
+            interest.initiative ?? 0
+          ) * 0.08;
+      }
+    });
+
+    return score;
   }
 
 
-  // ============================================================
-  // 9. УПОДОБАННЯ
-  // ============================================================
+  /*
+   * ==========================================================
+   * ПЕРЕВАГИ
+   * ==========================================================
+   */
 
-  evaluatePreferences(
-    action,
-    definition
-  ) {
+  scorePreferences(action, situation) {
+    const preferencesData =
+      this.brain?.data?.preferences || {};
 
     const preferences =
-      this.brain.data.preferences ||
-      {};
+      preferencesData.preferences ||
+      preferencesData;
 
-
-    let total = 0;
-
-    const factors = {};
-
-
-    const mapping = {
-
-      cycle: [
-        ["activities", "cycling"]
-      ],
-
-      walk: [
-        ["activities", "cityWalks"]
-      ],
-
-      visitMuseum: [
-        ["activities", "museums"]
-      ],
-
-      visitPlanetarium: [
-        ["activities", "planetarium"]
-      ],
-
-      goToCinema: [
-        ["activities", "cinema"]
-      ],
-
-      visitTheatre: [
-        ["activities", "theatre"]
-      ],
-
-      visitConcert: [
-        ["activities", "concerts"]
-      ],
-
-      boatRide: [
-        ["activities", "boatRides"]
-      ],
-
-      fishing: [
-        ["activities", "fishing"]
-      ],
-
-      read: [
-        ["activities", "reading"]
-      ],
-
-      craftWithClay: [
-        ["activities", "clay"]
-      ],
-
-      lookAtFlowers: [
-        ["nature", "flowers"]
-      ],
-
-      observeAnimals: [
-        ["nature", "animals"]
-      ]
-    };
-
-
-    const entries =
-      mapping[action] ||
-      [];
-
-
-    for (
-      const [category, key]
-      of entries
-    ) {
-
-      const data =
-        preferences?.[category]?.[key];
-
-
-      if (!data) {
-        continue;
-      }
-
-
-      /*
-       * Тут навмисно використовуємо
-       * кілька параметрів, а не один.
-       */
-      const liking =
-        Number(
-          data.liking ??
-          0
-        );
-
-
-      const comfort =
-        Number(
-          data.comfort ??
-          0
-        );
-
-
-      const practicality =
-        Number(
-          data.practicality ??
-          0
-        );
-
-
-      const aesthetic =
-        Number(
-          data.aesthetic ??
-          0
-        );
-
-
-      const value =
-        liking * 0.16 +
-        comfort * 0.06 +
-        practicality * 0.03 +
-        aesthetic * 0.03;
-
-
-      total += value;
-
-
-      factors[
-        `${category}.${key}`
-      ] =
-        value;
-    }
-
-
-    return {
-      total,
-      factors
-    };
-  }
-
-
-  // ============================================================
-  // 10. ЗВИЧКИ
-  // ============================================================
-
-  evaluateHabits(
-    action,
-    context
-  ) {
-
-    const habits =
-      this.brain.data.habits ||
-      {};
-
-
-    let total = 0;
-
-    const factors = {};
-
+    let score = 0;
 
     /*
-     * Шукаємо всі звички, пов'язані з дією.
+     * activities.json може містити
+     * preferenceTags.
      */
-    const allHabits =
-      habits.habits ||
-      habits;
 
+    const tags =
+      Array.isArray(action.preferenceTags)
+        ? action.preferenceTags
+        : [];
 
-    for (
-      const [id, habit]
-      of Object.entries(
-        allHabits
-      )
-    ) {
+    tags.forEach(tag => {
+      const preference =
+        preferences[tag];
 
-      if (
-        !habit ||
-        typeof habit !== "object"
-      ) {
-        continue;
+      if (!preference) {
+        return;
       }
 
-
-      const possibleActions =
-        habit.actions ||
-        habit.activities ||
-        [];
-
-
       if (
-        !possibleActions.includes(
-          action
-        )
+        typeof preference === "number"
       ) {
-        continue;
+        score +=
+          preference * 0.20;
+
+        return;
       }
 
-
-      let probability =
+      score +=
         Number(
-          habit.probability ??
-          habit.chance ??
-          habit.frequency ??
-          0
-        );
+          preference.liking ?? 0
+        ) * 0.15;
 
+      score +=
+        Number(
+          preference.comfort ?? 0
+        ) * 0.10;
 
-      /*
-       * Якщо звичка прив'язана до часу,
-       * перевіряємо контекст.
-       */
-      if (
-        habit.time &&
-        !this.matchesTimeCondition(
-          habit.time
-        )
-      ) {
-
-        probability *=
-          0.25;
-      }
-
-
-      /*
-       * Погода теж може змінити звичку.
-       */
-      if (
-        habit.weather &&
-        !this.matchesWeatherCondition(
-          habit.weather
-        )
-      ) {
-
-        probability *=
-          0.30;
-      }
-
-
-      /*
-       * Нещодавній повтор послаблює звичку.
-       */
-      const recentPenalty =
-        this.getRecentActionPenalty(
-          action
-        );
-
-
-      const value =
-        probability *
-        0.08 *
-        (1 - recentPenalty);
-
-
-      total += value;
-
-
-      factors[id] =
-        value;
-    }
-
-
-    return {
-      total,
-      factors
-    };
-  }
-
-
-  // ============================================================
-  // 11. СТОСУНКИ
-  // ============================================================
-
-  evaluateRelationships(
-    action,
-    definition
-  ) {
-
-    const relationships =
-      this.brain.state
-        ?.relationships ||
-      {};
-
-
-    let total = 0;
-
-    const factors = {};
-
-
-    if (
-      action === "talkToYani"
-    ) {
-
-      const relationship =
-        relationships
-          .Yani_Bakeneko;
-
-
-      if (
-        relationship
-      ) {
-
-        const closeness =
-          Number(
-            relationship.closeness ??
-            0
-          );
-
-
-        const affection =
-          Number(
-            relationship.affection ??
-            0
-          );
-
-
-        const contact =
-          Number(
-            relationship.desireForContact ??
-            0
-          );
-
-
-        const value =
-          closeness * 0.18 +
-          affection * 0.20 +
-          contact * 0.22;
-
-
-        total += value;
-
-
-        factors.Yani =
-          value;
-      }
-    }
-
+      score +=
+        Number(
+          preference.practicality ?? 0
+        ) * 0.05;
+    });
 
     /*
-     * Загальна потреба в компанії.
+     * Загальні категорії.
      */
+
     if (
-      action === "talkToSomeone"
+      action.category === "relaxing"
     ) {
-
-      const social =
-        Number(
-          this.brain.state
-            ?.needs
-            ?.social ??
-          50
-        );
-
-
-      const value =
-        social * 0.15;
-
-
-      total += value;
-
-
-      factors.social =
-        value;
+      score +=
+        this.getPreferenceValue(
+          preferences,
+          "relaxing"
+        ) * 0.20;
     }
 
+    if (
+      action.category === "cultural"
+    ) {
+      score +=
+        this.getPreferenceValue(
+          preferences,
+          "cultural"
+        ) * 0.20;
+    }
 
-    return {
-      total,
-      factors
-    };
+    if (
+      action.category === "outdoor"
+    ) {
+      score +=
+        this.getPreferenceValue(
+          preferences,
+          "outdoor"
+        ) * 0.15;
+    }
+
+    return score;
   }
 
 
-  // ============================================================
-  // 12. ПОГОДА
-  // ============================================================
+  getPreferenceValue(preferences, key) {
+    const value =
+      preferences?.activities?.[key] ??
+      preferences?.activityPreferences?.[key] ??
+      preferences?.[key];
 
-  evaluateWeather(action) {
+    if (typeof value === "number") {
+      return value;
+    }
 
+    if (
+      value &&
+      typeof value === "object"
+    ) {
+      return Number(
+        value.liking ??
+        value.interest ??
+        value.value ??
+        0
+      );
+    }
+
+    return 0;
+  }
+
+
+  /*
+   * ==========================================================
+   * ЗВИЧКИ
+   * ==========================================================
+   */
+
+  scoreHabits(action, situation) {
+    const habitsData =
+      this.brain?.data?.habits || {};
+
+    let score = 0;
+
+    const time =
+      this.getMinutesOfDay(
+        situation.time
+      );
+
+    /*
+     * Ранкові звички.
+     */
+    if (
+      time >= 6 * 60 &&
+      time < 10 * 60
+    ) {
+      if (action.id === "checkPhone") {
+        score += 15;
+      }
+
+      if (action.id === "checkCalendar") {
+        score += 12;
+      }
+
+      if (action.id === "drink") {
+        score += 8;
+      }
+    }
+
+    /*
+     * Вечірні.
+     */
+    if (
+      time >= 20 * 60
+    ) {
+      if (action.id === "read") {
+        score += 12;
+      }
+
+      if (action.id === "listenToMusic") {
+        score += 10;
+      }
+
+      if (
+        action.id === "checkSocialNetwork"
+      ) {
+        score += 8;
+      }
+    }
+
+    /*
+     * Якщо habits.json містить прямі
+     * probability-значення.
+     */
+    const source =
+      habitsData.habits ||
+      habitsData;
+
+    if (
+      source &&
+      typeof source === "object"
+    ) {
+      Object.values(source)
+        .forEach(habit => {
+          if (!habit || typeof habit !== "object") {
+            return;
+          }
+
+          const habitAction =
+            habit.action ||
+            habit.activity;
+
+          if (
+            habitAction !== action.id
+          ) {
+            return;
+          }
+
+          const probability =
+            Number(
+              habit.probability ??
+              habit.chance ??
+              0
+            );
+
+          score +=
+            probability * 0.20;
+        });
+    }
+
+    return score;
+  }
+
+
+  /*
+   * ==========================================================
+   * ПОГОДА
+   * ==========================================================
+   */
+
+  scoreWeather(action, situation) {
     const weather =
-      this.brain.data.weather
-        ?.current ||
-      {};
+      this.getWeatherData(
+        situation
+      );
 
+    if (!weather) {
+      return 0;
+    }
 
-    let total = 0;
+    let score = 0;
 
-    const factors = {};
+    const temperature =
+      Number(
+        weather.temperature ??
+        weather.temp ??
+        18
+      );
 
+    const precipitation =
+      Number(
+        weather.precipitation ??
+        weather.precipitationChance ??
+        0
+      );
+
+    const wind =
+      Number(
+        weather.wind ??
+        weather.windSpeed ??
+        0
+      );
 
     const outdoor = [
-
       "walk",
       "cycle",
       "boatRide",
@@ -2008,1210 +1464,831 @@ class AkiraDecision {
       "stargazing"
     ];
 
-
     if (
-      outdoor.includes(
-        action
-      )
+      outdoor.includes(action.id)
     ) {
-
-      const comfort =
-        Number(
-          weather.outdoorComfort ??
-          weather.comfort ??
-          50
-        );
-
-
-      const value =
-        (comfort - 50) *
-        0.30;
-
-
-      total += value;
-
-
-      factors.outdoorComfort =
-        value;
-    }
-
-
-    /*
-     * Нічне спостереження не дуже
-     * добре узгоджується з днем.
-     */
-    if (
-      action === "stargazing"
-    ) {
-
-      const isNight =
-        this.isNight();
-
-
-      if (isNight) {
-
-        total += 30;
-
-        factors.night =
-          30;
-      }
-
-      else {
-
-        total -= 30;
-
-        factors.dayPenalty =
-          -30;
-      }
-    }
-
-
-    return {
-      total,
-      factors
-    };
-  }
-
-
-  // ============================================================
-  // 13. ЧАС
-  // ============================================================
-
-  evaluateTime(action) {
-
-    let total = 0;
-
-    const factors = {};
-
-
-    const hour =
-      this.getHour();
-
-
-    /*
-     * Робота.
-     */
-    if (
-      action === "work"
-    ) {
-
+      /*
+       * Комфортна температура.
+       */
       if (
-        hour >= 10 &&
-        hour < 18
+        temperature >= 10 &&
+        temperature <= 25
       ) {
-
-        total += 35;
-
-        factors.workHours =
-          35;
+        score += 18;
       }
-      else {
 
-        total -= 80;
-
-        factors.outsideWorkHours =
-          -80;
-      }
-    }
-
-
-    /*
-     * Сон.
-     */
-    if (
-      action === "sleep"
-    ) {
-
+      /*
+       * Холод.
+       */
       if (
-        hour >= 22 ||
-        hour < 8
+        temperature < 5
       ) {
-
-        total += 35;
-
-        factors.sleepTime =
-          35;
+        score -= 25;
       }
-    }
 
-
-    /*
-     * Планетарій/музей/театр тощо
-     * частіше доречні вдень/увечері.
-     */
-    const cultural = [
-
-      "visitMuseum",
-      "visitPlanetarium",
-      "visitTheatre",
-      "visitConcert",
-      "goToCinema"
-    ];
-
-
-    if (
-      cultural.includes(
-        action
-      )
-    ) {
-
+      /*
+       * Сильна спека.
+       */
       if (
-        hour >= 10 &&
-        hour <= 21
+        temperature > 30
       ) {
-
-        total += 10;
-
-        factors.openHours =
-          10;
+        score -= 25;
       }
-      else {
 
-        total -= 20;
+      /*
+       * Дощ.
+       */
+      score -=
+        precipitation * 0.25;
 
-        factors.lateHours =
-          -20;
+      /*
+       * Вітер.
+       */
+      if (wind > 8) {
+        score -=
+          (wind - 8) * 2;
       }
     }
-
-
-    return {
-      total,
-      factors
-    };
-  }
-
-
-  // ============================================================
-  // 14. МІСЦЕ
-  // ============================================================
-
-  evaluateLocation(action) {
-
-    const location =
-      this.brain.state
-        ?.character
-        ?.location ||
-      this.brain.state
-        ?.location ||
-      "home";
-
-
-    let total = 0;
-
-    const factors = {};
-
-
-    const directActions = {
-
-      organizeDesk:
-        ["home", "techsmith"],
-
-      work:
-        ["techsmith"],
-
-      fishing:
-        ["water"],
-
-      boatRide:
-        ["water"],
-
-      stargazing:
-        ["rooftop"],
-
-      lookAtFlowers:
-        ["park"],
-
-      observeAnimals:
-        ["park"],
-
-      visitMuseum:
-        ["museum"],
-
-      visitPlanetarium:
-        ["planetarium"],
-
-      visitTheatre:
-        ["theatre"],
-
-      visitConcert:
-        ["concertHall"],
-
-      goToCinema:
-        ["cinema"]
-    };
-
-
-    const idealLocations =
-      directActions[action];
-
-
-    if (
-      idealLocations?.includes(
-        location
-      )
-    ) {
-
-      total += 25;
-
-      factors.correctLocation =
-        25;
-    }
-
 
     /*
-     * Якщо дія потребує переходу,
-     * це невеликий штраф, а не заборона.
+     * Планетарій/музей/кіно/театр
+     * можуть бути приємною альтернативою
+     * поганій погоді.
      */
-    else if (
-      idealLocations
-    ) {
-
-      total -= 8;
-
-      factors.travelCost =
-        -8;
-    }
-
-
-    /*
-     * Домашні дії.
-     */
-    const homeActions = [
-
-      "rest",
-      "read",
-      "listenToMusic",
-      "playGame",
-      "checkPhone",
-      "checkSocialNetwork",
-      "think",
-      "rememberSomeone"
-    ];
-
 
     if (
-      homeActions.includes(
-        action
-      ) &&
-      location === "home"
+      [
+        "visitMuseum",
+        "visitPlanetarium",
+        "visitTheatre",
+        "visitConcert",
+        "goToCinema"
+      ].includes(action.id)
     ) {
+      score +=
+        precipitation * 0.10;
 
-      total += 15;
-
-      factors.homeComfort =
-        15;
-    }
-
-
-    return {
-      total,
-      factors
-    };
-  }
-
-
-  // ============================================================
-  // 15. НОВИЗНА
-  // ============================================================
-
-  evaluateNovelty(action) {
-
-    const recent =
-      this.getRecentActions();
-
-
-    const count =
-      recent.filter(
-        item =>
-          item === action
-      ).length;
-
-
-    /*
-     * Якщо дія давно не виконувалась,
-     * новизна трохи підвищує її шанс.
-     */
-    if (
-      count === 0
-    ) {
-
-      return {
-        total: 8,
-        factors: {
-          newAction: 8
-        }
-      };
-    }
-
-
-    return {
-      total:
-        Math.max(
-          -10,
-          8 - count * 4
-        ),
-
-      factors: {
-        previousUse:
-          Math.max(
-            -10,
-            8 - count * 4
-          )
-      }
-    };
-  }
-
-
-  // ============================================================
-  // 16. ПОВТОРЕННЯ
-  // ============================================================
-
-  evaluateRepetition(action) {
-
-    const recent =
-      this.getRecentActions();
-
-
-    const index =
-      recent.indexOf(
-        action
-      );
-
-
-    if (
-      index === -1
-    ) {
-
-      return {
-        total: 0,
-        factors: {}
-      };
-    }
-
-
-    /*
-     * Чим ближче останній повтор,
-     * тим сильніше покарання.
-     */
-    const penalty =
-      Math.max(
-        -35,
-        -25 +
-        index * 4
-      );
-
-
-    return {
-      total: penalty,
-
-      factors: {
-        recentRepeat:
-          penalty
-      }
-    };
-  }
-
-
-  // ============================================================
-  // 17. ЕНЕРГІЯ
-  // ============================================================
-
-  evaluateEnergy(action) {
-
-    const energy =
-      Number(
-        this.brain.state
-          ?.needs
-          ?.energy ??
-        50
-      );
-
-
-    const demanding = [
-
-      "cycle",
-      "walk",
-      "boatRide",
-      "fishing",
-      "work"
-    ];
-
-
-    const relaxing = [
-
-      "rest",
-      "sleep",
-      "read",
-      "listenToMusic",
-      "think"
-    ];
-
-
-    let total = 0;
-
-    const factors = {};
-
-
-    if (
-      demanding.includes(
-        action
-      )
-    ) {
-
-      if (
-        energy < 25
-      ) {
-
-        total -= 30;
-
-        factors.lowEnergy =
-          -30;
+      if (temperature < 5) {
+        score += 8;
       }
 
-      else if (
-        energy > 70
-      ) {
-
-        total += 10;
-
-        factors.highEnergy =
-          10;
+      if (temperature > 30) {
+        score += 8;
       }
     }
 
-
-    if (
-      relaxing.includes(
-        action
-      )
-    ) {
-
-      if (
-        energy < 40
-      ) {
-
-        total += 18;
-
-        factors.lowEnergy =
-          18;
-      }
-    }
-
-
-    return {
-      total,
-      factors
-    };
+    return score;
   }
 
 
-  // ============================================================
-  // 18. ВИПАДКОВА ВАРІАЦІЯ
-  // ============================================================
-
-  randomVariation() {
-
-    return (
-      Math.random() * 2 - 1
-    ) * this.randomness;
-  }
-
-
-  // ============================================================
-  // 19. ВИБІР КАНДИДАТА
-  // ============================================================
-
-  selectCandidate(
-    candidates
-  ) {
+  getWeatherData(situation) {
+    const weatherData =
+      this.brain?.data?.weather || {};
 
     if (
-      !candidates.length
+      weatherData.current &&
+      typeof weatherData.current === "object"
     ) {
-
-      return {
-        action: "nothing",
-        score: 0,
-        factors: {}
-      };
+      return weatherData.current;
     }
-
-
-    /*
-     * Найкращий кандидат має найбільшу
-     * ймовірність, але не абсолютну гарантію.
-     *
-     * Використовуємо softmax-подібний вибір.
-     */
-    const temperature =
-      20;
-
-
-    const values =
-      candidates.map(
-        candidate =>
-          Math.exp(
-            candidate.score /
-            temperature
-          )
-      );
-
-
-    const sum =
-      values.reduce(
-        (a, b) =>
-          a + b,
-        0
-      );
-
-
-    let random =
-      Math.random() * sum;
-
-
-    for (
-      let i = 0;
-      i < candidates.length;
-      i++
-    ) {
-
-      random -=
-        values[i];
-
-
-      if (
-        random <= 0
-      ) {
-
-        return candidates[i];
-      }
-    }
-
-
-    return candidates[0];
-  }
-
-
-  // ============================================================
-  // 20. ПРИРОДНА ЦІЛЬ ДІЇ
-  // ============================================================
-
-  findNaturalTarget(
-    action
-  ) {
 
     if (
-      action === "talkToYani"
+      situation.weather &&
+      typeof situation.weather === "object"
     ) {
-
-      return "Yani_Bakeneko";
+      return situation.weather;
     }
-
-
-    if (
-      action === "work"
-    ) {
-
-      return "Techsmith";
-    }
-
-
-    if (
-      action === "talkToSomeone"
-    ) {
-
-      return this.findSocialTarget();
-    }
-
 
     return null;
   }
 
 
-  findSocialTarget() {
+  isDangerousWeather(situation) {
+    const weather =
+      this.getWeatherData(
+        situation
+      );
 
-    const relationships =
-      this.brain.state
-        ?.relationships ||
-      {};
+    if (!weather) {
+      return false;
+    }
 
+    const precipitation =
+      Number(
+        weather.precipitation ??
+        weather.precipitationChance ??
+        0
+      );
+
+    const wind =
+      Number(
+        weather.wind ??
+        weather.windSpeed ??
+        0
+      );
+
+    const temperature =
+      Number(
+        weather.temperature ??
+        weather.temp ??
+        18
+      );
+
+    return (
+      precipitation >= 80 ||
+      wind >= 15 ||
+      temperature <= -10 ||
+      temperature >= 38
+    );
+  }
+
+
+  /*
+   * ==========================================================
+   * ЧАС
+   * ==========================================================
+   */
+
+  scoreTime(action, situation) {
+    const minutes =
+      this.getMinutesOfDay(
+        situation.time
+      );
+
+    let score = 0;
 
     /*
-     * Шукаємо людину з найбільшим
-     * бажанням контакту.
+     * Ніч.
      */
-    let best = null;
-
-    let bestValue =
-      -Infinity;
-
-
-    for (
-      const [personId, relation]
-      of Object.entries(
-        relationships
-      )
+    if (
+      minutes >= 23 * 60 ||
+      minutes < 6 * 60
     ) {
-
-      const value =
-        Number(
-          relation.desireForContact ??
-          relation.liking ??
-          0
-        );
-
+      if (
+        [
+          "sleep",
+          "read",
+          "listenToMusic",
+          "think",
+          "stargazing"
+        ].includes(action.id)
+      ) {
+        score += 25;
+      }
 
       if (
-        value > bestValue
+        [
+          "work",
+          "visitMuseum",
+          "visitTheatre",
+          "visitConcert",
+          "goToCinema"
+        ].includes(action.id)
       ) {
-
-        bestValue =
-          value;
-
-        best =
-          personId;
+        score -= 40;
       }
     }
 
-
-    return best;
-  }
-
-
-  // ============================================================
-  // 21. ТРИВАЛІСТЬ
-  // ============================================================
-
-  estimateDuration(
-    action
-  ) {
-
-    const durations = {
-
-      sleep: 480,
-
-      eat: 20,
-
-      drink: 5,
-
-      rest: 30,
-
-      work: 60,
-
-      walk: 45,
-
-      cycle: 60,
-
-      read: 40,
-
-      listenToMusic: 30,
-
-      playGame: 40,
-
-      checkSocialNetwork: 15,
-
-      writePost: 20,
-
-      talkToSomeone: 20,
-
-      talkToYani: 30,
-
-      visitMuseum: 120,
-
-      visitPlanetarium: 120,
-
-      visitTheatre: 150,
-
-      visitConcert: 120,
-
-      goToCinema: 130,
-
-      boatRide: 90,
-
-      fishing: 120,
-
-      craftWithClay: 60,
-
-      lookAtFlowers: 20,
-
-      observeAnimals: 30,
-
-      stargazing: 45,
-
-      checkCalendar: 5,
-
-      checkPhone: 5,
-
-      lookOutWindow: 5,
-
-      organizeDesk: 20,
-
-      think: 15,
-
-      rememberSomeone: 5,
-
-      nothing: 15
-    };
-
-
-    return (
-      durations[action] ??
-      15
-    );
-  }
-
-
-  // ============================================================
-  // 22. ЧАС РОБОТИ
-  // ============================================================
-
-  isWorkTime() {
-
-    const hour =
-      this.getHour();
-
-
-    return (
-      hour >= 10 &&
-      hour < 18 &&
-      this.getDayOfWeek() >= 1 &&
-      this.getDayOfWeek() <= 5
-    );
-  }
-
-
-  // ============================================================
-  // 23. НЕЩОДАВНІ ДІЇ
-  // ============================================================
-
-  getRecentActions() {
-
-    const actions =
-      this.brain.state
-        ?.recentActions;
-
-
+    /*
+     * Робочий час.
+     */
     if (
-      Array.isArray(actions)
+      minutes >= 10 * 60 &&
+      minutes < 18 * 60
     ) {
-
-      return actions
-        .slice(
-          -this.recentActionLimit
-        )
-        .map(
-          item =>
-            typeof item === "string"
-              ? item
-              : item.action
-        );
+      if (action.id === "work") {
+        score += 30;
+      }
     }
 
+    /*
+     * Після роботи.
+     */
+    if (
+      minutes >= 18 * 60
+    ) {
+      if (action.id === "work") {
+        score -= 30;
+      }
 
-    return this.history
-      .slice(
-        -this.recentActionLimit
-      )
-      .map(
-        item =>
-          item.action
-      );
+      if (
+        [
+          "walk",
+          "cycle",
+          "read",
+          "listenToMusic",
+          "talkToSomeone",
+          "talkToYani"
+        ].includes(action.id)
+      ) {
+        score += 10;
+      }
+    }
+
+    return score;
   }
 
 
-  getRecentActionPenalty(
-    action
-  ) {
+  /*
+   * ==========================================================
+   * СТОСУНКИ
+   * ==========================================================
+   */
 
-    const recent =
-      this.getRecentActions();
+  scoreRelationships(action, situation) {
+    let score = 0;
+
+    const relationships =
+      this.brain?.state?.relationships ||
+      {};
+
+    /*
+     * Соціальні дії загалом.
+     */
+    if (
+      action.category === "social"
+    ) {
+      Object.values(relationships)
+        .forEach(relation => {
+          const closeness =
+            Number(
+              relation.closeness ?? 0
+            );
+
+          const desire =
+            Number(
+              relation.desireForContact ?? 0
+            );
+
+          score +=
+            closeness * 0.05;
+
+          score +=
+            desire * 0.08;
+        });
+    }
+
+    /*
+     * Якщо дія прямо пов'язана з людиною,
+     * беремо відповідний relationship.
+     *
+     * Людина задається в activities.json:
+     *
+     * targetPerson: "Yani_Bakeneko"
+     */
+
+    if (action.targetPerson) {
+      const relation =
+        relationships[
+          action.targetPerson
+        ];
+
+      if (relation) {
+        score +=
+          Number(
+            relation.desireForContact ?? 0
+          ) * 0.35;
+
+        score +=
+          Number(
+            relation.closeness ?? 0
+          ) * 0.20;
+
+        score +=
+          Number(
+            relation.affection ?? 0
+          ) * 0.15;
+      }
+    }
+
+    /*
+     * talkToYani залишаємо як сумісність
+     * із поточним activities.json.
+     *
+     * Це не емоційна логіка,
+     * лише прив'язка до relationship data.
+     */
+
+    if (action.id === "talkToYani") {
+      const relation =
+        relationships.Yani_Bakeneko;
+
+      if (relation) {
+        score +=
+          Number(
+            relation.desireForContact ?? 0
+          ) * 0.30;
+      }
+    }
+
+    return score;
+  }
 
 
-    const index =
-      recent.lastIndexOf(
-        action
+  /*
+   * ==========================================================
+   * ЦІКАВІСТЬ
+   * ==========================================================
+   */
+
+  scoreCuriosity(action, situation) {
+    const curiosity =
+      Number(
+        situation.needs?.curiosity ??
+        50
       );
 
-
-    if (
-      index === -1
-    ) {
+    if (curiosity <= 50) {
       return 0;
     }
 
+    const exploratoryActions = [
+      "read",
+      "visitMuseum",
+      "visitPlanetarium",
+      "stargazing",
+      "think",
+      "checkSocialNetwork",
+      "goToCinema"
+    ];
 
-    const distance =
-      recent.length -
-      1 -
-      index;
+    if (
+      exploratoryActions.includes(action.id)
+    ) {
+      return (
+        curiosity - 50
+      ) * 0.50;
+    }
+
+    return 0;
+  }
 
 
-    return Math.max(
-      0,
-      1 -
-      distance /
-      this.recentActionLimit
+  /*
+   * ==========================================================
+   * НОВИЗНА
+   * ==========================================================
+   */
+
+  scoreNovelty(action, situation) {
+    const recent =
+      this.brain?.state?.behavior
+        ?.recentActions || [];
+
+    if (!recent.length) {
+      return 10;
+    }
+
+    const last =
+      recent[recent.length - 1];
+
+    if (
+      !last ||
+      last.type !== action.id
+    ) {
+      return 5;
+    }
+
+    /*
+     * Новизна падає при повторенні.
+     */
+    return -15;
+  }
+
+
+  /*
+   * ==========================================================
+   * ПОТОЧНИЙ СТАН
+   * ==========================================================
+   */
+
+  scoreCurrentState(action, situation) {
+    let score = 0;
+
+    const energy =
+      Number(
+        situation.energy ?? 50
+      );
+
+    const fatigue =
+      Number(
+        situation.fatigue ?? 0
+      );
+
+    const focus =
+      Number(
+        situation.focus ?? 50
+      );
+
+    const stress =
+      Number(
+        situation.stress ?? 0
+      );
+
+    /*
+     * Низька енергія.
+     */
+    if (energy < 30) {
+      if (
+        [
+          "sleep",
+          "rest",
+          "read",
+          "listenToMusic",
+          "doNothing"
+        ].includes(action.id)
+      ) {
+        score += 25;
+      }
+
+      if (
+        [
+          "cycle",
+          "fishing",
+          "work",
+          "visitConcert"
+        ].includes(action.id)
+      ) {
+        score -= 20;
+      }
+    }
+
+    /*
+     * Сильна втома.
+     */
+    if (fatigue > 70) {
+      if (
+        [
+          "sleep",
+          "rest",
+          "doNothing"
+        ].includes(action.id)
+      ) {
+        score += 30;
+      }
+    }
+
+    /*
+     * Високий стрес.
+     */
+    if (stress > 60) {
+      if (
+        [
+          "rest",
+          "read",
+          "listenToMusic",
+          "walk",
+          "doNothing"
+        ].includes(action.id)
+      ) {
+        score += 15;
+      }
+
+      if (
+        [
+          "work",
+          "playGame"
+        ].includes(action.id)
+      ) {
+        score -= 8;
+      }
+    }
+
+    /*
+     * Високий focus допомагає роботі,
+     * читанню, навчанню.
+     */
+    if (focus > 75) {
+      if (
+        [
+          "work",
+          "read",
+          "think",
+          "organizeDesk"
+        ].includes(action.id)
+      ) {
+        score += 12;
+      }
+    }
+
+    return score;
+  }
+
+
+  /*
+   * ==========================================================
+   * ПОВТОРЕННЯ
+   * ==========================================================
+   */
+
+  scoreRepetition(action, situation) {
+    const recent =
+      this.brain?.state?.behavior
+        ?.recentActions || [];
+
+    if (!recent.length) {
+      return 0;
+    }
+
+    let repeats = 0;
+
+    /*
+     * Дивимося останні 5 дій.
+     */
+    recent
+      .slice(-5)
+      .forEach(entry => {
+        if (
+          entry?.type === action.id
+        ) {
+          repeats++;
+        }
+      });
+
+    if (!repeats) {
+      return 0;
+    }
+
+    return (
+      -35 *
+      repeats *
+      this.repetitionPenalty
     );
   }
 
 
-  // ============================================================
-  // 24. УМОВИ ЧАСУ
-  // ============================================================
+  /*
+   * ==========================================================
+   * ВИБІР ІЗ ВАРІАТИВНІСТЮ
+   * ==========================================================
+   */
 
-  matchesTimeCondition(
-    condition
-  ) {
-
-    if (!condition) {
-      return true;
+  selectWithVariation(scored) {
+    if (!scored.length) {
+      return {
+        type: "nothing",
+        reason: "noCandidates"
+      };
     }
 
+    /*
+     * Не дозволяємо негативним оцінкам
+     * повністю зруйнувати вибір.
+     */
+    const positive =
+      scored.map(item => ({
+        item,
+        weight:
+          Math.max(
+            0.1,
+            item.score + 100
+          )
+      }));
 
-    const hour =
-      this.getHour();
+    /*
+     * Беремо максимум із верхньої частини.
+     *
+     * Нижчі кандидати отримують меншу
+     * ймовірність.
+     */
+    const topCount =
+      Math.min(
+        5,
+        positive.length
+      );
 
+    const top =
+      positive.slice(0, topCount);
 
-    if (
-      typeof condition === "string"
-    ) {
+    /*
+     * Підсилюємо найкращі варіанти.
+     */
+    const weighted =
+      top.map((entry, index) => ({
+        ...entry,
+        weight:
+          entry.weight /
+          (1 + index * 0.8)
+      }));
 
-      if (
-        condition === "morning"
-      ) {
-        return hour >= 6 &&
-          hour < 12;
-      }
+    const total =
+      weighted.reduce(
+        (sum, entry) =>
+          sum + entry.weight,
+        0
+      );
 
-      if (
-        condition === "day"
-      ) {
-        return hour >= 12 &&
-          hour < 18;
-      }
+    let random =
+      Math.random() * total;
 
-      if (
-        condition === "evening"
-      ) {
-        return hour >= 18 &&
-          hour < 23;
-      }
+    for (const entry of weighted) {
+      random -= entry.weight;
 
-      if (
-        condition === "night"
-      ) {
-        return hour >= 23 ||
-          hour < 6;
+      if (random <= 0) {
+        return this.finalizeAction(
+          entry.item
+        );
       }
     }
 
-
-    return true;
+    return this.finalizeAction(
+      weighted[0].item
+    );
   }
 
 
-  // ============================================================
-  // 25. УМОВИ ПОГОДИ
-  // ============================================================
+  finalizeAction(action) {
+    return {
+      type: action.id,
 
-  matchesWeatherCondition(
-    condition
-  ) {
-
-    const weather =
-      this.brain.data.weather
-        ?.current ||
-      {};
-
-
-    if (
-      typeof condition !== "string"
-    ) {
-      return true;
-    }
-
-
-    if (
-      condition === "good"
-    ) {
-
-      return (
-        Number(
-          weather.outdoorComfort ??
-          weather.comfort ??
-          50
-        ) >= 60
-      );
-    }
-
-
-    if (
-      condition === "bad"
-    ) {
-
-      return (
-        Number(
-          weather.outdoorComfort ??
-          weather.comfort ??
-          50
-        ) < 60
-      );
-    }
-
-
-    return true;
-  }
-
-
-  // ============================================================
-  // 26. «НІЧОГО НЕ РОБИТИ»
-  // ============================================================
-
-  createNothingDecision(
-    reason
-  ) {
-
-    const decision = {
-
-      action:
-        "nothing",
-
-      target:
-        null,
+      actionId: action.id,
 
       duration:
-        15,
+        Number(action.duration) || 10,
+
+      category:
+        action.category || "general",
+
+      targetPerson:
+        action.targetPerson || null,
+
+      reason:
+        action.reason ||
+        "currentSituation",
 
       score:
-        0,
+        typeof action.score === "number"
+          ? action.score
+          : null,
 
-      factors: {
-
-        reason
-      },
-
-      alternatives: [],
-
-      timestamp:
-        this.getCurrentTime()
+      factors:
+        action.factors || {}
     };
-
-
-    this.lastDecision =
-      decision;
-
-
-    this.recordDecision(
-      decision
-    );
-
-
-    return decision;
   }
 
 
-  // ============================================================
-  // 27. ІСТОРІЯ
-  // ============================================================
+  /*
+   * ==========================================================
+   * ПОЯСНЕННЯ ДЛЯ ВНУТРІШНЬОГО СТАНУ
+   * ==========================================================
+   *
+   * Це НЕ chain-of-thought.
+   *
+   * Це короткий структурований опис
+   * результату для налагодження системи.
+   */
+
+  generateReason(
+    action,
+    factors,
+    situation
+  ) {
+    const important =
+      Object.entries(factors)
+        .filter(
+          ([, value]) =>
+            Math.abs(value) >= 10
+        )
+        .sort(
+          ([, a], [, b]) =>
+            Math.abs(b) -
+            Math.abs(a)
+        )
+        .slice(0, 3)
+        .map(
+          ([name, value]) =>
+            `${name}:${Math.round(value)}`
+        );
+
+    if (!important.length) {
+      return "weakPreference";
+    }
+
+    return important.join(", ");
+  }
+
+
+  /*
+   * ==========================================================
+   * ІСТОРІЯ РІШЕНЬ
+   * ==========================================================
+   */
 
   recordDecision(
-    decision
+    selected,
+    scored,
+    situation
   ) {
+    const record = {
+      timestamp:
+        this.brain.getCurrentTimestamp(),
 
-    this.history.push({
-
-      action:
-        decision.action,
-
-      target:
-        decision.target,
+      selected:
+        selected?.type || null,
 
       score:
-        decision.score,
+        selected?.score ?? null,
 
-      timestamp:
-        decision.timestamp
-    });
+      alternatives:
+        scored
+          .slice(0, 5)
+          .map(action => ({
+            id: action.id,
+            score: action.score
+          })),
 
+      context: {
+        location:
+          situation.location,
+
+        activity:
+          situation.activity,
+
+        energy:
+          situation.energy,
+
+        fatigue:
+          situation.fatigue,
+
+        stress:
+          situation.stress
+      }
+    };
+
+    this.history.push(record);
 
     if (
       this.history.length >
       this.maxHistory
     ) {
-
       this.history.shift();
     }
-
-
-    /*
-     * Зберігаємо також у brain.state,
-     * щоб інші модулі бачили недавню поведінку.
-     */
-    if (
-      this.brain.state
-    ) {
-
-      if (
-        !Array.isArray(
-          this.brain.state.recentActions
-        )
-      ) {
-
-        this.brain.state.recentActions =
-          [];
-      }
-
-
-      this.brain.state
-        .recentActions
-        .push({
-
-          action:
-            decision.action,
-
-          target:
-            decision.target,
-
-          timestamp:
-            decision.timestamp
-        });
-
-
-      if (
-        this.brain.state
-          .recentActions
-          .length > 20
-      ) {
-
-        this.brain.state
-          .recentActions
-          .shift();
-      }
-    }
   }
 
 
-  // ============================================================
-  // 28. ДОПОМОГА
-  // ============================================================
+  /*
+   * ==========================================================
+   * ОТРИМАННЯ ІСТОРІЇ
+   * ==========================================================
+   */
 
-  getActivity() {
+  getHistory(limit = 20) {
+    return this.history
+      .slice(-limit)
+      .reverse();
+  }
+
+
+  /*
+   * ==========================================================
+   * ДОПОМІЖНІ
+   * ==========================================================
+   */
+
+  getMinutesOfDay(time) {
+    if (!time) {
+      return 0;
+    }
+
+    const [hours, minutes] =
+      time
+        .split(":")
+        .map(Number);
 
     return (
-      this.brain.state
-        ?.character
-        ?.activity ??
-      this.brain.state
-        ?.activity ??
-      "idle"
+      (hours || 0) * 60 +
+      (minutes || 0)
     );
   }
 
 
-  getHour() {
+  clamp(
+    value,
+    min = -100,
+    max = 100
+  ) {
+    const number =
+      Number(value);
 
-    const time =
-      this.brain.state
-        ?.world
-        ?.time;
-
-
-    if (
-      typeof time === "string"
-    ) {
-
-      return Number(
-        time.split(":")[0]
-      );
+    if (!Number.isFinite(number)) {
+      return min;
     }
 
-
-    return new Date()
-      .getHours();
-  }
-
-
-  getDayOfWeek() {
-
-    /*
-     * Якщо brain уже має дату світу,
-     * використовуємо її.
-     */
-    const date =
-      this.brain.state
-        ?.world
-        ?.date;
-
-
-    if (date) {
-
-      const parsed =
-        new Date(date);
-
-
-      if (
-        !Number.isNaN(
-          parsed.getTime()
-        )
-      ) {
-
-        return parsed.getDay() || 7;
-      }
-    }
-
-
-    const day =
-      new Date()
-        .getDay();
-
-
-    return day || 7;
-  }
-
-
-  isNight() {
-
-    const hour =
-      this.getHour();
-
-
-    return (
-      hour >= 21 ||
-      hour < 6
+    return Math.max(
+      min,
+      Math.min(max, number)
     );
-  }
-
-
-  getCurrentTime() {
-
-    if (
-      this.brain.state
-        ?.world
-    ) {
-
-      return (
-        this.brain.state.world.date +
-        "T" +
-        this.brain.state.world.time
-      );
-    }
-
-
-    return new Date()
-      .toISOString();
   }
 }
 
 
-// ============================================================
-// ЕКСПОРТ
-// ============================================================
+/*
+ * ============================================================
+ * ЕКСПОРТ
+ * ============================================================
+ */
 
-if (
-  typeof window !== "undefined"
-) {
-
+if (typeof window !== "undefined") {
   window.AkiraDecision =
     AkiraDecision;
 }
