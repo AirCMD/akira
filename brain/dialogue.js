@@ -357,6 +357,34 @@ class AkiraDialogue {
 
     detectIntent(text) {
 
+        // Питання про самого Акіру мають пріоритет над загальним question.
+        // Інакше «як ти?» бачиться лише як слово «як» + знак питання.
+        const normalized = String(text || "").toLowerCase().replace(/[’`ʼ]/g, "'").trim();
+
+        const askWellbeingPatterns = [
+            /^(ну\s+)?як\s+ти[\s?!.,]*$/iu,
+            /^(ну\s+)?як\s+(твої|у\s+тебе)\s+справи[\s?!.,]*$/iu,
+            /^(ну\s+)?як\s+справи[\s?!.,]*$/iu,
+            /^(як|що)\s+ти\s+себе\s+почуваєш[\s?!.,]*$/iu,
+            /^як\s+(твій\s+)?настрій[\s?!.,]*$/iu,
+            /^ти\s+як[\s?!.,]*$/iu
+        ];
+
+        if (askWellbeingPatterns.some(pattern => pattern.test(normalized))) {
+            return "ask_state";
+        }
+
+        const askActivityPatterns = [
+            /^що\s+(ти\s+)?(зараз\s+)?робиш[\s?!.,]*$/iu,
+            /^чим\s+(ти\s+)?(зараз\s+)?займаєшся[\s?!.,]*$/iu,
+            /^чим\s+зайнятий[\s?!.,]*$/iu,
+            /^ти\s+зараз\s+що\s+робиш[\s?!.,]*$/iu
+        ];
+
+        if (askActivityPatterns.some(pattern => pattern.test(normalized))) {
+            return "ask_activity";
+        }
+
         const topicData =
             this.brain.data?.topics?.intentPatterns ||
             this.brain.data?.topics?.intents ||
@@ -686,12 +714,14 @@ class AkiraDialogue {
             };
         }
 
+        const moodState = this.brain.mood.getState?.() || {};
+
         return {
             values:
-                this.brain.mood.getState?.() || {},
+                moodState.emotions || moodState.current || {},
 
             dominant:
-                this.brain.mood.getDominantEmotions?.() || [],
+                this.brain.mood.getDominantEmotions?.() || moodState.dominant || [],
 
             conflicting:
                 this.brain.mood.getConflictingEmotions?.() || [],
@@ -749,7 +779,13 @@ class AkiraDialogue {
                 ),
 
             availability:
-                this.brain.state?.availability || "available"
+                this.brain.state?.availability || "available",
+
+            action:
+                this.brain.state?.action || null,
+
+            needs:
+                this.brain.needs?.getState?.() || this.brain.state?.needs || {}
         };
     }
 
@@ -1035,6 +1071,97 @@ class AkiraDialogue {
 
 
     // =========================================================
+    // ВІДПОВІДІ ПРО ВЛАСНИЙ СТАН
+    // =========================================================
+
+    composeStateAnswer(profile) {
+        const needs = profile.state?.needs || {};
+        const emotions = profile.emotions?.values || {};
+
+        const needValue = (name, fallback = 50) => {
+            const item = needs[name];
+            if (item && typeof item === "object") {
+                return this.number(item.value ?? item.current, fallback);
+            }
+            return this.number(item, fallback);
+        };
+
+        const energy = needValue("energy", profile.state?.energy ?? 70);
+        const hunger = needValue("hunger", 20);
+        const thirst = needValue("thirst", 20);
+        const rest = needValue("rest", 60);
+
+        const emotion = name => this.number(emotions[name], 0);
+
+        let pool;
+
+        if (energy <= 20) {
+            pool = ["Дуже втомився. Енергії майже немає.", "Якось зовсім без сил зараз."];
+        } else if (hunger >= 75) {
+            pool = ["Загалом нормально, але я вже добряче голодний.", "Нормально. Тільки їсти хочеться страшенно."];
+        } else if (thirst >= 75) {
+            pool = ["Нормально, тільки пити вже дуже хочеться.", "Та нічого. Треба б води випити."];
+        } else if (emotion("sadness") >= 60 || emotion("disappointment") >= 65) {
+            pool = ["Бувало й краще. Настрій сьогодні трохи паршивий.", "Не дуже. Трохи сумно сьогодні."];
+        } else if (emotion("anger") >= 60 || emotion("offense") >= 65) {
+            pool = ["Якось не дуже. Я зараз трохи злий.", "Не найкращий момент. Дещо мене дратує."];
+        } else if (emotion("anxiety") >= 60 || emotion("fear") >= 55) {
+            pool = ["Трохи тривожно, якщо чесно. Але тримаюсь.", "Нормально, хоча є якась тривога."];
+        } else if (energy <= 40 || rest <= 30) {
+            pool = ["Трохи втомився, якщо чесно. А так нормально.", "Нормально. Просто хочеться трохи відпочити."];
+        } else if (emotion("joy") >= 65 || emotion("pleasure") >= 65) {
+            pool = ["Добре. Навіть настрій сьогодні непоганий.", "Усе добре. Сьогодні я в непоганому настрої."];
+        } else if (emotion("calm") >= 60) {
+            pool = ["Нормально. Сьогодні якось спокійно.", "Усе гаразд. Досить спокійний день."];
+        } else {
+            pool = ["Нормально. Потроху.", "Та загалом усе гаразд.", "Непогано. Живу своїм життям."];
+        }
+
+        return this.chooseTemplate(pool) || pool[0];
+    }
+
+
+    composeActivityAnswer(profile) {
+        const action = profile.state?.action;
+        const id = action?.actionId || "";
+
+        const names = {
+            sleep: "Сплю. Хоча якщо я тобі відповідаю, то вже не дуже переконливо.",
+            eat: "Їм зараз.",
+            drink: "Вирішив щось випити.",
+            rest: "Відпочиваю трохи.",
+            walk: "Гуляю.",
+            cycle: "Катаюся на велосипеді.",
+            read: "Читаю зараз.",
+            listenToMusic: "Слухаю музику.",
+            playGame: "Граю трохи.",
+            work: "Працюю зараз.",
+            talkToSomeone: "Розмовляю дещо з людьми.",
+            talkToYani: "Розмовляю з Яні.",
+            checkSocialNetwork: "Перевіряю соцмережі.",
+            writePost: "Пишу допис.",
+            think: "Та думаю про всяке.",
+            organizeDesk: "Трохи прибираю на столі."
+        };
+
+        if (id && names[id]) {
+            return names[id];
+        }
+
+        const activity = profile.state?.activity;
+        if (activity && activity !== "idle") {
+            return `Зараз я зайнятий: ${activity}.`;
+        }
+
+        return this.chooseTemplate([
+            "Зараз нічим особливим. Просто відпочиваю.",
+            "Та нічим конкретним зараз.",
+            "Поки нічим особливим не зайнятий."
+        ]);
+    }
+
+
+    // =========================================================
     // СКЛАДАННЯ
     // =========================================================
 
@@ -1045,6 +1172,16 @@ class AkiraDialogue {
         const templates = this.getDialogueTemplates();
         const conversation =
             this.brain.data?.language?.conversation || {};
+
+        // Питання про поточний стан відповідають з живого стану мозку,
+        // а не з випадкового fallback-шаблону.
+        if (profile.analysis.intent === "ask_state") {
+            return [this.composeStateAnswer(profile)];
+        }
+
+        if (profile.analysis.intent === "ask_activity") {
+            return [this.composeActivityAnswer(profile)];
+        }
 
         // Базові соціальні репліки мають реагувати безпосередньо
         // на зміст повідомлення, а не провалюватися у fallback.
