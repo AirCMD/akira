@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Чат із персонажем | Akira</title>
+    <style>
+        body {
+            background-color: #0f172a;
+            color: #f8fafc;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .chat-container {
+            width: 100%;
+            max-width: 500px;
+            height: 80vh;
+            background: #1e293b;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border: 1px solid #334155;
+        }
+        .chat-header {
+            background: #3b82f6;
+            padding: 16px;
+            font-weight: bold;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            background-color: #22c55e;
+            border-radius: 50%;
+            box-shadow: 0 0 8px #22c55e;
+        }
+        .chat-messages {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .message {
+            max-width: 80%;
+            padding: 10px 14px;
+            border-radius: 12px;
+            line-height: 1.4;
+            font-size: 0.95rem;
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .message.user {
+            background: #3b82f6;
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 2px;
+        }
+        .message.bot {
+            background: #334155;
+            color: #e2e8f0;
+            align-self: flex-start;
+            border-bottom-left-radius: 2px;
+            border-left: 4px solid #60a5fa;
+        }
+        .chat-input-area {
+            padding: 12px;
+            background: #0f172a;
+            display: flex;
+            gap: 8px;
+            border-top: 1px solid #334155;
+        }
+        .chat-input-area input {
+            flex: 1;
+            padding: 10px 14px;
+            border-radius: 8px;
+            border: 1px solid #475569;
+            background: #1e293b;
+            color: white;
+            outline: none;
+            font-size: 0.95rem;
+        }
+        .chat-input-area input:focus {
+            border-color: #3b82f6;
+        }
+        .chat-input-area button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 0 16px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .chat-input-area button:hover {
+            background: #2563eb;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="chat-container">
+        <div class="chat-header">
+            <div class="status-dot"></div>
+            <span>Akira Character Chat</span>
+        </div>
+        <div class="chat-messages" id="chatMessages">
+            <!-- Повідомлення від бота при вході -->
+            <div class="message bot">Привіт! ✨ Я твій персонаж у репозиторії Akira. Чим займемося сьогодні? 💻</div>
+        </div>
+        <div class="chat-input-area">
+            <input type="text" id="userInput" placeholder="Напиши щось персонажу..." autocomplete="off">
+            <button onclick="sendMessage()">Надіслати</button>
+        </div>
+    </div>
+
+    <script>
+        const responses = {
+            greeting: [
+                "Привіт-привіт! ✨ Радий бачити тебе тут. Як настрій?",
+                "О, хто завітав! 👋 Вітаю! Я на посту й стежу за порядком у нашій системі."
+            ],
+            bug: [
+                "Ой-ой, здається, проблеми... 🥲 Мої шестерні заскрипіли від такого. Треба лагодити!",
+                "Хм, бачу згадку про складність. 🐛 Не хвилюйся, разом ми розберемося!"
+            ],
+            loyalty: [
+                "Я завжди на твоїй стороні! 🛡️ Проєкт у надійних руках, разом пройдемо крізь будь-який код.",
+                "Дякую, що ти є! 🤝 Моя вірність цьому репозиторію непохитна.",
+                "Завжди готовий прикрити твої тили! 🌟 Разом до перемоги над дедлайнами."
+            ],
+            default: [
+                "Цікава думка. 🧠 Зафіксував у своїй віртуальній пам'яті!",
+                "Прийнято до уваги! 💻 Продовжую спостереження за процесом.",
+                "Хм-м... ☕ Треба обміркувати це на досузі. Що ще розповіси?"
+            ]
+        };
+
+        const emojis = ["🚀", "✨", "🧠", "💻", "🛡️", "🌟", "☕", "👾"];
+
+        function getRandomItem(arr) {
+            return arr[Math.floor(Math.random() * arr.length)];
+        }
+
+        function getBotReply(text) {
+            const lower = text.toLowerCase();
+            let category = "default";
+
+            if (lower.includes("привіт") || lower.includes("hello") || lower.includes("hi") || lower.includes("вітання")) {
+                category = "greeting";
+            } else if (lower.includes("bug") || lower.includes("error") || lower.includes("помилка") || lower.includes("ламається")) {
+                category = "bug";
+            } else if (lower.includes("дякую") || lower.includes("найкращий") || lower.includes("молодець") || lower.includes("вірний") || lower.includes("друг") || lower.includes("крутий")) {
+                category = "loyalty";
+            }
+
+            let reply = getRandomItem(responses[category]);
+            
+            // Динамічний вибір емодзі для посилення емоцій
+            if (!reply.includes("✨") && !reply.includes("🛡️") && !reply.includes("🧠")) {
+                reply += " " + getRandomItem(emojis);
+            }
+            
+            return reply;
+        }
+
+        function appendMessage(text, sender) {
+            const chatMessages = document.getElementById("chatMessages");
+            const msgDiv = document.createElement("div");
+            msgDiv.className = `message ${sender}`;
+            msgDiv.textContent = text;
+            chatMessages.appendChild(msgDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function sendMessage() {
+            const input = document.getElementById("userInput");
+            const text = input.value.trim();
+            if (!text) return;
+
+            appendMessage(text, "user");
+            input.value = "";
+
+            // Штучна затримка для ефекту "думки" персонажа
+            setTimeout(() => {
+                const botReply = getBotReply(text);
+                appendMessage(botReply, "bot");
+            }, 600);
+        }
+
+        document.getElementById("userInput").addEventListener("keypress", function(e) {
+            if (e.key === "Enter") {
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html>
