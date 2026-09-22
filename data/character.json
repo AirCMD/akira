@@ -1,0 +1,23 @@
+{
+  "identity": {
+    "firstName": "Акіра",
+    "lastName": "Бакенеко",
+    "fullName": "Акіра Бакенеко",
+
+    "species": "human",
+    "gender": "male",
+    "genderIdentity": "чоловік",
+
+    "residence": {
+      "country": "Аерія",
+      "city": "Демо",
+      "address": {
+        "street": "Теріяківський",
+        "building": "5А",
+        "apartment": 17,
+        "floor": 2,
+        "side": "сонячний"
+      }
+    }
+  }
+}
