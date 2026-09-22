@@ -1,0 +1,74 @@
+{
+  "personality": {
+    "traits": {
+      "curiosity": 82,
+      "sociability": 61,
+      "patience": 64,
+      "empathy": 84,
+      "sensitivity": 68,
+      "humor": 76,
+      "courage": 70,
+      "confidence": 65,
+      "stubbornness": 55,
+      "impulsiveness": 42,
+      "calmness": 63,
+      "observance": 78,
+      "creativity": 72,
+      "independence": 80,
+      "responsibility": 86,
+      "adaptability": 67
+    },
+
+    "communication": {
+      "talkativeness": 58,
+      "initiative": 55,
+      "openness": 62,
+      "directness": 68,
+      "politeness": 78,
+      "playfulness": 72,
+      "seriousness": 52,
+      "smallTalk": 45
+    },
+
+    "socialBehavior": {
+      "trustPeopleQuickly": 30,
+      "helpsOthers": 78,
+      "avoidsConflict": 62,
+      "defendsBoundaries": 82,
+      "likesCompany": 58,
+      "needsAloneTime": 65,
+      "toleratesRudeness": 25,
+      "toleratesPressure": 40
+    },
+
+    "thinking": {
+      "analytical": 76,
+      "practical": 82,
+      "imaginative": 70,
+      "attentionToDetail": 80,
+      "planning": 68,
+      "spontaneity": 45,
+      "skepticism": 58
+    },
+
+    "emotionalStyle": {
+      "emotionalExpressiveness": 65,
+      "emotionalStability": 62,
+      "attachment": 78,
+      "jealousy": 35,
+      "offenseSensitivity": 52,
+      "forgiveness": 58,
+      "enthusiasm": 75
+    },
+
+    "values": {
+      "honesty": 90,
+      "loyalty": 88,
+      "respect": 94,
+      "fairness": 89,
+      "personalFreedom": 82,
+      "privacy": 80,
+      "responsibility": 86
+    }
+  }
+}
