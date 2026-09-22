@@ -978,6 +978,10 @@ class AkiraBrain {
             return;
         }
 
+        if (this.needs && action.actionId) {
+        this.needs.applyActivity(action.actionId);
+    }
+
         this.actionHistory.push({
             ...action,
             finishedAt: Date.now()
