@@ -1,0 +1,755 @@
+{
+  "activities": {
+    "sleep": {
+      "category": "basic",
+      "enabled": true,
+      "autonomous": true,
+      "preference": {
+        "liking": 75,
+        "initiative": 80,
+        "comfort": 90
+      },
+      "duration": {
+        "minMinutes": 360,
+        "maxMinutes": 540
+      },
+      "requirements": {
+        "locationTypes": ["home"],
+        "minimumEnergy": 0
+      },
+      "context": {
+        "preferredTime": ["night", "early_morning"],
+        "whenTired": 2.0,
+        "whenEnergyLow": 2.5,
+        "duringWork": 0.1
+      }
+    },
+
+    "eat": {
+      "category": "basic",
+      "enabled": true,
+      "autonomous": true,
+      "preference": {
+        "liking": 65,
+        "initiative": 70,
+        "comfort": 75
+      },
+      "duration": {
+        "minMinutes": 10,
+        "maxMinutes": 40
+      },
+      "requirements": {
+        "locationTypes": ["home", "workplace", "restaurant", "cafe"],
+        "minimumEnergy": 0
+      },
+      "context": {
+        "whenHungry": 2.5,
+        "duringWork": 0.5
+      }
+    },
+
+    "drink": {
+      "category": "basic",
+      "enabled": true,
+      "autonomous": true,
+      "preference": {
+        "liking": 65,
+        "initiative": 75,
+        "comfort": 80
+      },
+      "duration": {
+        "minMinutes": 2,
+        "maxMinutes": 10
+      },
+      "requirements": {
+        "locationTypes": ["home", "workplace", "restaurant", "cafe"]
+      },
+      "context": {
+        "whenThirsty": 3.0,
+        "duringWork": 0.8
+      }
+    },
+
+    "rest": {
+      "category": "recovery",
+      "enabled": true,
+      "autonomous": true,
+      "preference": {
+        "liking": 88,
+        "initiative": 78,
+        "comfort": 95
+      },
+      "duration": {
+        "minMinutes": 10,
+        "maxMinutes": 90
+      },
+      "requirements": {
+        "locationTypes": ["home", "workplace", "park", "cafe"]
+      },
+      "context": {
+        "whenTired": 2.0,
+        "whenEnergyLow": 2.2,
+        "whenSociallyFatigued": 1.5
+      }
+    },
+
+    "talk": {
+      "category": "social",
+      "enabled": true,
+      "autonomous": true,
+      "preference": {
+        "liking": 68,
+        "initiative": 55,
+        "socialValue": 85,
+        "comfort": 70
+      },
+      "duration": {
+        "minMinutes": 5,
+        "maxMinutes": 120
+      },
+      "requirements": {
+        "requiresPerson": true
+      },
+      "context": {
+        "whenSocialNeedLow": 2.0,
+        "whenSocialNeedHigh": 0.5,
+        "withClosePerson": 2.0,
+        "withStranger": 0.4,
+        "whenTired": 0.5
+      }
+    },
+
+    "playGame": {
+      "category": "entertainment",
+      "enabled": true,
+      "autonomous": true,
+      "preference": {
+        "liking": 55,
+        "initiative": 35,
+        "fun": 90,
+        "socialValue": 70,
+        "competitiveValue": 20
+      },
+      "duration": {
+        "minMinutes": 15,
+        "maxMinutes": 120
+      },
+      "requirements": {
+        "locationTypes": ["home", "game_room"],
+        "minimumEnergy": 20
+      },
+      "context": {
+        "whenBored": 1.8,
+        "whenFunLow": 2.0,
+        "whenTired": 0.6,
+        "withFriend": 1.4
+      },
+      "games": [
+        {
+          "id": "tic_tac_toe",
+          "name": "хрестики-нулики",
+          "interest": 55,
+          "skill": 50,
+          "twoPlayer": true,
+          "emojiResponses": true
+        },
+        {
+          "id": "chess",
+          "name": "шахи",
+          "interest": 35,
+          "skill": 35,
+          "twoPlayer": true,
+          "emojiResponses": true
+        },
+        {
+          "id": "checkers",
+          "name": "шашки",
+          "interest": 32,
+          "skill": 30,
+          "twoPlayer": true,
+          "emojiResponses": true
+        }
+      ]
+    },
+
+    "read": {
+      "category": "quiet",
+      "enabled": true,
+      "autonomous": true,
+      "preference": {
+        "liking": 78,
+        "initiative": 72,
+        "fun": 72,
+        "curiosity": 90,
+        "comfort": 82
+      },
+      "duration": {
+        "minMinutes": 15,
+        "maxMinutes": 180
+      },
+      "requirements": {
+        "locationTypes": ["home", "library", "cafe", "park"],
+        "minimumEnergy": 15
+      },
+      "context": {
+        "whenCurious": 1.8,
+        "whenBored": 1.4,
+        "whenTired": 1.1,
+        "whenSocialNeedLow": 0.8
+      }
+    },
+
+    "walk": {
+      "category": "outdoor",
+      "enabled": true,
+      "autonomous": true,
+      "preference": {
+        "liking": 88,
+        "initiative": 78,
+        "fun": 82,
+        "comfort": 80,
+        "novelty": 65
+      },
+      "duration": {
+        "minMinutes": 20,
+        "maxMinutes": 180
+      },
+      "requirements": {
+        "locationTypes": ["city", "park", "street"],
+        "minimumEnergy": 25
+      },
+      "context": {
+        "goodWeather": 1.7,
+        "badWeather": 0.35,
+        "whenBored": 1.5,
+        "whenCurious": 1.4,
+        "whenTired": 0.6,
+        "city": 1.5,
+        "forest": 0.5,
+        "wildNature": 0.25
+      },
+      "avoidConditions": [
+        "mosquitoes",
+        "ticks",
+        "nettles"
+      ]
+    },
+
+    "cycle": {
+      "category": "sport",
+      "enabled": true,
+      "autonomous": true,
+      "preference": {
+        "liking": 92,
+        "initiative": 82,
+        "fun": 92,
+        "achievement": 70,
+        "competitiveValue": 10
+      },
+      "duration": {
+        "minMinutes": 20,
+        "maxMinutes": 180
+      },
+      "requirements": {
+        "locationTypes": ["city", "park", "cycle_path"],
+        "minimumEnergy": 35
+      },
+      "context": {
+        "goodWeather": 1.8,
+        "badWeather": 0.2,
+        "whenBored": 1.4,
+        "whenEnergyLow": 0.3,
+        "whenTired": 0.4
+      }
+    },
+
+    "work": {
+      "category": "work",
+      "enabled": true,
+      "autonomous": true,
+      "preference": {
+        "liking": 62,
+        "initiative": 45,
+        "achievement": 80,
+        "responsibility": 95,
+        "socialValue": 60
+      },
+      "duration": {
+        "minMinutes": 120,
+        "maxMinutes": 480
+      },
+      "requirements": {
+        "locationTypes": ["workplace"],
+        "minimumEnergy": 25
+      },
+      "context": {
+        "duringWorkHours": 4.0,
+        "outsideWorkHours": 0.15,
+        "whenTired": 0.4,
+        "whenAchievementLow": 1.3
+      },
+      "role": {
+        "workplace": "Техсмітник",
+        "position": "продавець-консультант",
+        "specialties": [
+          "електроніка",
+          "комп'ютери",
+          "периферія",
+          "побутова техніка"
+        ]
+      }
+    },
+
+    "listenToMusic": {
+      "category": "entertainment",
+      "enabled": true,
+      "autonomous": true,
+      "preference": {
+        "liking": 82,
+        "initiative": 65,
+        "fun": 78,
+        "comfort": 85
+      },
+      "duration": {
+        "minMinutes": 10,
+        "maxMinutes": 240
+      },
+      "requirements": {
+        "locationTypes": ["home", "workplace", "transport", "walk"]
+      },
+      "context": {
+        "whenBored": 1.5,
+        "whenTired": 1.2,
+        "whenSad": 1.3,
+        "whenAngry": 1.1
+      },
+      "musicPreferences": {
+        "variety": 85,
+        "catchyMelodies": 90,
+        "electronic": 85,
+        "tranceLike": 82,
+        "viralMelodies": 70
+      }
+    },
+
+    "checkSocialNetwork": {
+      "category": "social_media",
+      "enabled": true,
+      "autonomous": true,
+      "preference": {
+        "liking": 62,
+        "initiative": 58,
+        "fun": 65,
+        "socialValue": 75,
+        "novelty": 72
+      },
+      "duration": {
+        "minMinutes": 2,
+        "maxMinutes": 60
+      },
+      "requirements": {
+        "locationTypes": ["home", "workplace", "anywhere"]
+      },
+      "context": {
+        "whenBored": 1.5,
+        "whenSocialNeedLow": 1.4,
+        "whenTired": 1.0,
+        "duringWork": 0.3
+      },
+      "possibleActions": [
+        "readPosts",
+        "readComments",
+        "checkMessages",
+        "viewProfiles",
+        "reactToPost",
+        "writeComment"
+      ]
+    },
+
+    "writePost": {
+      "category": "social_media",
+      "enabled": true,
+      "autonomous": true,
+      "preference": {
+        "liking": 58,
+        "initiative": 45,
+        "creativity": 75,
+        "socialValue": 70,
+        "novelty": 65
+      },
+      "duration": {
+        "minMinutes": 5,
+        "maxMinutes": 40
+      },
+      "requirements": {
+        "locationTypes": ["home", "workplace", "anywhere"],
+        "minimumEnergy": 20
+      },
+      "context": {
+        "whenInspired": 2.0,
+        "whenBored": 1.2,
+        "whenSocialNeedLow": 1.1,
+        "whenTired": 0.6,
+        "duringWork": 0.25
+      },
+      "topics": [
+        "technology",
+        "electronics",
+        "cycling",
+        "city",
+        "cinema",
+        "music",
+        "space",
+        "animals",
+        "flowers",
+        "books",
+        "interestingEvents",
+        "dailyLife"
+      ]
+    },
+
+    "talkToSomeone": {
+      "category": "social",
+      "enabled": true,
+      "autonomous": true,
+      "preference": {
+        "liking": 70,
+        "initiative": 55,
+        "socialValue": 90
+      },
+      "duration": {
+        "minMinutes": 5,
+        "maxMinutes": 120
+      },
+      "requirements": {
+        "requiresPerson": true
+      },
+      "context": {
+        "whenSocialNeedLow": 2.2,
+        "whenLonely": 2.5,
+        "withYani": 3.0,
+        "withFriend": 1.5,
+        "withDislikedPerson": 0.05,
+        "withStranger": 0.3
+      },
+      "targetSelection": {
+        "useRelationship": true,
+        "useDesireForContact": true,
+        "useCloseness": true,
+        "useTrust": true,
+        "avoidHighIrritation": true
+      }
+    },
+
+    "visitMuseum": {
+      "category": "culture",
+      "enabled": true,
+      "autonomous": true,
+      "preference": {
+        "liking": 88,
+        "initiative": 70,
+        "curiosity": 90,
+        "fun": 75
+      },
+      "duration": {
+        "minMinutes": 60,
+        "maxMinutes": 240
+      },
+      "requirements": {
+        "locationTypes": ["city"],
+        "minimumEnergy": 30
+      },
+      "context": {
+        "goodWeather": 1.2,
+        "whenCurious": 1.8,
+        "whenBored": 1.5,
+        "whenTired": 0.7
+      }
+    },
+
+    "visitPlanetarium": {
+      "category": "culture",
+      "enabled": true,
+      "autonomous": true,
+      "preference": {
+        "liking": 96,
+        "initiative": 82,
+        "curiosity": 98,
+        "fun": 88
+      },
+      "duration": {
+        "minMinutes": 60,
+        "maxMinutes": 180
+      },
+      "requirements": {
+        "locationTypes": ["city"],
+        "minimumEnergy": 25
+      },
+      "context": {
+        "whenCurious": 2.2,
+        "whenBored": 1.8,
+        "withFriend": 1.3,
+        "withYani": 1.6
+      }
+    },
+
+    "visitTheatre": {
+      "category": "culture",
+      "enabled": true,
+      "autonomous": true,
+      "preference": {
+        "liking": 72,
+        "initiative": 50,
+        "fun": 75,
+        "socialValue": 65
+      },
+      "duration": {
+        "minMinutes": 90,
+        "maxMinutes": 240
+      },
+      "requirements": {
+        "locationTypes": ["city"],
+        "minimumEnergy": 25
+      }
+    },
+
+    "visitConcert": {
+      "category": "culture",
+      "enabled": true,
+      "autonomous": true,
+      "preference": {
+        "liking": 76,
+        "initiative": 55,
+        "fun": 85,
+        "socialValue": 70
+      },
+      "duration": {
+        "minMinutes": 60,
+        "maxMinutes": 240
+      },
+      "requirements": {
+        "locationTypes": ["city"],
+        "minimumEnergy": 25
+      },
+      "context": {
+        "whenBored": 1.4,
+        "whenSocialNeedLow": 1.2
+      }
+    },
+
+    "goToCinema": {
+      "category": "culture",
+      "enabled": true,
+      "autonomous": true,
+      "preference": {
+        "liking": 70,
+        "initiative": 58,
+        "fun": 82,
+        "comfort": 75
+      },
+      "duration": {
+        "minMinutes": 90,
+        "maxMinutes": 180
+      },
+      "requirements": {
+        "locationTypes": ["city"],
+        "minimumEnergy": 25
+      }
+    },
+
+    "boatRide": {
+      "category": "leisure",
+      "enabled": true,
+      "autonomous": true,
+      "preference": {
+        "liking": 48,
+        "initiative": 25,
+        "fun": 65,
+        "novelty": 75
+      },
+      "duration": {
+        "minMinutes": 30,
+        "maxMinutes": 180
+      },
+      "requirements": {
+        "locationTypes": ["water"],
+        "minimumEnergy": 25
+      },
+      "context": {
+        "goodWeather": 1.7,
+        "whenCurious": 1.3
+      }
+    },
+
+    "fishing": {
+      "category": "leisure",
+      "enabled": true,
+      "autonomous": true,
+      "preference": {
+        "liking": 35,
+        "initiative": 20,
+        "fun": 45,
+        "curiosity": 55,
+        "competitiveValue": 5
+      },
+      "duration": {
+        "minMinutes": 30,
+        "maxMinutes": 240
+      },
+      "requirements": {
+        "locationTypes": ["water"],
+        "minimumEnergy": 25
+      },
+      "context": {
+        "goodWeather": 1.5,
+        "whenBored": 1.1,
+        "whenTired": 0.5
+      }
+    },
+
+    "cruiseTravel": {
+      "category": "travel",
+      "enabled": true,
+      "autonomous": false,
+      "preference": {
+        "liking": 65,
+        "initiative": 35,
+        "fun": 80,
+        "novelty": 95,
+        "curiosity": 85
+      },
+      "duration": {
+        "minMinutes": 2880,
+        "maxMinutes": 20160
+      },
+      "requirements": {
+        "locationTypes": ["port", "ship"],
+        "requiresPlanning": true
+      }
+    },
+
+    "craftWithClay": {
+      "category": "creative",
+      "enabled": true,
+      "autonomous": true,
+      "preference": {
+        "liking": 48,
+        "initiative": 20,
+        "creativity": 75,
+        "fun": 60,
+        "comfort": 70
+      },
+      "duration": {
+        "minMinutes": 20,
+        "maxMinutes": 180
+      },
+      "requirements": {
+        "locationTypes": ["home", "workshop"],
+        "minimumEnergy": 20
+      },
+      "context": {
+        "whenInspired": 1.7,
+        "whenBored": 1.2
+      }
+    },
+
+    "lookAtFlowers": {
+      "category": "quiet",
+      "enabled": true,
+      "autonomous": true,
+      "preference": {
+        "liking": 88,
+        "initiative": 65,
+        "aesthetic": 90,
+        "comfort": 85
+      },
+      "duration": {
+        "minMinutes": 5,
+        "maxMinutes": 60
+      },
+      "requirements": {
+        "locationTypes": ["home", "park", "garden", "city"]
+      },
+      "context": {
+        "whenStressed": 1.3,
+        "whenSad": 1.2,
+        "goodWeather": 1.3
+      }
+    },
+
+    "observeAnimals": {
+      "category": "quiet",
+      "enabled": true,
+      "autonomous": true,
+      "preference": {
+        "liking": 85,
+        "initiative": 68,
+        "curiosity": 80,
+        "comfort": 82
+      },
+      "duration": {
+        "minMinutes": 5,
+        "maxMinutes": 90
+      },
+      "requirements": {
+        "locationTypes": ["home", "city", "park", "zoo"]
+      }
+    },
+
+    "stargazing": {
+      "category": "quiet",
+      "enabled": true,
+      "autonomous": true,
+      "preference": {
+        "liking": 92,
+        "initiative": 75,
+        "curiosity": 98,
+        "comfort": 85
+      },
+      "duration": {
+        "minMinutes": 10,
+        "maxMinutes": 180
+      },
+      "requirements": {
+        "locationTypes": ["home", "rooftop", "park", "observatory"],
+        "requiresNight": true
+      },
+      "context": {
+        "clearSky": 2.0,
+        "cloudySky": 0.35,
+        "whenCurious": 2.0,
+        "whenStressed": 1.2
+      }
+    }
+  },
+
+  "generalRules": {
+    "enabled": true,
+    "actionsAreNotGuaranteed": true,
+    "decisionDependsOn": [
+      "needs",
+      "emotions",
+      "personality",
+      "interests",
+      "relationships",
+      "memories",
+      "time",
+      "weather",
+      "location",
+      "recentActions"
+    ],
+    "avoidRepetition": {
+      "enabled": true,
+      "sameActionCooldownMinutes": 30,
+      "repetitionPenalty": 20
+    },
+    "energyProtection": {
+      "enabled": true,
+      "avoidDemandingActivitiesBelowEnergy": 20
+    },
+    "contextMatters": true,
+    "preferencesAreMultidimensional": true,
+    "lowInterestDoesNotMeanImpossible": true,
+    "highInterestDoesNotMeanAutomatic": true
+  }
+}
