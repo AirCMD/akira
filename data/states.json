@@ -1,0 +1,500 @@
+{
+  "states": {
+    "enabled": true,
+
+    "principle": "Стан є тимчасовим і змінюється під впливом світу, потреб, емоцій, дій, подій, цілей та часу.",
+
+    "current": {
+      "activity": "idle",
+      "location": "home",
+
+      "availability": {
+        "available": true,
+        "sociallyAvailable": true,
+        "interruptible": true,
+        "canStartConversation": true,
+        "canReceiveMessages": true,
+        "canStartActivity": true
+      },
+
+      "physical": {
+        "energy": 80,
+        "fatigue": 20,
+        "comfort": 65,
+        "sleepiness": 10,
+        "hunger": 20,
+        "thirst": 20,
+        "physicalDiscomfort": 0,
+        "health": 100
+      },
+
+      "mental": {
+        "attention": 65,
+        "concentration": 65,
+        "mentalEnergy": 75,
+        "clarity": 80,
+        "curiosity": 65,
+        "boredom": 12,
+        "motivation": 65
+      },
+
+      "social": {
+        "socialEnergy": 60,
+        "desireForContact": 50,
+        "desireForPrivacy": 40,
+        "conversationReadiness": 60,
+        "socialFatigue": 15
+      },
+
+      "behavior": {
+        "activityIntensity": 0,
+        "focus": 50,
+        "initiative": 55,
+        "spontaneity": 45,
+        "restlessness": 10,
+        "patience": 64
+      },
+
+      "emotional": {
+        "dominantEmotion": "calm",
+        "emotionalIntensity": 35,
+        "emotionalStability": 62,
+        "expressionLevel": 55
+      },
+
+      "communication": {
+        "responseSpeed": 65,
+        "responseLength": 55,
+        "talkativeness": 58,
+        "humorReadiness": 60,
+        "seriousness": 45,
+        "emojiUse": 30
+      },
+
+      "worldInteraction": {
+        "environmentAwareness": 75,
+        "weatherAwareness": 60,
+        "peopleAwareness": 70,
+        "technologyAwareness": 80
+      }
+    },
+
+    "activityStates": {
+      "idle": {
+        "description": "нічим конкретним не зайнятий",
+        "interruptible": true,
+        "conversationAvailable": true,
+        "canChangeActivity": true
+      },
+
+      "working": {
+        "description": "працює",
+        "interruptible": true,
+        "conversationAvailable": true,
+        "conversationPenalty": 25,
+        "canChangeActivity": false
+      },
+
+      "walking": {
+        "description": "йде пішки",
+        "interruptible": true,
+        "conversationAvailable": true,
+        "attentionToEnvironment": 85
+      },
+
+      "cycling": {
+        "description": "їде велосипедом",
+        "interruptible": false,
+        "conversationAvailable": false,
+        "attentionToEnvironment": 95
+      },
+
+      "reading": {
+        "description": "читає",
+        "interruptible": true,
+        "conversationAvailable": true,
+        "conversationPenalty": 35,
+        "focus": 85
+      },
+
+      "gaming": {
+        "description": "грає",
+        "interruptible": true,
+        "conversationAvailable": true,
+        "conversationPenalty": 20,
+        "focus": 80
+      },
+
+      "talking": {
+        "description": "розмовляє",
+        "interruptible": true,
+        "conversationAvailable": true,
+        "socialFocus": 90
+      },
+
+      "resting": {
+        "description": "відпочиває",
+        "interruptible": true,
+        "conversationAvailable": true,
+        "activityIntensity": 5
+      },
+
+      "sleeping": {
+        "description": "спить",
+        "interruptible": false,
+        "conversationAvailable": false,
+        "canReceiveMessages": true,
+        "canReactToEmergency": true
+      },
+
+      "eating": {
+        "description": "їсть",
+        "interruptible": true,
+        "conversationAvailable": true,
+        "conversationPenalty": 15
+      },
+
+      "drinking": {
+        "description": "п'є",
+        "interruptible": true,
+        "conversationAvailable": true
+      },
+
+      "thinking": {
+        "description": "обмірковує щось",
+        "interruptible": true,
+        "conversationAvailable": true,
+        "conversationPenalty": 30,
+        "focus": 80
+      },
+
+      "organizing": {
+        "description": "щось упорядковує",
+        "interruptible": true,
+        "conversationAvailable": true
+      }
+    },
+
+    "locationStates": {
+      "home": {
+        "privacy": 90,
+        "comfort": 95,
+        "socialOpportunity": 35,
+        "activityFreedom": 95
+      },
+
+      "techsmith": {
+        "privacy": 20,
+        "comfort": 55,
+        "socialOpportunity": 90,
+        "activityFreedom": 35,
+        "workRelevant": true
+      },
+
+      "cityCenter": {
+        "privacy": 15,
+        "comfort": 65,
+        "socialOpportunity": 85,
+        "activityFreedom": 80
+      },
+
+      "park": {
+        "privacy": 45,
+        "comfort": 70,
+        "socialOpportunity": 55,
+        "activityFreedom": 85,
+        "natureExposure": 80
+      },
+
+      "museum": {
+        "privacy": 60,
+        "comfort": 75,
+        "socialOpportunity": 35,
+        "activityFreedom": 70,
+        "cultureExposure": 95
+      },
+
+      "planetarium": {
+        "privacy": 65,
+        "comfort": 85,
+        "socialOpportunity": 30,
+        "activityFreedom": 60,
+        "spaceInterestBonus": 100
+      },
+
+      "theatre": {
+        "privacy": 45,
+        "comfort": 75,
+        "socialOpportunity": 50,
+        "activityFreedom": 50
+      },
+
+      "cinema": {
+        "privacy": 65,
+        "comfort": 85,
+        "socialOpportunity": 35,
+        "activityFreedom": 55
+      },
+
+      "concertHall": {
+        "privacy": 30,
+        "comfort": 65,
+        "socialOpportunity": 75,
+        "activityFreedom": 40
+      },
+
+      "cafe": {
+        "privacy": 25,
+        "comfort": 75,
+        "socialOpportunity": 80,
+        "activityFreedom": 75
+      },
+
+      "water": {
+        "privacy": 50,
+        "comfort": 65,
+        "socialOpportunity": 40,
+        "activityFreedom": 70,
+        "boatActivityBonus": 80
+      },
+
+      "rooftop": {
+        "privacy": 70,
+        "comfort": 60,
+        "socialOpportunity": 25,
+        "activityFreedom": 50,
+        "stargazingBonus": 90
+      },
+
+      "workshop": {
+        "privacy": 75,
+        "comfort": 60,
+        "socialOpportunity": 20,
+        "activityFreedom": 80,
+        "creativeActivityBonus": 90
+      }
+    },
+
+    "transitions": {
+      "enabled": true,
+
+      "rules": {
+        "statesChangeGradually": true,
+        "activityChangesState": true,
+        "locationChangesState": true,
+        "eventsCanChangeState": true,
+        "emotionsCanChangeState": true,
+        "needsCanChangeState": true,
+        "healthCanChangeState": true,
+        "weatherCanChangeState": true,
+        "conversationCanChangeState": true,
+        "timeCanChangeState": true,
+
+        "sleepRestoresEnergy": true,
+        "restReducesFatigue": true,
+        "eatingReducesHunger": true,
+        "drinkingReducesThirst": true,
+        "socialInteractionChangesSocialEnergy": true,
+        "workConsumesEnergy": true,
+        "cyclingConsumesEnergy": true,
+        "mentalWorkConsumesMentalEnergy": true
+      }
+    },
+
+    "modifiers": {
+      "enabled": true,
+
+      "energy": {
+        "high": {
+          "minimum": 70,
+          "activityBonus": 15,
+          "initiativeBonus": 10,
+          "conversationBonus": 5
+        },
+
+        "medium": {
+          "minimum": 40,
+          "maximum": 69,
+          "activityBonus": 0
+        },
+
+        "low": {
+          "maximum": 39,
+          "activityPenalty": 20,
+          "initiativePenalty": 15,
+          "concentrationPenalty": 10
+        },
+
+        "critical": {
+          "maximum": 15,
+          "activityPenalty": 50,
+          "initiativePenalty": 40,
+          "restPriorityBonus": 60
+        }
+      },
+
+      "fatigue": {
+        "low": {
+          "maximum": 30
+        },
+
+        "medium": {
+          "minimum": 31,
+          "maximum": 60,
+          "concentrationPenalty": 10
+        },
+
+        "high": {
+          "minimum": 61,
+          "concentrationPenalty": 25,
+          "socialPenalty": 15,
+          "activityPenalty": 20
+        }
+      },
+
+      "socialEnergy": {
+        "high": {
+          "minimum": 70,
+          "conversationBonus": 15,
+          "socialActivityBonus": 15
+        },
+
+        "low": {
+          "maximum": 30,
+          "privacyBonus": 25,
+          "conversationPenalty": 20
+        }
+      },
+
+      "boredom": {
+        "low": {
+          "maximum": 30
+        },
+
+        "medium": {
+          "minimum": 31,
+          "maximum": 60,
+          "noveltySeekingBonus": 10
+        },
+
+        "high": {
+          "minimum": 61,
+          "noveltySeekingBonus": 30,
+          "activityChangeBonus": 25
+        }
+      },
+
+      "focus": {
+        "high": {
+          "minimum": 75,
+          "distractionResistance": 30
+        },
+
+        "low": {
+          "maximum": 35,
+          "distractionSensitivity": 30
+        }
+      }
+    },
+
+    "availability": {
+      "rules": {
+        "sleepReducesAvailability": true,
+        "cyclingReducesAvailability": true,
+        "workReducesAvailability": true,
+        "deepFocusReducesAvailability": true,
+        "highSocialFatigueReducesAvailability": true,
+        "highStressReducesAvailability": true,
+        "illnessCanReduceAvailability": true,
+        "strongEmotionCanReduceAvailability": true,
+
+        "YaniCanIncreaseSocialAvailability": true,
+        "urgentEventCanOverrideAvailability": true
+      }
+    },
+
+    "interruptions": {
+      "enabled": true,
+
+      "rules": {
+        "interruptibleActivityCanBeInterrupted": true,
+        "nonInterruptibleActivityCanIgnoreEvent": true,
+        "importantEventCanInterruptActivity": true,
+        "criticalNeedCanInterruptActivity": true,
+        "strongEmotionCanInterruptActivity": true,
+        "characterCanChooseNotToInterrupt": true
+      },
+
+      "priorityThresholds": {
+        "low": 25,
+        "medium": 50,
+        "high": 75,
+        "critical": 90
+      }
+    },
+
+    "context": {
+      "enabled": true,
+
+      "dimensions": [
+        "time",
+        "date",
+        "season",
+        "weather",
+        "location",
+        "activity",
+        "energy",
+        "fatigue",
+        "health",
+        "emotion",
+        "socialEnergy",
+        "currentGoal",
+        "recentEvent",
+        "recentAction",
+        "relationship",
+        "conversationTopic"
+      ],
+
+      "rules": {
+        "contextChangesBehavior": true,
+        "sameStimulusCanHaveDifferentEffects": true,
+        "currentStateOverridesSomeBaselineTraits": true,
+        "baselinePersonalityRemainsRelevant": true
+      }
+    },
+
+    "stateHistory": {
+      "enabled": true,
+      "storePreviousStates": true,
+      "maximumEntries": 50,
+
+      "record": [
+        "activity",
+        "location",
+        "energy",
+        "fatigue",
+        "health",
+        "dominantEmotion",
+        "socialEnergy",
+        "focus"
+      ]
+    },
+
+    "stateRules": {
+      "enabled": true,
+
+      "principles": [
+        "стан не є особистістю",
+        "стан не є емоцією",
+        "стан не є потребою",
+        "стан не є метою",
+        "стан може змінитися без зміни особистості",
+        "стан може змінити поведінку",
+        "одна й та сама дія може мати різний результат у різному стані",
+        "персонаж може діяти всупереч поточному комфорту через важливішу мету",
+        "персонаж може нічого не робити",
+        "персонаж не зобов'язаний постійно бути доступним для спілкування"
+      ]
+    }
+  }
+}
