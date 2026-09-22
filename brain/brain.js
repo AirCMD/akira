@@ -241,7 +241,8 @@ class AkiraBrain {
             "calendar",
             "games",
             "media",
-            "social"
+            "social",
+            "opinions"
         ];
 
         const results = {};
@@ -651,7 +652,8 @@ class AkiraBrain {
             ["activities", "AkiraActivities"],
             ["social", "AkiraSocial"],
             ["calendar", "AkiraCalendar"],
-            ["weather", "AkiraWeather"]
+            ["weather", "AkiraWeather"],
+            ["opinions", "AkiraOpinions"]
         ];
         for (const [property, globalName] of modules) {
             const Ctor = window[globalName];

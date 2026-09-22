@@ -1262,6 +1262,14 @@ class AkiraDialogue {
             return [this.composeActivityAnswer(profile)];
         }
 
+        // Побутові суспільні/економічні події оцінюються через власні
+        // цінності та особистий вплив, а не через наперед задану політичну позицію.
+        const opinionReaction = this.brain.opinions?.reactToText?.(profile.input);
+        if (opinionReaction) {
+            const reply = this.brain.opinions.describeReaction(opinionReaction);
+            if (reply) return [reply];
+        }
+
         // Базові соціальні репліки мають реагувати безпосередньо
         // на зміст повідомлення, а не провалюватися у fallback.
         if (profile.analysis.containsGreeting) {
