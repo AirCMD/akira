@@ -545,6 +545,10 @@
 <script src="./brain/needs.js" defer></script>
 <script src="./brain/decision.js" defer></script>
 <script src="./brain/dialogue.js" defer></script>
+<script src="./brain/relationships.js" defer></script>
+<script src="./brain/perception.js" defer></script>
+<script src="./brain/activities.js" defer></script>
+<script src="./brain/social.js" defer></script>
 <script src="./brain/brain.js" defer></script>
 </head>
 
@@ -1224,38 +1228,7 @@
     });
   </script>
 
-<!-- DEBUG PANEL -->
-<div id="debug" style="position:fixed; bottom:12px; right:12px; background:rgba(0,0,0,0.9); color:#0f0; padding:12px 14px; font-family:monospace; font-size:13px; border-radius:10px; z-index:9999; min-width:240px;">
-  <div id="debug-needs">Needs: …</div>
-  <div style="margin-top:8px; display:flex; gap:6px; flex-wrap:wrap;">
-    <button onclick="testEat()">Test Eat</button>
-    <button onclick="testSleep()">Test Sleep</button>
-  </div>
-</div>
 
-<script>
-  function updateDebug() {
-    const n = window.akiraBrain?.state?.needs;
-    if (!n) return;
-    document.getElementById('debug-needs').innerHTML =
-      `E:${Math.round(n.energy||0)}  S:${Math.round(n.sleep||0)}<br>` +
-      `H:${Math.round(n.hunger||0)}  T:${Math.round(n.thirst||0)}`;
-  }
-
-  function testEat() {
-    if (!window.akiraBrain?.needs) return;
-    window.akiraBrain.needs.applyActivity("eat");
-    updateDebug();
-  }
-
-  function testSleep() {
-    if (!window.akiraBrain?.needs) return;
-    window.akiraBrain.needs.applyActivity("sleep");
-    updateDebug();
-  }
-
-  setInterval(updateDebug, 400);
-</script>
 
 
 </body>

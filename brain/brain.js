@@ -31,6 +31,11 @@ class AkiraBrain {
         this.needs = null;
         this.decision = null;
         this.dialogue = null;
+        this.relationships = null;
+        this.perception = null;
+        this.activities = null;
+        this.social = null;
+        this.tickCount = 0;
 
         this.running = false;
         this.initialized = false;
@@ -231,7 +236,12 @@ class AkiraBrain {
             "states",
             "social_network",
             "dialogue_data",
-            "dialogue_templates"
+            "dialogue_templates",
+            "relationships",
+            "calendar",
+            "games",
+            "media",
+            "social"
         ];
 
         const results = {};
@@ -298,6 +308,7 @@ class AkiraBrain {
         this.initializeMood();
         this.initializeDecision();
         this.initializeDialogue();
+        this.initializeExtendedModules();
 
         this.state.initialized = true;
         this.initialized = true;
@@ -319,45 +330,29 @@ class AkiraBrain {
     // =========================================================
 
     initializeWorld() {
+        const root = this.data.world || {};
+        const world = root.world || root;
+        const calendar = world.calendar || {};
+        const timeCfg = world.time || {};
+        const timeCurrent = timeCfg.current || {};
+        const locationCfg = world.location || {};
 
-        const world =
-            this.data.world || {};
+        const date = (calendar.year && calendar.month && calendar.day)
+            ? `${calendar.year}-${String(calendar.month).padStart(2,"0")}-${String(calendar.day).padStart(2,"0")}`
+            : (world.date || this.getToday());
 
-        const current =
-            world.current ||
-            world.time ||
-            {};
+        const time = (Number.isFinite(Number(timeCurrent.hour)))
+            ? `${String(Number(timeCurrent.hour)).padStart(2,"0")}:${String(Number(timeCurrent.minute)||0).padStart(2,"0")}`
+            : (typeof world.time === "string" ? world.time : "16:00");
 
+        const parsed = new Date(`${date}T12:00:00`);
         this.state.world = {
-
-            date:
-                current.date ||
-                world.date ||
-                this.getToday(),
-
-            time:
-                current.time ||
-                world.time ||
-                "16:00",
-
-            day:
-                current.day ||
-                world.day ||
-                this.getDayName(),
-
-            season:
-                current.season ||
-                world.season ||
-                "autumn",
-
-            location:
-                current.location ||
-                world.location ||
-                "home",
-
-            weather:
-                this.data.weather?.current ||
-                null
+            date,
+            time,
+            day: Number.isNaN(parsed.getTime()) ? this.getDayName() : parsed.toLocaleDateString("en-US", {weekday:"long"}),
+            season: calendar.season?.current || world.season || "autumn",
+            location: locationCfg.current || world.location || "home",
+            weather: this.data.weather?.current || this.data.weather?.weather?.current || null
         };
     }
 
@@ -631,6 +626,21 @@ class AkiraBrain {
     }
 
 
+    initializeExtendedModules() {
+        const modules = [
+            ["relationships", "AkiraRelationships"],
+            ["perception", "AkiraPerception"],
+            ["activities", "AkiraActivities"],
+            ["social", "AkiraSocial"]
+        ];
+        for (const [property, globalName] of modules) {
+            const Ctor = window[globalName];
+            if (typeof Ctor !== "function") continue;
+            this[property] = new Ctor(this);
+            this[property].init?.();
+        }
+    }
+
     // =========================================================
     // ЗАПУСК
     // =========================================================
@@ -731,6 +741,9 @@ class AkiraBrain {
 
         this.state.lastUpdate =
             Date.now();
+
+        this.tickCount++;
+        if (this.tickCount % 10 === 0) this.saveState();
 
         this.emit(
             "tick",
@@ -977,10 +990,21 @@ finishAction() {
         return;
     }
 
-    // Застосовуємо ефекти дії
-    if (this.needs && action.actionId) {
+    // Застосовуємо наслідки лише один раз, до очищення action.
+    if (!action.effectsApplied && this.needs && action.actionId) {
         this.needs.applyActivity(action.actionId);
+        action.effectsApplied = true;
     }
+
+    this.social?.completeAction?.(action);
+
+    this.memory?.remember?.({
+        type: "activity",
+        importance: 20,
+        details: [`Акіра завершив дію: ${action.actionId}`],
+        associations: [action.actionId],
+        people: action.targetPerson ? [action.targetPerson] : []
+    });
 
     this.actionHistory.push({
         ...action,
@@ -1002,6 +1026,7 @@ finishAction() {
     this.state.actionStartedAt = null;
     this.state.actionEndsAt = null;
 
+    this.saveState();
     this.emit("actionFinished", action);
 }
 
@@ -1082,7 +1107,7 @@ finishAction() {
                 max - min
             );
 
-        return minutes * 1000;
+        return (minutes * 1000) / Math.max(0.01, this.config.simulationSpeed);
     }
 
 
@@ -1105,6 +1130,7 @@ finishAction() {
                 ?.getBehaviorModifiers?.() || {};
 
         this.state.situation = {
+            perception: this.perception?.perceive?.() || null,
             kyivTime: this.getKyivTime(),
             dayPeriod: this.getDayPeriod(),
             isNight: this.isNightInKyiv(),
@@ -1232,7 +1258,7 @@ finishAction() {
 
             endsAt:
                 now +
-                duration * 60 * 1000
+                (duration * 1000) / Math.max(0.01, this.config.simulationSpeed)
         };
 
         this.state.activity =

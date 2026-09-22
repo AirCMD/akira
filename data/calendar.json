@@ -1,0 +1,33 @@
+{
+  "year": 2026,
+  "month": 9,
+  "day": 22,
+  "dayOfWeek": "tuesday",
+  "week": {
+    "monday": 1,
+    "tuesday": 2,
+    "wednesday": 3,
+    "thursday": 4,
+    "friday": 5,
+    "saturday": 6,
+    "sunday": 7
+  },
+  "season": {
+    "current": "autumn",
+    "northernHemisphere": true
+  },
+  "holidays": {
+    "halloween": {
+      "month": 10,
+      "day": 31
+    },
+    "newYear": {
+      "month": 1,
+      "day": 1
+    },
+    "valentinesDay": {
+      "month": 2,
+      "day": 14
+    }
+  }
+}
