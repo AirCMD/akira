@@ -50,10 +50,16 @@ class AkiraWeather {
     const temp=this.temperature(condition);
     const now=new Date();
     const date=this.brain.calendar?.localDate?.(now) || `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+    const conditionData=this.data.conditions?.[condition] || {};
+    const intensity=this.intensity(condition);
+    const precipitationByIntensity={none:0,light:25,medium:60,heavy:90};
     const current={
       condition, temperature:temp, feelsLike:temp-(condition==='strongWind'?3:0),
-      intensity:this.intensity(condition), generatedForDate:date, generatedAt:Date.now(),
+      intensity, generatedForDate:date, generatedAt:Date.now(),
       humidity:Math.round(45+Math.random()*45), windSpeed:Math.round(1+Math.random()*9),
+      precipitation: precipitationByIntensity[intensity] || 0,
+      outdoorComfort: Number(conditionData.outdoorComfort ?? 50),
+      activityModifiers: {...(conditionData.activityModifiers || {})},
       isDay: now.getHours()>=7 && now.getHours()<20,
       snow:this.updateSnow(condition,temp,prev)
     };
@@ -81,6 +87,19 @@ class AkiraWeather {
     this.brain.state.recentEvents.push(event);
     this.brain.state.recentEvents=this.brain.state.recentEvents.slice(-50);
     this.brain.state.weatherPerception={...event,noticed:true};
+
+    // Погода впливає на емоції лише після того, як Акіра її помітив.
+    const moodEffect=this.data.conditions?.[current.condition]?.moodEffect || {};
+    for(const [emotion,amount] of Object.entries(moodEffect)){
+      this.brain.emotions?.change?.(emotion, Number(amount)||0);
+    }
+    const snowNow=['lightSnow','snow','heavySnow'].includes(current.condition);
+    const snowBefore=['lightSnow','snow','heavySnow'].includes(previous?.condition);
+    if(snowNow && !snowBefore){
+      this.brain.emotions?.change?.('surprise', 8);
+      this.brain.emotions?.change?.('interest', 5);
+    }
+
     if(this.brain.memory?.remember && (current.intensity==='heavy' || current.condition==='hail' || current.condition==='thunderstorm')){
       this.brain.memory.remember({type:'weather',title:'Незвична погода',content:this.describe(current),topics:['weather'],keywords:[current.condition],importance:55});
     }

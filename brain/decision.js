@@ -2326,6 +2326,20 @@ class AkiraDecision {
                 50
             );
 
+        // Точний модифікатор конкретної активності з weather.json.
+        // 1.0 = нейтрально, >1 = погода сприяє, <1 = заважає.
+        const actionId = action?.id || action?.actionId || null;
+        const activityModifier = actionId
+            ? this.numberOr(weather.activityModifiers?.[actionId], 1)
+            : 1;
+        score += (activityModifier - 1) * 70;
+
+        // Небезпечна погода майже прибирає необов'язкові виходи надвір,
+        // але критична потреба все одно може переважити через інші фактори рішення.
+        if (outdoor && ['thunderstorm', 'hail'].includes(weather.condition)) {
+            score -= weather.condition === 'thunderstorm' ? 55 : 35;
+        }
+
 
         if (outdoor) {
 
