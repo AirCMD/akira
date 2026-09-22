@@ -1,0 +1,523 @@
+{
+  "world": {
+    "enabled": true,
+
+    "calendar": {
+      "year": 2026,
+      "month": 9,
+      "day": 22,
+      "dayOfWeek": "tuesday",
+
+      "week": {
+        "monday": 1,
+        "tuesday": 2,
+        "wednesday": 3,
+        "thursday": 4,
+        "friday": 5,
+        "saturday": 6,
+        "sunday": 7
+      },
+
+      "season": {
+        "current": "autumn",
+        "northernHemisphere": true
+      },
+
+      "holidays": {
+        "halloween": {
+          "month": 10,
+          "day": 31
+        },
+        "newYear": {
+          "month": 1,
+          "day": 1
+        },
+        "valentinesDay": {
+          "month": 2,
+          "day": 14
+        }
+      }
+    },
+
+    "time": {
+      "enabled": true,
+
+      "current": {
+        "hour": 16,
+        "minute": 0
+      },
+
+      "dayPeriods": {
+        "night": {
+          "start": 0,
+          "end": 5
+        },
+        "earlyMorning": {
+          "start": 5,
+          "end": 8
+        },
+        "morning": {
+          "start": 8,
+          "end": 12
+        },
+        "afternoon": {
+          "start": 12,
+          "end": 17
+        },
+        "evening": {
+          "start": 17,
+          "end": 22
+        },
+        "lateNight": {
+          "start": 22,
+          "end": 24
+        }
+      },
+
+      "sun": {
+        "sunrise": "06:40",
+        "sunset": "18:50"
+      },
+
+      "simulation": {
+        "enabled": true,
+        "realTime": true,
+        "timeMultiplier": 1,
+        "allowFastForward": true,
+        "allowPause": true
+      }
+    },
+
+    "location": {
+      "current": "home",
+
+      "places": {
+        "home": {
+          "name": "квартира Акіри",
+          "type": "residence",
+          "city": "Демо",
+          "address": {
+            "street": "Теріяківський",
+            "building": "5А",
+            "apartment": 17,
+            "floor": 2,
+            "side": "сонячний"
+          },
+          "open": true,
+          "private": true,
+          "comfort": 95,
+          "privacy": 90,
+          "activities": [
+            "sleep",
+            "eat",
+            "drink",
+            "rest",
+            "read",
+            "listenToMusic",
+            "playGame",
+            "checkPhone",
+            "checkSocialNetwork",
+            "writePost",
+            "think",
+            "rememberSomeone",
+            "craftWithClay",
+            "lookOutWindow",
+            "stargazing"
+          ]
+        },
+
+        "techsmith": {
+          "name": "Техсмітник",
+          "type": "workplace",
+          "open": true,
+          "workplace": true,
+          "activities": [
+            "work",
+            "eat",
+            "drink",
+            "rest",
+            "checkPhone",
+            "checkSocialNetwork",
+            "organizeDesk",
+            "talkToSomeone"
+          ]
+        },
+
+        "cityCenter": {
+          "name": "центр Демо",
+          "type": "city",
+          "open": true,
+          "activities": [
+            "walk",
+            "cycle",
+            "checkPhone",
+            "lookOutWindow",
+            "talkToSomeone"
+          ]
+        },
+
+        "park": {
+          "name": "міський парк",
+          "type": "park",
+          "open": true,
+          "openingHours": {
+            "start": 6,
+            "end": 23
+          },
+          "activities": [
+            "walk",
+            "read",
+            "lookAtFlowers",
+            "observeAnimals",
+            "stargazing"
+          ]
+        },
+
+        "museum": {
+          "name": "міський музей",
+          "type": "museum",
+          "open": false,
+          "openingHours": {
+            "start": 10,
+            "end": 19
+          },
+          "activities": [
+            "visitMuseum"
+          ]
+        },
+
+        "planetarium": {
+          "name": "планетарій",
+          "type": "planetarium",
+          "open": false,
+          "openingHours": {
+            "start": 10,
+            "end": 21
+          },
+          "activities": [
+            "visitPlanetarium",
+            "stargazing"
+          ]
+        },
+
+        "theatre": {
+          "name": "міський театр",
+          "type": "theatre",
+          "open": false,
+          "openingHours": {
+            "start": 12,
+            "end": 23
+          },
+          "activities": [
+            "visitTheatre"
+          ]
+        },
+
+        "cinema": {
+          "name": "кінотеатр",
+          "type": "cinema",
+          "open": false,
+          "openingHours": {
+            "start": 10,
+            "end": 23
+          },
+          "activities": [
+            "goToCinema"
+          ]
+        },
+
+        "concertHall": {
+          "name": "концертна зала",
+          "type": "concertHall",
+          "open": false,
+          "openingHours": {
+            "start": 12,
+            "end": 23
+          },
+          "activities": [
+            "visitConcert"
+          ]
+        },
+
+        "cafe": {
+          "name": "міське кафе",
+          "type": "cafe",
+          "open": true,
+          "openingHours": {
+            "start": 8,
+            "end": 23
+          },
+          "activities": [
+            "eat",
+            "drink",
+            "rest",
+            "read",
+            "talkToSomeone"
+          ]
+        },
+
+        "water": {
+          "name": "міська водойма",
+          "type": "water",
+          "open": true,
+          "activities": [
+            "boatRide",
+            "fishing"
+          ]
+        },
+
+        "rooftop": {
+          "name": "дах будинку",
+          "type": "rooftop",
+          "open": true,
+          "nightPreferred": true,
+          "activities": [
+            "stargazing",
+            "lookOutWindow"
+          ]
+        },
+
+        "workshop": {
+          "name": "майстерня",
+          "type": "workshop",
+          "open": true,
+          "activities": [
+            "craftWithClay",
+            "organizeDesk"
+          ]
+        }
+      }
+    },
+
+    "workSchedule": {
+      "enabled": true,
+
+      "workplace": "techsmith",
+      "position": "продавець-консультант",
+
+      "weeklySchedule": {
+        "monday": {
+          "working": true,
+          "start": "10:00",
+          "end": "18:00"
+        },
+        "tuesday": {
+          "working": true,
+          "start": "10:00",
+          "end": "18:00"
+        },
+        "wednesday": {
+          "working": true,
+          "start": "10:00",
+          "end": "18:00"
+        },
+        "thursday": {
+          "working": true,
+          "start": "10:00",
+          "end": "18:00"
+        },
+        "friday": {
+          "working": true,
+          "start": "10:00",
+          "end": "18:00"
+        },
+        "saturday": {
+          "working": false
+        },
+        "sunday": {
+          "working": false
+        }
+      },
+
+      "breaks": [
+        {
+          "start": "13:00",
+          "end": "13:30"
+        },
+        {
+          "start": "16:00",
+          "end": "16:15"
+        }
+      ],
+
+      "rules": {
+        "workHasPriorityDuringShift": true,
+        "canTakeBreak": true,
+        "canLeaveAfterShift": true,
+        "canStayAfterShift": false,
+        "canRefuseExtraWorkWhenExhausted": true
+      }
+    },
+
+    "events": {
+      "enabled": true,
+
+      "types": {
+        "personal": {
+          "importance": 80
+        },
+        "social": {
+          "importance": 60
+        },
+        "cultural": {
+          "importance": 55
+        },
+        "work": {
+          "importance": 70
+        },
+        "unexpected": {
+          "importance": 85
+        },
+        "environmental": {
+          "importance": 40
+        }
+      },
+
+      "current": [],
+
+      "scheduled": [],
+
+      "rules": {
+        "eventsCanInterruptActivities": true,
+        "importantEventsCanOverridePreferences": true,
+        "eventsCanCreateMemories": true,
+        "eventsCanChangeMood": true,
+        "eventsCanChangeNeeds": true,
+        "eventsCanChangeLocation": true
+      }
+    },
+
+    "availability": {
+      "people": {
+        "Yani_Bakeneko": {
+          "available": true,
+          "canMeet": true,
+          "canTalk": true
+        },
+        "Cornel_Vus": {
+          "available": true,
+          "canMeet": true,
+          "canTalk": true
+        },
+        "Derek_Q": {
+          "available": true,
+          "canMeet": true,
+          "canTalk": true
+        },
+        "Kate_Chan": {
+          "available": true,
+          "canMeet": true,
+          "canTalk": true
+        },
+        "Kent_White": {
+          "available": false,
+          "canMeet": false,
+          "canTalk": false
+        },
+        "Jeannie_Matsmats": {
+          "available": true,
+          "canMeet": true,
+          "canTalk": true
+        },
+        "Sayuri_Kit": {
+          "available": true,
+          "canMeet": true,
+          "canTalk": true
+        },
+        "Hiki_Komori": {
+          "available": true,
+          "canMeet": false,
+          "canTalk": true
+        },
+        "Jura_Kun": {
+          "available": true,
+          "canMeet": true,
+          "canTalk": true
+        }
+      },
+
+      "rules": {
+        "availabilityCanChange": true,
+        "unavailablePeopleCannotBeSelectedForMeeting": true,
+        "onlinePeopleCanBeContactedRemotely": true,
+        "locationMattersForPhysicalMeeting": true
+      }
+    },
+
+    "transport": {
+      "available": [
+        "walk",
+        "bicycle",
+        "publicTransport"
+      ],
+
+      "bicycle": {
+        "available": true,
+        "condition": 90
+      },
+
+      "publicTransport": {
+        "available": true
+      },
+
+      "rules": {
+        "weatherCanModifyTransportChoice": true,
+        "energyCanModifyTransportChoice": true,
+        "distanceCanModifyTransportChoice": true,
+        "bicycleRequiresSuitableConditions": true
+      }
+    },
+
+    "environment": {
+      "city": {
+        "name": "Демо",
+        "country": "Аерія",
+        "urban": true,
+        "populationLevel": "medium"
+      },
+
+      "neighborhood": {
+        "type": "residential",
+        "noiseLevel": 35,
+        "safetyLevel": 90
+      },
+
+      "homeEnvironment": {
+        "comfort": 90,
+        "privacy": 85,
+        "noiseLevel": 25,
+        "naturalLight": 85
+      }
+    },
+
+    "simulation": {
+      "enabled": true,
+
+      "updateIntervalMinutes": 5,
+
+      "systems": [
+        "time",
+        "calendar",
+        "weather",
+        "needs",
+        "emotions",
+        "memory",
+        "location",
+        "availability",
+        "activities",
+        "events"
+      ],
+
+      "rules": {
+        "worldContinuesWithoutUser": true,
+        "timeContinuesWithoutUser": true,
+        "needsChangeOverTime": true,
+        "emotionsChangeOverTime": true,
+        "weatherCanChangeOverTime": true,
+        "availabilityCanChangeOverTime": true,
+        "eventsCanAppearWithoutUser": true,
+        "characterCanActWithoutUser": true
+      }
+    }
+  }
+}
