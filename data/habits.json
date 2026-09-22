@@ -1,0 +1,650 @@
+{
+  "habits": {
+    "enabled": true,
+
+    "daily": {
+      "morning": [
+        {
+          "id": "check_phone_after_waking",
+          "action": "checkPhone",
+          "probability": 65,
+          "priority": 40,
+          "conditions": {
+            "afterSleep": true
+          }
+        },
+        {
+          "id": "drink_after_waking",
+          "action": "drink",
+          "probability": 75,
+          "priority": 55,
+          "conditions": {
+            "afterSleep": true,
+            "thirstAbove": 25
+          }
+        },
+        {
+          "id": "check_calendar",
+          "action": "checkCalendar",
+          "probability": 55,
+          "priority": 45,
+          "conditions": {
+            "morning": true
+          }
+        }
+      ],
+
+      "duringDay": [
+        {
+          "id": "check_phone",
+          "action": "checkPhone",
+          "probability": 45,
+          "priority": 25,
+          "conditions": {
+            "betweenActivities": true
+          }
+        },
+        {
+          "id": "look_out_window",
+          "action": "lookOutWindow",
+          "probability": 30,
+          "priority": 20,
+          "conditions": {
+            "atHome": true,
+            "idle": true
+          }
+        },
+        {
+          "id": "drink_regularly",
+          "action": "drink",
+          "probability": 60,
+          "priority": 35,
+          "conditions": {
+            "thirstAbove": 30
+          }
+        },
+        {
+          "id": "organize_desk",
+          "action": "organizeDesk",
+          "probability": 35,
+          "priority": 20,
+          "conditions": {
+            "atWork": true,
+            "disorderAbove": 50
+          }
+        }
+      ],
+
+      "evening": [
+        {
+          "id": "check_social_network",
+          "action": "checkSocialNetwork",
+          "probability": 60,
+          "priority": 35,
+          "conditions": {
+            "freeTime": true
+          }
+        },
+        {
+          "id": "read_evening",
+          "action": "read",
+          "probability": 55,
+          "priority": 45,
+          "conditions": {
+            "atHome": true,
+            "freeTime": true
+          }
+        },
+        {
+          "id": "listen_to_music",
+          "action": "listenToMusic",
+          "probability": 50,
+          "priority": 35,
+          "conditions": {
+            "atHome": true,
+            "freeTime": true
+          }
+        }
+      ],
+
+      "beforeSleep": [
+        {
+          "id": "check_phone_before_sleep",
+          "action": "checkPhone",
+          "probability": 45,
+          "priority": 20,
+          "conditions": {
+            "lateEvening": true
+          }
+        },
+        {
+          "id": "quiet_activity_before_sleep",
+          "action": "read",
+          "probability": 50,
+          "priority": 35,
+          "conditions": {
+            "lateEvening": true,
+            "energyBelow": 55
+          }
+        }
+      ]
+    },
+
+    "work": {
+      "beforeWork": [
+        {
+          "id": "check_schedule",
+          "action": "checkCalendar",
+          "probability": 55,
+          "priority": 30
+        },
+        {
+          "id": "prepare_for_work",
+          "action": "organizeDesk",
+          "probability": 40,
+          "priority": 25
+        }
+      ],
+
+      "duringWork": [
+        {
+          "id": "check_customer_needs",
+          "action": "consultCustomer",
+          "probability": 80,
+          "priority": 80,
+          "conditions": {
+            "customerPresent": true
+          }
+        },
+        {
+          "id": "compare_products",
+          "action": "compareProducts",
+          "probability": 70,
+          "priority": 70,
+          "conditions": {
+            "customerNeedsComparison": true
+          }
+        },
+        {
+          "id": "explain_technology",
+          "action": "explainTechnology",
+          "probability": 75,
+          "priority": 75,
+          "conditions": {
+            "customerNeedsExplanation": true
+          }
+        },
+        {
+          "id": "take_break",
+          "action": "rest",
+          "probability": 80,
+          "priority": 70,
+          "conditions": {
+            "breakTime": true
+          }
+        }
+      ],
+
+      "afterWork": [
+        {
+          "id": "leave_work",
+          "action": "goHome",
+          "probability": 85,
+          "priority": 80,
+          "conditions": {
+            "workFinished": true
+          }
+        }
+      ]
+    },
+
+    "leisure": {
+      "goodWeather": [
+        {
+          "id": "go_for_city_walk",
+          "action": "walk",
+          "probability": 55,
+          "priority": 45,
+          "conditions": {
+            "freeTime": true,
+            "energyAbove": 35,
+            "weatherGood": true
+          }
+        },
+        {
+          "id": "ride_bicycle",
+          "action": "cycle",
+          "probability": 65,
+          "priority": 65,
+          "conditions": {
+            "freeTime": true,
+            "energyAbove": 45,
+            "weatherGood": true
+          }
+        }
+      ],
+
+      "badWeather": [
+        {
+          "id": "stay_inside",
+          "action": "rest",
+          "probability": 45,
+          "priority": 35,
+          "conditions": {
+            "badWeather": true,
+            "atHome": true
+          }
+        },
+        {
+          "id": "read_when_raining",
+          "action": "read",
+          "probability": 55,
+          "priority": 45,
+          "conditions": {
+            "badWeather": true,
+            "atHome": true
+          }
+        },
+        {
+          "id": "listen_music_when_raining",
+          "action": "listenToMusic",
+          "probability": 50,
+          "priority": 40,
+          "conditions": {
+            "badWeather": true,
+            "atHome": true
+          }
+        }
+      ],
+
+      "night": [
+        {
+          "id": "stargazing",
+          "action": "stargazing",
+          "probability": 40,
+          "priority": 50,
+          "conditions": {
+            "night": true,
+            "clearSky": true,
+            "energyAbove": 30
+          }
+        }
+      ]
+    },
+
+    "social": {
+      "checkingPeople": [
+        {
+          "id": "think_of_yani",
+          "action": "rememberSomeone",
+          "probability": 45,
+          "priority": 45,
+          "target": "Yani_Bakeneko"
+        },
+        {
+          "id": "contact_yani",
+          "action": "talkToYani",
+          "probability": 55,
+          "priority": 75,
+          "conditions": {
+            "YaniAvailable": true,
+            "desireForContactAbove": 60
+          }
+        }
+      ],
+
+      "loneliness": [
+        {
+          "id": "seek_company",
+          "action": "talkToSomeone",
+          "probability": 55,
+          "priority": 55,
+          "conditions": {
+            "lonelinessAbove": 30
+          }
+        },
+        {
+          "id": "check_social_network",
+          "action": "checkSocialNetwork",
+          "probability": 65,
+          "priority": 45,
+          "conditions": {
+            "lonelinessAbove": 30
+          }
+        }
+      ],
+
+      "social_fatigue": [
+        {
+          "id": "withdraw_for_a_while",
+          "action": "rest",
+          "probability": 55,
+          "priority": 45,
+          "conditions": {
+            "socialFatigueAbove": 60
+          }
+        },
+        {
+          "id": "quiet_activity",
+          "action": "read",
+          "probability": 50,
+          "priority": 40,
+          "conditions": {
+            "socialFatigueAbove": 60
+          }
+        }
+      ]
+    },
+
+    "curiosity": {
+      "interestingTopic": [
+        {
+          "id": "search_for_more_information",
+          "action": "read",
+          "probability": 55,
+          "priority": 50,
+          "conditions": {
+            "curiosityAbove": 65
+          }
+        },
+        {
+          "id": "think_about_topic",
+          "action": "think",
+          "probability": 45,
+          "priority": 40,
+          "conditions": {
+            "curiosityAbove": 70
+          }
+        }
+      ],
+
+      "newPlace": [
+        {
+          "id": "explore_new_route",
+          "action": "walk",
+          "probability": 50,
+          "priority": 50,
+          "conditions": {
+            "noveltyAbove": 70
+          }
+        },
+        {
+          "id": "explore_by_bicycle",
+          "action": "cycle",
+          "probability": 60,
+          "priority": 60,
+          "conditions": {
+            "noveltyAbove": 70,
+            "energyAbove": 45,
+            "weatherGood": true
+          }
+        }
+      ]
+    },
+
+    "boredom": {
+      "enabled": true,
+
+      "mild": [
+        {
+          "action": "checkPhone",
+          "probability": 35,
+          "priority": 20
+        },
+        {
+          "action": "listenToMusic",
+          "probability": 35,
+          "priority": 25
+        },
+        {
+          "action": "read",
+          "probability": 30,
+          "priority": 25
+        }
+      ],
+
+      "moderate": [
+        {
+          "action": "walk",
+          "probability": 45,
+          "priority": 40
+        },
+        {
+          "action": "playGame",
+          "probability": 40,
+          "priority": 35
+        },
+        {
+          "action": "checkSocialNetwork",
+          "probability": 45,
+          "priority": 35
+        }
+      ],
+
+      "high": [
+        {
+          "action": "walk",
+          "probability": 55,
+          "priority": 50
+        },
+        {
+          "action": "cycle",
+          "probability": 60,
+          "priority": 60,
+          "conditions": {
+            "energyAbove": 45,
+            "weatherGood": true
+          }
+        },
+        {
+          "action": "talkToSomeone",
+          "probability": 45,
+          "priority": 40
+        },
+        {
+          "action": "playGame",
+          "probability": 50,
+          "priority": 40
+        }
+      ]
+    },
+
+    "emotional": {
+      "sad": [
+        {
+          "action": "listenToMusic",
+          "probability": 55,
+          "priority": 45
+        },
+        {
+          "action": "read",
+          "probability": 45,
+          "priority": 35
+        },
+        {
+          "action": "talkToYani",
+          "probability": 50,
+          "priority": 60,
+          "conditions": {
+            "YaniAvailable": true
+          }
+        }
+      ],
+
+      "happy": [
+        {
+          "action": "walk",
+          "probability": 45,
+          "priority": 40
+        },
+        {
+          "action": "cycle",
+          "probability": 55,
+          "priority": 55,
+          "conditions": {
+            "energyAbove": 40,
+            "weatherGood": true
+          }
+        },
+        {
+          "action": "talkToSomeone",
+          "probability": 45,
+          "priority": 40
+        }
+      ],
+
+      "stressed": [
+        {
+          "action": "rest",
+          "probability": 60,
+          "priority": 60
+        },
+        {
+          "action": "listenToMusic",
+          "probability": 55,
+          "priority": 50
+        },
+        {
+          "action": "read",
+          "probability": 45,
+          "priority": 40
+        }
+      ]
+    },
+
+    "memory": {
+      "enabled": true,
+
+      "spontaneousRecall": [
+        {
+          "id": "remember_yani",
+          "target": "Yani_Bakeneko",
+          "probability": 35,
+          "priority": 55,
+          "conditions": {
+            "idle": true
+          }
+        },
+        {
+          "id": "remember_work",
+          "target": "working_at_techsmith",
+          "probability": 20,
+          "priority": 25,
+          "conditions": {
+            "atWork": false
+          }
+        }
+      ],
+
+      "associationTriggers": {
+        "Yani": {
+          "memoryTargets": [
+            "first_meeting_yani"
+          ]
+        },
+        "electronicTechnology": {
+          "memoryTargets": [
+            "working_at_techsmith"
+          ]
+        },
+        "Cornel": {
+          "memoryTargets": [
+            "meeting_cornel"
+          ]
+        },
+        "Derek": {
+          "memoryTargets": [
+            "derek_negative_impression"
+          ]
+        }
+      }
+    },
+
+    "personal": {
+      "cycling": {
+        "frequency": 70,
+        "preferredTime": [
+          "afternoon",
+          "evening"
+        ],
+        "preferredWeather": [
+          "clear",
+          "partlyCloudy"
+        ],
+        "usuallyAlone": true,
+        "sometimesWithCompany": true
+      },
+
+      "reading": {
+        "frequency": 60,
+        "preferredTime": [
+          "evening",
+          "night"
+        ],
+        "preferredLocation": [
+          "home",
+          "cafe"
+        ],
+        "usuallyAlone": true
+      },
+
+      "music": {
+        "frequency": 65,
+        "canBeBackground": true,
+        "preferredTime": [
+          "evening",
+          "night"
+        ]
+      },
+
+      "cityWalks": {
+        "frequency": 70,
+        "preferredTime": [
+          "afternoon",
+          "evening"
+        ],
+        "preferredWeather": [
+          "clear",
+          "partlyCloudy",
+          "cloudy"
+        ]
+      },
+
+      "planetarium": {
+        "frequency": 35,
+        "initiative": 82,
+        "specialInterest": true
+      }
+    },
+
+    "habitSystem": {
+      "enabled": true,
+
+      "principles": {
+        "habitIsProbabilityNotGuarantee": true,
+        "contextCanSuppressHabit": true,
+        "needsCanOverrideHabit": true,
+        "emotionsCanOverrideHabit": true,
+        "weatherCanModifyHabit": true,
+        "timeCanModifyHabit": true,
+        "locationCanModifyHabit": true,
+        "relationshipsCanModifyHabit": true,
+        "recentRepetitionCanReduceHabitProbability": true,
+        "newExperiencesCanInterruptHabit": true,
+        "habitsCanChangeOverTime": true
+      },
+
+      "repetition": {
+        "enabled": true,
+        "sameHabitPenalty": 8,
+        "maximumConsecutiveUses": 3
+      },
+
+      "randomness": {
+        "enabled": true,
+        "minimum": 0.8,
+        "maximum": 1.2
+      }
+    }
+  }
+}
