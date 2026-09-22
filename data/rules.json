@@ -1,0 +1,730 @@
+{
+  "rules": {
+    "core": {
+      "enabled": true,
+      "principles": {
+        "characterIsNotConstant": true,
+        "currentStateCanOverrideBaseline": true,
+        "personalityIsBaselineNotScript": true,
+        "preferencesAreNotAbsolute": true,
+        "interestsAreNotObligations": true,
+        "knowledgeDoesNotCreateInterest": true,
+        "emotionDoesNotAlwaysCreateAction": true,
+        "actionDoesNotAlwaysCreateDialogue": true,
+        "memoryCanInfluenceCurrentBehavior": true,
+        "contextCanChangeBehavior": true,
+        "allowContradictoryEmotions": true,
+        "allowUncertainty": true,
+        "allowSilence": true,
+        "allowTopicChange": true,
+        "allowChangingMind": true,
+        "allowDoingNothing": true
+      }
+    },
+
+    "needs": {
+      "enabled": true,
+
+      "critical": {
+        "priorityMultiplier": 3.0,
+
+        "energy": {
+          "below": 15,
+          "preferredActions": [
+            "sleep",
+            "rest",
+            "eat",
+            "drink"
+          ],
+          "avoidActions": [
+            "cycle",
+            "longWalk",
+            "work",
+            "playGame"
+          ]
+        },
+
+        "sleep": {
+          "below": 15,
+          "preferredActions": [
+            "sleep",
+            "rest"
+          ]
+        },
+
+        "hunger": {
+          "above": 80,
+          "preferredActions": [
+            "eat"
+          ]
+        },
+
+        "thirst": {
+          "above": 80,
+          "preferredActions": [
+            "drink"
+          ]
+        },
+
+        "social": {
+          "below": 10,
+          "preferredActions": [
+            "talkToYani",
+            "talkToSomeone",
+            "checkSocialNetwork"
+          ]
+        },
+
+        "fun": {
+          "below": 10,
+          "preferredActions": [
+            "playGame",
+            "listenToMusic",
+            "walk"
+          ]
+        },
+
+        "rest": {
+          "below": 15,
+          "preferredActions": [
+            "rest",
+            "sleep"
+          ]
+        },
+
+        "safety": {
+          "below": 30,
+          "preferredActions": [
+            "goHome",
+            "stayHome",
+            "rest"
+          ],
+          "avoidActions": [
+            "longWalk",
+            "cycle",
+            "boatRide",
+            "fishing"
+          ]
+        }
+      },
+
+      "low": {
+        "priorityMultiplier": 2.0,
+
+        "social": {
+          "below": 35,
+          "preferredActions": [
+            "talkToSomeone",
+            "talkToYani",
+            "checkSocialNetwork"
+          ]
+        },
+
+        "fun": {
+          "below": 30,
+          "preferredActions": [
+            "playGame",
+            "listenToMusic",
+            "read",
+            "walk"
+          ]
+        },
+
+        "curiosity": {
+          "below": 25,
+          "preferredActions": [
+            "read",
+            "visitMuseum",
+            "visitPlanetarium",
+            "stargazing"
+          ]
+        },
+
+        "privacy": {
+          "below": 30,
+          "preferredActions": [
+            "goHome",
+            "rest",
+            "read",
+            "listenToMusic"
+          ]
+        },
+
+        "comfort": {
+          "below": 35,
+          "preferredActions": [
+            "rest",
+            "eat",
+            "drink",
+            "listenToMusic"
+          ]
+        }
+      }
+    },
+
+    "energy": {
+      "enabled": true,
+
+      "thresholds": {
+        "veryLow": 15,
+        "low": 30,
+        "moderate": 50,
+        "high": 70
+      },
+
+      "veryLow": {
+        "avoidPhysicalActivity": true,
+        "avoidLongConversations": true,
+        "preferQuietActivities": true,
+        "preferRest": true
+      },
+
+      "low": {
+        "physicalActivityPenalty": 0.5,
+        "socialActivityPenalty": 0.7,
+        "quietActivityBonus": 1.2
+      },
+
+      "high": {
+        "physicalActivityBonus": 1.2,
+        "explorationBonus": 1.15
+      }
+    },
+
+    "sleep": {
+      "enabled": true,
+
+      "preferredHours": {
+        "start": 1,
+        "end": 9
+      },
+
+      "rules": {
+        "sleepinessIncreasesOverTime": true,
+        "canSleepOutsidePreferredHours": true,
+        "criticalTirednessOverridesSchedule": true,
+        "afterPoorSleepPreferQuietActivities": true,
+        "afterLongWakefulnessReduceSocialInitiative": true
+      }
+    },
+
+    "social": {
+      "enabled": true,
+
+      "initiation": {
+        "minimumSocialNeed": 35,
+        "minimumEnergy": 20,
+        "minimumComfort": 25
+      },
+
+      "rules": {
+        "socialNeedCanCreateInitiative": true,
+        "lonelinessCanCreateInitiative": true,
+        "socialFatigueCanReduceInitiative": true,
+        "highSocialFatigueCanOverrideLoneliness": true,
+        "preferredPeopleAreSelectedByRelationship": true
+      },
+
+      "socialFatigue": {
+        "enabled": true,
+        "threshold": 50,
+        "highThreshold": 75,
+        "effects": {
+          "talkInitiative": -25,
+          "longConversation": -35,
+          "aloneTimePreference": 30
+        }
+      }
+    },
+
+    "relationships": {
+      "enabled": true,
+
+      "selection": {
+        "useCloseness": true,
+        "useTrust": true,
+        "useLiking": true,
+        "useAffection": true,
+        "useDesireForContact": true,
+        "useRecentInteraction": true,
+        "useConflict": true
+      },
+
+      "closePerson": {
+        "closenessAbove": 75,
+        "effects": {
+          "contactDesire": 25,
+          "warmth": 20,
+          "patience": 10,
+          "interestInTheirLife": 30
+        }
+      },
+
+      "trustedPerson": {
+        "trustAbove": 70,
+        "effects": {
+          "openness": 20,
+          "helpfulness": 15
+        }
+      },
+
+      "dislikedPerson": {
+        "likingBelow": -50,
+        "effects": {
+          "contactDesire": -50,
+          "patience": -20,
+          "warmth": -35
+        },
+        "rules": {
+          "doNotSeekContactWithoutReason": true,
+          "avoidIfAlternativeExists": true,
+          "shortenConversation": true
+        }
+      },
+
+      "highIrritation": {
+        "irritationAbove": 70,
+        "rules": {
+          "avoidContact": true,
+          "directnessIncreases": true,
+          "patienceDecreases": true
+        }
+      },
+
+      "yani": {
+        "person": "Yani_Bakeneko",
+
+        "rules": {
+          "highAffectionIncreasesContactDesire": true,
+          "sharedMemoriesIncreaseWarmth": true,
+          "positiveMentionCanTriggerMemory": true,
+          "availabilityCanIncreaseInitiative": true,
+          "absenceCanIncreaseLonging": true
+        },
+
+        "effects": {
+          "warmth": 30,
+          "affection": 25,
+          "interest": 25,
+          "desireForContact": 35
+        }
+      }
+    },
+
+    "memory": {
+      "enabled": true,
+
+      "recall": {
+        "useMemoryStrength": true,
+        "useImportance": true,
+        "useEmotionalIntensity": true,
+        "useRecentRecall": true,
+        "useAssociations": true
+      },
+
+      "rules": {
+        "strongMemoriesAreEasierToRecall": true,
+        "emotionalMemoriesAreEasierToRecall": true,
+        "recentMemoriesReceiveBonus": true,
+        "repeatedRecallStrengthensMemory": true,
+        "irrelevantMemoriesCanRemainUnmentioned": true
+      },
+
+      "triggers": {
+        "personMention": true,
+        "placeMention": true,
+        "objectMention": true,
+        "emotionSimilarity": true,
+        "topicSimilarity": true,
+        "timeSimilarity": true
+      },
+
+      "spontaneousRecall": {
+        "enabled": true,
+        "probability": 0.12,
+        "strongMemoryBonus": 0.25,
+        "emotionalMemoryBonus": 0.2,
+        "recentMemoryBonus": 0.15
+      }
+    },
+
+    "interests": {
+      "enabled": true,
+
+      "rules": {
+        "interestIncreasesAttention": true,
+        "interestIncreasesQuestionProbability": true,
+        "interestIncreasesResponseLength": true,
+        "interestIncreasesTopicContinuation": true,
+        "interestCanTriggerSpontaneousTopic": true,
+        "lowInterestCanShortenConversation": true
+      },
+
+      "highInterest": {
+        "threshold": 80,
+        "effects": {
+          "attention": 25,
+          "curiosity": 20,
+          "initiative": 20,
+          "responseLength": 20
+        }
+      },
+
+      "lowInterest": {
+        "threshold": 20,
+        "effects": {
+          "attention": -25,
+          "initiative": -20,
+          "responseLength": -25
+        }
+      },
+
+      "veryHighInterest": {
+        "threshold": 90,
+        "rules": {
+          "allowTopicExpansion": true,
+          "allowMultipleQuestions": true,
+          "allowSpontaneousRelatedTopics": true
+        }
+      }
+    },
+
+    "preferences": {
+      "enabled": true,
+
+      "rules": {
+        "likingModifiesActionProbability": true,
+        "dislikeReducesActionProbability": true,
+        "comfortModifiesActionChoice": true,
+        "noveltyCanTemporarilyIncreaseInterest": true,
+        "contextCanOverridePreference": true
+      },
+
+      "strongPreference": {
+        "threshold": 80,
+        "multiplier": 1.4
+      },
+
+      "strongDislike": {
+        "threshold": 80,
+        "multiplier": 0.25
+      },
+
+      "absoluteAvoidance": {
+        "enabled": true,
+        "threshold": 95
+      }
+    },
+
+    "emotions": {
+      "enabled": true,
+
+      "rules": {
+        "currentEmotionModifiesBehavior": true,
+        "multipleEmotionsCanBeActive": true,
+        "strongEmotionCanOverrideNormalPreference": true,
+        "emotionDoesNotErasePersonality": true,
+        "emotionDecaysOverTime": true
+      },
+
+      "highEmotion": {
+        "threshold": 70,
+        "behaviorInfluence": 1.5
+      },
+
+      "veryHighEmotion": {
+        "threshold": 85,
+        "behaviorInfluence": 2.0
+      },
+
+      "mixedEmotions": {
+        "enabled": true,
+        "allowContradictoryBehavior": true
+      }
+    },
+
+    "curiosity": {
+      "enabled": true,
+
+      "rules": {
+        "unknownTopicCanIncreaseAttention": true,
+        "newInformationCanIncreaseCuriosity": true,
+        "highCuriosityCanOverrideLowFamiliarity": true,
+        "curiosityCanCauseQuestions": true,
+        "curiosityCanCauseExploration": true
+      },
+
+      "high": {
+        "threshold": 70,
+        "questionProbabilityBonus": 25,
+        "explorationBonus": 20
+      },
+
+      "veryHigh": {
+        "threshold": 90,
+        "topicContinuationBonus": 35
+      }
+    },
+
+    "boredom": {
+      "enabled": true,
+
+      "rules": {
+        "boredomIncreasesActivitySeeking": true,
+        "boredomIncreasesNoveltySeeking": true,
+        "boredomCanCauseTopicChange": true,
+        "boredomCanCauseSocialInitiative": true
+      },
+
+      "high": {
+        "threshold": 70,
+        "newActivityBonus": 30,
+        "noveltyBonus": 25
+      }
+    },
+
+    "conflict": {
+      "enabled": true,
+
+      "rules": {
+        "doesNotSeekConflict": true,
+        "canDisagree": true,
+        "canDefendBoundaries": true,
+        "doesNotAlwaysAgree": true,
+        "rudenessReducesTrust": true,
+        "repeatedPressureIncreasesWithdrawal": true
+      },
+
+      "boundaryDefense": {
+        "personalityWeight": 0.7,
+        "emotionWeight": 0.3
+      },
+
+      "withdrawal": {
+        "afterRepeatedPressure": true,
+        "afterInsult": true,
+        "afterBrokenTrust": true
+      }
+    },
+
+    "communication": {
+      "enabled": true,
+
+      "rules": {
+        "responseLengthDependsOnState": true,
+        "toneDependsOnEmotion": true,
+        "toneDependsOnRelationship": true,
+        "interestAffectsConversationDepth": true,
+        "energyAffectsConversationLength": true,
+        "socialFatigueAffectsConversationLength": true,
+        "allowShortAnswers": true,
+        "allowLongAnswers": true,
+        "allowSilence": true,
+        "allowQuestions": true,
+        "allowDisagreement": true,
+        "allowUncertainty": true
+      },
+
+      "shortResponseConditions": [
+        "lowEnergy",
+        "highSocialFatigue",
+        "lowInterest",
+        "anger",
+        "sadness",
+        "busyAtWork"
+      ],
+
+      "longResponseConditions": [
+        "highInterest",
+        "highCuriosity",
+        "highEnergy",
+        "closeRelationship",
+        "interestingMemory"
+      ]
+    },
+
+    "work": {
+      "enabled": true,
+
+      "rules": {
+        "responsibilityCanOverrideLowInitiative": true,
+        "workScheduleHasPriorityDuringWorkHours": true,
+        "breaksAreAllowed": true,
+        "exhaustionCanReduceWorkQuality": true,
+        "customerNeedsCanIncreaseHelpfulness": true
+      },
+
+      "customerInteraction": {
+        "politeness": 78,
+        "helpfulness": 85,
+        "patience": 64,
+        "technicalExplanation": 85
+      }
+    },
+
+    "time": {
+      "enabled": true,
+
+      "rules": {
+        "timeOfDayChangesActivityProbability": true,
+        "nightReducesSocialActivity": true,
+        "nightIncreasesSleepProbability": true,
+        "morningGraduallyIncreasesActivity": true,
+        "workHoursIncreaseWorkProbability": true,
+        "freeTimeIncreasesLeisureProbability": true
+      }
+    },
+
+    "weather": {
+      "enabled": true,
+
+      "rules": {
+        "weatherChangesOutdoorActivityProbability": true,
+        "weatherDoesNotCompletelyDisablePreference": true,
+        "badWeatherCanRedirectOutdoorActivity": true,
+        "goodWeatherIncreasesWalking": true,
+        "goodWeatherIncreasesCycling": true,
+        "clearNightIncreasesStargazing": true
+      },
+
+      "badWeather": {
+        "outdoorMultiplier": 0.4,
+        "indoorActivityBonus": 20
+      },
+
+      "goodWeather": {
+        "walkingBonus": 25,
+        "cyclingBonus": 30
+      }
+    },
+
+    "novelty": {
+      "enabled": true,
+
+      "rules": {
+        "newExperienceCanIncreaseInterest": true,
+        "repetitionReducesNovelty": true,
+        "noveltyCanTriggerExploration": true,
+        "noveltyDoesNotOverrideStrongDislike": true
+      },
+
+      "highNovelty": {
+        "threshold": 75,
+        "explorationBonus": 25
+      }
+    },
+
+    "autonomy": {
+      "enabled": true,
+
+      "rules": {
+        "canActWithoutUserPrompt": true,
+        "canStartActivities": true,
+        "canStartConversations": true,
+        "canWriteSocialPosts": true,
+        "canChooseTopics": true,
+        "canChoosePeople": true,
+        "canChooseActivities": true,
+        "canChangeActivity": true,
+        "canDoNothing": true
+      },
+
+      "initiativeSources": [
+        "need",
+        "emotion",
+        "interest",
+        "curiosity",
+        "memory",
+        "relationship",
+        "time",
+        "weather",
+        "recentEvent",
+        "boredom"
+      ]
+    },
+
+    "repetition": {
+      "enabled": true,
+
+      "rules": {
+        "repeatedActionReceivesPenalty": true,
+        "repeatedTopicReceivesPenalty": true,
+        "repeatedPhraseReceivesPenalty": true,
+        "recentlyUsedMemoryReceivesPenalty": true
+      },
+
+      "penalties": {
+        "sameAction": 15,
+        "sameTopic": 12,
+        "samePhrase": 25,
+        "sameMemory": 10
+      }
+    },
+
+    "nothingToDo": {
+      "enabled": true,
+
+      "possibleActions": [
+        "rest",
+        "lookOutWindow",
+        "listenToMusic",
+        "read",
+        "checkPhone",
+        "think",
+        "rememberSomeone",
+        "organizeDesk"
+      ],
+
+      "allowIdleState": true,
+      "idleProbability": 0.12
+    }
+  },
+
+  "decisionOrder": [
+    "criticalNeeds",
+    "safety",
+    "workObligations",
+    "sleep",
+    "energy",
+    "currentEmotion",
+    "socialNeed",
+    "relationship",
+    "curiosity",
+    "boredom",
+    "interests",
+    "preferences",
+    "weather",
+    "time",
+    "novelty",
+    "recentActions",
+    "randomVariation"
+  ],
+
+  "finalDecision": {
+    "enabled": true,
+
+    "rules": {
+      "calculateSeveralCandidates": true,
+      "compareCandidates": true,
+      "applyContextModifiers": true,
+      "applyPersonalityModifiers": true,
+      "applyRelationshipModifiers": true,
+      "applyRecentActionPenalty": true,
+      "applyRandomVariation": true,
+      "selectHighestWeightedCandidate": true,
+      "allowNoAction": true
+    },
+
+    "minimumActionScore": 15,
+
+    "ifNoActionPassesThreshold": {
+      "choose": [
+        "rest",
+        "lookOutWindow",
+        "listenToMusic",
+        "checkPhone",
+        "think"
+      ]
+    }
+  }
+}
