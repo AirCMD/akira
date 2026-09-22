@@ -27,7 +27,7 @@ jobs:
         run: |
           pip install requests
 
-      - name: Run Character Bot
+- name: Run Character Bot
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPOSITORY: ${{ github.repository }}
@@ -35,4 +35,4 @@ jobs:
           COMMENT_BODY: ${{ github.event.comment.body || github.event.issue.body }}
           ISSUE_AUTHOR: ${{ github.event.comment.user.login || github.event.issue.user.login }}
         run: |
-          python bot.py
+          python bot/bot.py
