@@ -2,6 +2,21 @@
 // Рушій потреб програмного мозку Акіри.
 // Не містить конкретного характеру або реплік персонажа.
 // Працює з даними з needs.json.
+//
+// Значення потреб знаходяться в діапазоні 0–100.
+//
+// Для більшості потреб:
+//   високий показник = добре
+//   низький показник = погано
+//
+// Для накопичуваних потреб:
+//   низький показник = добре
+//   високий показник = погано
+//
+// Напрямок визначається з drift.perHour.
+// Позитивний drift означає накопичення потреби
+// (наприклад hunger, thirst).
+
 
 class AkiraNeeds {
 
@@ -29,6 +44,10 @@ class AkiraNeeds {
             this.brain.data.needs || {};
 
         this.initializeNeeds();
+
+        this.loadFromBrainState();
+
+        this.updateDerivedState();
 
         this.syncToBrain();
 
@@ -92,6 +111,61 @@ class AkiraNeeds {
 
 
     // =========================================================
+    // ВІДНОВЛЕННЯ ЗІ ЗБЕРЕЖЕНОГО СТАНУ
+    // =========================================================
+
+    loadFromBrainState() {
+
+        const saved =
+            this.brain.state?.needs;
+
+        if (
+            !saved ||
+            typeof saved !== "object"
+        ) {
+            return;
+        }
+
+        for (
+            const [name, value]
+            of Object.entries(saved)
+        ) {
+
+            if (
+                !this.needs[name]
+            ) {
+                continue;
+            }
+
+            /*
+             * Підтримуємо і старий формат,
+             * де state.needs[name] є числом,
+             * і потенційний майбутній формат
+             * з об'єктом { value: ... }.
+             */
+
+            const savedValue =
+                value &&
+                typeof value === "object"
+                    ? value.value
+                    : value;
+
+            if (
+                Number.isFinite(
+                    Number(savedValue)
+                )
+            ) {
+
+                this.needs[name].value =
+                    this.clamp(
+                        savedValue
+                    );
+            }
+        }
+    }
+
+
+    // =========================================================
     // ОНОВЛЕННЯ
     // =========================================================
 
@@ -131,7 +205,9 @@ class AkiraNeeds {
         const drift =
             this.data.drift || {};
 
-        if (drift.enabled === false) {
+        if (
+            drift.enabled === false
+        ) {
             return;
         }
 
@@ -181,6 +257,58 @@ class AkiraNeeds {
 
 
     // =========================================================
+    // НАПРЯМОК ПОТРЕБИ
+    // =========================================================
+    //
+    // "higher" =
+    //   більше значення краще.
+    //
+    // "lower" =
+    //   менше значення краще,
+    //   тобто потреба накопичується.
+    //
+    // Якщо drift позитивний,
+    // вважаємо потребу накопичуваною.
+    //
+    // Якщо drift відсутній,
+    // за замовчуванням вважаємо,
+    // що більше значення краще.
+    //
+
+    getNeedDirection(name) {
+
+        const drift =
+            this.data.drift
+                ?.perHour?.[name];
+
+        const rate =
+            this.brain.number(
+                drift,
+                0
+            );
+
+        if (rate > 0) {
+            return "lower";
+        }
+
+        return "higher";
+    }
+
+
+    // =========================================================
+    // ЧИ Є ПОТРЕБА НАКОПИЧУВАНОЮ
+    // =========================================================
+
+    isAccumulatingNeed(name) {
+
+        return (
+            this.getNeedDirection(name) ===
+            "lower"
+        );
+    }
+
+
+    // =========================================================
     // ПОВНА ІНФОРМАЦІЯ ПРО ПОТРЕБУ
     // =========================================================
 
@@ -194,7 +322,18 @@ class AkiraNeeds {
         }
 
         return {
+
             ...need,
+
+            direction:
+                this.getNeedDirection(
+                    name
+                ),
+
+            accumulating:
+                this.isAccumulatingNeed(
+                    name
+                ),
 
             status:
                 this.getStatus(name),
@@ -203,7 +342,10 @@ class AkiraNeeds {
                 this.getDeficit(name),
 
             urgency:
-                this.getUrgency(name)
+                this.getUrgency(name),
+
+            priority:
+                this.getPriority(name)
         };
     }
 
@@ -217,23 +359,12 @@ class AkiraNeeds {
         const result = {};
 
         for (
-            const [name, need]
-            of Object.entries(this.needs)
+            const name
+            of Object.keys(this.needs)
         ) {
 
-            result[name] = {
-
-                ...need,
-
-                status:
-                    this.getStatus(name),
-
-                deficit:
-                    this.getDeficit(name),
-
-                urgency:
-                    this.getUrgency(name)
-            };
+            result[name] =
+                this.getNeed(name);
         }
 
         return result;
@@ -258,15 +389,20 @@ class AkiraNeeds {
         this.needs[name].value =
             this.clamp(value);
 
+        this.updateDerivedState();
+
         this.syncToBrain();
 
         this.brain.emit(
             "needChanged",
             {
                 need: name,
+
                 oldValue,
+
                 value:
                     this.needs[name].value,
+
                 change:
                     this.needs[name].value -
                     oldValue
@@ -324,15 +460,21 @@ class AkiraNeeds {
         const effects =
             activity.effects || {};
 
+        let changed = false;
+
         for (
             const [need, amount]
             of Object.entries(effects)
         ) {
 
-            this.change(
-                need,
-                amount
-            );
+            if (
+                this.change(
+                    need,
+                    amount
+                )
+            ) {
+                changed = true;
+            }
         }
 
         this.updateDerivedState();
@@ -350,7 +492,7 @@ class AkiraNeeds {
             }
         );
 
-        return true;
+        return changed;
     }
 
 
@@ -369,6 +511,47 @@ class AkiraNeeds {
 
         const value =
             need.value;
+
+        const direction =
+            this.getNeedDirection(
+                name
+            );
+
+
+        // -----------------------------------------------------
+        // НАКОПИЧУВАНА ПОТРЕБА
+        // -----------------------------------------------------
+        //
+        // Приклад:
+        // hunger = 20  → нормально
+        // hunger = 80  → критично
+        //
+
+        if (
+            direction === "lower"
+        ) {
+
+            if (
+                value >=
+                need.critical
+            ) {
+                return "critical";
+            }
+
+            if (
+                value >
+                need.minimumComfort
+            ) {
+                return "low";
+            }
+
+            return "normal";
+        }
+
+
+        // -----------------------------------------------------
+        // ЗВИЧАЙНА ПОТРЕБА
+        // -----------------------------------------------------
 
         if (
             value <=
@@ -391,6 +574,16 @@ class AkiraNeeds {
     // =========================================================
     // ДЕФІЦИТ
     // =========================================================
+    //
+    // Дефіцит — наскільки потреба віддалена
+    // від комфортної зони.
+    //
+    // Для звичайної потреби:
+    //   minimumComfort - value
+    //
+    // Для накопичуваної:
+    //   value - minimumComfort
+    //
 
     getDeficit(name) {
 
@@ -399,6 +592,22 @@ class AkiraNeeds {
 
         if (!need) {
             return 0;
+        }
+
+        const direction =
+            this.getNeedDirection(
+                name
+            );
+
+        if (
+            direction === "lower"
+        ) {
+
+            return Math.max(
+                0,
+                need.value -
+                need.minimumComfort
+            );
         }
 
         return Math.max(
@@ -424,6 +633,42 @@ class AkiraNeeds {
 
         const value =
             need.value;
+
+        const direction =
+            this.getNeedDirection(
+                name
+            );
+
+
+        // -----------------------------------------------------
+        // НАКОПИЧУВАНА ПОТРЕБА
+        // -----------------------------------------------------
+
+        if (
+            direction === "lower"
+        ) {
+
+            if (
+                value >=
+                need.critical
+            ) {
+                return 3;
+            }
+
+            if (
+                value >
+                need.minimumComfort
+            ) {
+                return 2;
+            }
+
+            return 1;
+        }
+
+
+        // -----------------------------------------------------
+        // ЗВИЧАЙНА ПОТРЕБА
+        // -----------------------------------------------------
 
         if (
             value <=
@@ -537,9 +782,17 @@ class AkiraNeeds {
                     status:
                         this.getStatus(name),
 
+                    direction:
+                        this.getNeedDirection(
+                            name
+                        ),
+
                     urgency,
 
-                    priority
+                    priority,
+
+                    deficit:
+                        this.getDeficit(name)
                 };
             }
         }
@@ -636,18 +889,22 @@ class AkiraNeeds {
             criticalEnergyThreshold,
 
             preferredStart:
-                sleep.preferredStart ?? 1,
+                sleep.preferredStart ??
+                1,
 
             preferredEnd:
-                sleep.preferredEnd ?? 9,
+                sleep.preferredEnd ??
+                9,
 
             variationHours:
-                sleep.variationHours ?? 2,
+                sleep.variationHours ??
+                2,
 
             canSleepOutsidePreferredHours:
                 sleep.decision
                     ?.canSleepOutsidePreferredHours
-                    ?? true
+                    ??
+                    true
         };
     }
 
@@ -659,7 +916,8 @@ class AkiraNeeds {
     getSocialState() {
 
         const config =
-            this.data.socialBehavior || {};
+            this.data.socialBehavior ||
+            {};
 
         const social =
             this.get("social");
@@ -731,12 +989,11 @@ class AkiraNeeds {
             );
 
         /*
-         * Соціальна втома впливає
-         * насамперед на energy.
+         * Соціальна втома поки впливає
+         * на energy.
          *
-         * Саму social потребу
-         * розмова, навпаки,
-         * задовольняє через activity effect.
+         * Social потреба змінюється
+         * окремо через ефекти активності.
          */
 
         this.change(
@@ -908,13 +1165,11 @@ class AkiraNeeds {
         }
 
         /*
-         * Старий brain.js зберігає
-         * state.needs як прості числа.
+         * Brain зберігає state.needs
+         * як прості числові значення.
          *
-         * Тому назовні передаємо
-         * саме значення, а повна
-         * інформація залишається
-         * всередині рушія.
+         * Повна службова інформація
+         * залишається всередині AkiraNeeds.
          */
 
         const result = {};
@@ -936,18 +1191,71 @@ class AkiraNeeds {
 
 
     // =========================================================
-    // СЛУЖБОВІ
+    // ПОХІДНІ СТАНИ BRAIN
     // =========================================================
 
     updateDerivedState() {
+
+        if (!this.brain.state) {
+            return;
+        }
 
         const social =
             this.getSocialState();
 
         this.brain.state.socialNeed =
             social.value;
+
+
+        /*
+         * Поки brain має окремі energy/fatigue,
+         * синхронізуємо їх із потребою energy.
+         *
+         * Energy у state — зручне похідне значення,
+         * а основним джерелом тепер є needs.energy.
+         */
+
+        if (
+            this.needs.energy
+        ) {
+
+            const energy =
+                this.get("energy");
+
+            this.brain.state.energy =
+                energy;
+
+            this.brain.state.fatigue =
+                this.clamp(
+                    100 - energy
+                );
+        }
+
+
+        /*
+         * Аналогічно boredom.
+         *
+         * Якщо boredom є окремою потребою,
+         * воно може бути джерелом для state.boredom.
+         *
+         * Зараз у needs.json boredom немає,
+         * тому існуюче state.boredom
+         * не чіпаємо.
+         */
+
+        if (
+            this.needs.curiosity
+        ) {
+
+            this.brain.state.curiosity =
+                this.get("curiosity");
+        }
     }
 
+
+    // =========================================================
+    // СЛУЖБОВІ
+    // =========================================================
 
     clamp(
         value,
