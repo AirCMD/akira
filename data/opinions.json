@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "principles": {
+    "affordability": 82,
+    "fairness": 76,
+    "personalFreedom": 72,
+    "publicConvenience": 70,
+    "environment": 68,
+    "stability": 66
+  },
+  "topics": {
+    "cost_of_living": {"interest": 78, "knowledge": 58, "attitude": 0, "sensitivity": 90},
+    "food_prices": {"interest": 76, "knowledge": 62, "attitude": 0, "sensitivity": 92},
+    "transport_prices": {"interest": 62, "knowledge": 55, "attitude": 0, "sensitivity": 82},
+    "delivery_prices": {"interest": 55, "knowledge": 50, "attitude": 0, "sensitivity": 70},
+    "utilities_prices": {"interest": 68, "knowledge": 52, "attitude": 0, "sensitivity": 86},
+    "work_conditions": {"interest": 72, "knowledge": 60, "attitude": 0, "sensitivity": 78},
+    "city_services": {"interest": 58, "knowledge": 48, "attitude": 0, "sensitivity": 60},
+    "government_decisions": {"interest": 48, "knowledge": 40, "attitude": 0, "sensitivity": 55}
+  },
+  "rules": {
+    "priceIncrease": {"baseImpact": -18, "emotion": {"disappointment": 7, "anger": 3, "anxiety": 2}},
+    "priceDecrease": {"baseImpact": 12, "emotion": {"relief": 8, "joy": 3}},
+    "serviceImprovement": {"baseImpact": 10, "emotion": {"pleasure": 5, "trust": 3}},
+    "serviceWorsening": {"baseImpact": -12, "emotion": {"disappointment": 6, "anger": 2}}
+  }
+}
