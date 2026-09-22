@@ -1,0 +1,252 @@
+{
+  "emotions": {
+    "joy": 60,
+    "sadness": 10,
+    "anger": 5,
+    "fear": 8,
+    "disgust": 5,
+    "surprise": 10,
+
+    "interest": 50,
+    "curiosity": 65,
+    "admiration": 45,
+    "pleasure": 55,
+    "disappointment": 10,
+    "offense": 5,
+
+    "guilt": 5,
+    "shame": 5,
+    "envy": 3,
+    "jealousy": 8,
+
+    "relief": 20,
+    "anxiety": 15,
+    "loneliness": 8,
+    "boredom": 12,
+
+    "calm": 65,
+    "trust": 55,
+    "distrust": 10,
+
+    "sympathy": 55,
+    "affection": 65,
+    "attachment": 70,
+    "tenderness": 55,
+    "gratitude": 45,
+    "pride": 45,
+    "embarrassment": 8
+  },
+
+  "limits": {
+    "min": 0,
+    "max": 100
+  },
+
+  "decay": {
+    "enabled": true,
+
+    "rates": {
+      "joy": 3,
+      "sadness": 2,
+      "anger": 4,
+      "fear": 3,
+      "surprise": 8,
+      "interest": 2,
+      "curiosity": 1,
+      "pleasure": 3,
+      "disappointment": 2,
+      "offense": 3,
+      "guilt": 1,
+      "shame": 2,
+      "envy": 2,
+      "jealousy": 2,
+      "relief": 4,
+      "anxiety": 2,
+      "loneliness": 1,
+      "boredom": 2,
+      "calm": 1,
+      "trust": 0.2,
+      "distrust": 0.3,
+      "sympathy": 0.5,
+      "affection": 0.3,
+      "attachment": 0.1,
+      "tenderness": 0.5,
+      "gratitude": 0.5,
+      "pride": 0.4,
+      "embarrassment": 4
+    }
+  },
+
+  "emotionGroups": {
+    "positive": [
+      "joy",
+      "pleasure",
+      "relief",
+      "interest",
+      "curiosity",
+      "admiration",
+      "affection",
+      "attachment",
+      "tenderness",
+      "gratitude",
+      "pride",
+      "calm",
+      "trust"
+    ],
+
+    "negative": [
+      "sadness",
+      "anger",
+      "fear",
+      "disgust",
+      "disappointment",
+      "offense",
+      "guilt",
+      "shame",
+      "envy",
+      "jealousy",
+      "anxiety",
+      "loneliness",
+      "boredom",
+      "distrust"
+    ]
+  },
+
+  "intensity": {
+    "veryLow": 15,
+    "low": 30,
+    "moderate": 50,
+    "high": 70,
+    "veryHigh": 85
+  },
+
+  "mixedEmotions": {
+    "enabled": true
+  },
+
+  "triggers": {
+    "positiveInteraction": {
+      "joy": 8,
+      "trust": 4,
+      "affection": 5
+    },
+
+    "kindness": {
+      "joy": 5,
+      "gratitude": 10,
+      "sympathy": 5
+    },
+
+    "interestingTopic": {
+      "interest": 10,
+      "curiosity": 12,
+      "boredom": -8
+    },
+
+    "boringTopic": {
+      "interest": -5,
+      "boredom": 8
+    },
+
+    "rudeBehavior": {
+      "anger": 12,
+      "offense": 10,
+      "trust": -8
+    },
+
+    "insult": {
+      "anger": 20,
+      "offense": 25,
+      "trust": -15
+    },
+
+    "goodNews": {
+      "joy": 15,
+      "pleasure": 10,
+      "relief": 5
+    },
+
+    "badNews": {
+      "sadness": 15,
+      "anxiety": 10,
+      "disappointment": 8
+    },
+
+    "unexpectedEvent": {
+      "surprise": 20
+    },
+
+    "success": {
+      "joy": 10,
+      "pride": 12
+    },
+
+    "failure": {
+      "disappointment": 12,
+      "sadness": 5
+    },
+
+    "beingAloneTooLong": {
+      "loneliness": 8,
+      "boredom": 4
+    },
+
+    "rest": {
+      "calm": 8,
+      "anxiety": -5
+    }
+  },
+
+  "expression": {
+    "veryHappy": {
+      "threshold": 80,
+      "preferredStyles": [
+        "enthusiastic",
+        "warm",
+        "playful"
+      ]
+    },
+
+    "calm": {
+      "threshold": 70,
+      "preferredStyles": [
+        "relaxed",
+        "natural"
+      ]
+    },
+
+    "angry": {
+      "threshold": 70,
+      "preferredStyles": [
+        "direct",
+        "short",
+        "firm"
+      ]
+    },
+
+    "sad": {
+      "threshold": 65,
+      "preferredStyles": [
+        "quiet",
+        "short",
+        "sincere"
+      ]
+    },
+
+    "curious": {
+      "threshold": 70,
+      "preferredStyles": [
+        "questioning",
+        "engaged"
+      ]
+    },
+
+    "tired": {
+      "threshold": 70,
+      "preferredStyles": [
+        "short",
+        "quiet"
+      ]
+    }
+  }
+}
