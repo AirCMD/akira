@@ -1,21 +1,1227 @@
-         */
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-        if (
-            document.readyState ===
-            "loading"
-        ) {
+  <title>Akira Chat — Frutiger Aero Edition</title>
 
-            document.addEventListener(
-                "DOMContentLoaded",
-                startAkiraInterface
-            );
+  <style>
+    * {
+      box-sizing: border-box;
+    }
 
-        } else {
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+    }
 
-            startAkiraInterface();
+    body {
+      font-family:
+        "Trebuchet MS",
+        "Segoe UI",
+        Arial,
+        sans-serif;
+
+      background:
+        radial-gradient(
+          circle at 20% 15%,
+          rgba(255, 255, 255, 0.95) 0,
+          rgba(255, 255, 255, 0.45) 12%,
+          transparent 32%
+        ),
+        radial-gradient(
+          circle at 85% 20%,
+          rgba(150, 225, 255, 0.8) 0,
+          rgba(150, 225, 255, 0.25) 20%,
+          transparent 45%
+        ),
+        linear-gradient(
+          135deg,
+          #b9ecff 0%,
+          #d9f8ff 30%,
+          #8bdcff 65%,
+          #6cc8ef 100%
+        );
+
+      color: #174b67;
+
+      display: flex;
+      justify-content: center;
+      align-items: center;
+
+      overflow: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+
+      pointer-events: none;
+
+      background:
+        radial-gradient(
+          ellipse at 30% 90%,
+          rgba(255, 255, 255, 0.7),
+          transparent 28%
+        ),
+        radial-gradient(
+          ellipse at 75% 75%,
+          rgba(255, 255, 255, 0.4),
+          transparent 30%
+        );
+
+      opacity: 0.9;
+    }
+
+    .chat-container {
+      position: relative;
+
+      width: min(550px, 94vw);
+      height: min(82vh, 760px);
+
+      display: flex;
+      flex-direction: column;
+
+      border-radius: 30px;
+
+      background:
+        linear-gradient(
+          145deg,
+          rgba(255, 255, 255, 0.78),
+          rgba(230, 250, 255, 0.62)
+        );
+
+      border: 2px solid rgba(255, 255, 255, 0.85);
+
+      box-shadow:
+        0 20px 50px rgba(40, 130, 170, 0.28),
+        inset 0 2px 3px rgba(255, 255, 255, 0.95),
+        inset 0 -2px 8px rgba(60, 160, 200, 0.12);
+
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+
+      overflow: hidden;
+    }
+
+    /* =========================
+       HEADER
+       ========================= */
+
+    .chat-header {
+      min-height: 74px;
+
+      display: flex;
+      align-items: center;
+      gap: 14px;
+
+      padding: 14px 18px;
+
+      background:
+        linear-gradient(
+          180deg,
+          rgba(255, 255, 255, 0.88),
+          rgba(191, 239, 255, 0.62)
+        );
+
+      border-bottom: 1px solid rgba(74, 172, 211, 0.2);
+
+      box-shadow:
+        0 3px 10px rgba(55, 150, 190, 0.1);
+    }
+
+    .avatar {
+      width: 48px;
+      height: 48px;
+
+      flex: 0 0 48px;
+
+      border-radius: 50%;
+
+      background:
+        radial-gradient(
+          circle at 35% 30%,
+          #ffffff 0,
+          #dff8ff 35%,
+          #78c9ee 70%,
+          #389dcc 100%
+        );
+
+      border: 2px solid rgba(255, 255, 255, 0.95);
+
+      box-shadow:
+        0 4px 12px rgba(35, 130, 175, 0.3),
+        inset 0 2px 5px rgba(255, 255, 255, 0.95);
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      color: #126087;
+      font-size: 21px;
+      font-weight: bold;
+
+      overflow: hidden;
+    }
+
+    .avatar::after {
+      content: "A";
+    }
+
+    .header-info {
+      min-width: 0;
+      flex: 1;
+    }
+
+    .header-name {
+      font-size: 18px;
+      font-weight: bold;
+      color: #155b7d;
+
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .header-status {
+      margin-top: 3px;
+
+      display: flex;
+      align-items: center;
+      gap: 7px;
+
+      font-size: 12px;
+      color: #4b829b;
+    }
+
+    .status-dot {
+      width: 9px;
+      height: 9px;
+
+      border-radius: 50%;
+
+      background: #48c96b;
+
+      box-shadow:
+        0 0 7px rgba(72, 201, 107, 0.75),
+        inset 0 1px 2px rgba(255, 255, 255, 0.9);
+
+      transition:
+        background 0.2s ease,
+        box-shadow 0.2s ease;
+    }
+
+    .status-dot.loading {
+      background: #f1bf45;
+
+      box-shadow:
+        0 0 7px rgba(241, 191, 69, 0.75),
+        inset 0 1px 2px rgba(255, 255, 255, 0.9);
+    }
+
+    .status-dot.error {
+      background: #e96868;
+
+      box-shadow:
+        0 0 7px rgba(233, 104, 104, 0.75),
+        inset 0 1px 2px rgba(255, 255, 255, 0.9);
+    }
+
+    /* =========================
+       MESSAGES
+       ========================= */
+
+    .chat-messages {
+      flex: 1;
+
+      padding: 20px 16px;
+
+      overflow-y: auto;
+      overflow-x: hidden;
+
+      scroll-behavior: smooth;
+    }
+
+    .chat-messages::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .chat-messages::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.25);
+      border-radius: 10px;
+    }
+
+    .chat-messages::-webkit-scrollbar-thumb {
+      background: rgba(67, 164, 203, 0.38);
+      border-radius: 10px;
+    }
+
+    .message-row {
+      display: flex;
+      margin-bottom: 13px;
+
+      animation: messageAppear 0.22s ease-out;
+    }
+
+    .message-row.user {
+      justify-content: flex-end;
+    }
+
+    .message-row.bot {
+      justify-content: flex-start;
+    }
+
+    .message {
+      max-width: 82%;
+
+      padding: 11px 15px;
+
+      border-radius: 19px;
+
+      line-height: 1.45;
+      font-size: 14px;
+
+      word-wrap: break-word;
+      white-space: pre-wrap;
+    }
+
+    .message.bot {
+      color: #22566d;
+
+      background:
+        linear-gradient(
+          145deg,
+          rgba(255, 255, 255, 0.9),
+          rgba(216, 246, 255, 0.78)
+        );
+
+      border: 1px solid rgba(255, 255, 255, 0.9);
+
+      border-bottom-left-radius: 7px;
+
+      box-shadow:
+        0 4px 10px rgba(45, 135, 175, 0.13),
+        inset 0 1px 2px rgba(255, 255, 255, 0.95);
+    }
+
+    .message.user {
+      color: #ffffff;
+
+      background:
+        linear-gradient(
+          145deg,
+          #53bce8,
+          #329bd1
+        );
+
+      border: 1px solid rgba(255, 255, 255, 0.55);
+
+      border-bottom-right-radius: 7px;
+
+      box-shadow:
+        0 4px 10px rgba(40, 130, 175, 0.22),
+        inset 0 1px 2px rgba(255, 255, 255, 0.35);
+    }
+
+    .message.system {
+      color: #4c7890;
+
+      background:
+        rgba(255, 255, 255, 0.5);
+
+      border: 1px dashed rgba(76, 151, 180, 0.3);
+
+      font-size: 12px;
+
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .typing {
+      display: inline-flex;
+      gap: 4px;
+      align-items: center;
+      min-width: 50px;
+    }
+
+    .typing span {
+      width: 6px;
+      height: 6px;
+
+      border-radius: 50%;
+
+      background: #5daac8;
+
+      animation: typingPulse 1s infinite ease-in-out;
+    }
+
+    .typing span:nth-child(2) {
+      animation-delay: 0.15s;
+    }
+
+    .typing span:nth-child(3) {
+      animation-delay: 0.3s;
+    }
+
+    /* =========================
+       INPUT
+       ========================= */
+
+    .chat-input-area {
+      display: flex;
+      gap: 9px;
+
+      padding: 13px 14px 14px;
+
+      background:
+        linear-gradient(
+          180deg,
+          rgba(223, 249, 255, 0.5),
+          rgba(255, 255, 255, 0.76)
+        );
+
+      border-top: 1px solid rgba(74, 172, 211, 0.18);
+    }
+
+    .chat-input {
+      flex: 1;
+
+      min-width: 0;
+
+      padding: 12px 15px;
+
+      border-radius: 18px;
+
+      border: 1px solid rgba(73, 166, 202, 0.35);
+
+      outline: none;
+
+      background:
+        rgba(255, 255, 255, 0.78);
+
+      color: #20566f;
+
+      font-family: inherit;
+      font-size: 14px;
+
+      box-shadow:
+        inset 0 2px 5px rgba(70, 150, 180, 0.08),
+        0 1px 2px rgba(255, 255, 255, 0.9);
+
+      transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+    }
+
+    .chat-input::placeholder {
+      color: #83aabd;
+    }
+
+    .chat-input:focus {
+      border-color: rgba(49, 154, 199, 0.65);
+
+      box-shadow:
+        0 0 0 3px rgba(91, 194, 230, 0.16),
+        inset 0 2px 5px rgba(70, 150, 180, 0.08);
+    }
+
+    .send-button {
+      flex: 0 0 auto;
+
+      min-width: 92px;
+
+      padding: 0 18px;
+
+      border: 1px solid rgba(255, 255, 255, 0.75);
+      border-radius: 18px;
+
+      background:
+        linear-gradient(
+          180deg,
+          #68cbed,
+          #3aa8d8
+        );
+
+      color: white;
+
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: bold;
+
+      cursor: pointer;
+
+      box-shadow:
+        0 4px 10px rgba(45, 143, 187, 0.28),
+        inset 0 1px 2px rgba(255, 255, 255, 0.5);
+
+      transition:
+        transform 0.12s ease,
+        filter 0.12s ease;
+    }
+
+    .send-button:hover {
+      filter: brightness(1.05);
+    }
+
+    .send-button:active {
+      transform: translateY(1px);
+    }
+
+    .send-button:disabled {
+      cursor: default;
+      opacity: 0.55;
+      filter: grayscale(0.15);
+    }
+
+    /* =========================
+       ANIMATIONS
+       ========================= */
+
+    @keyframes messageAppear {
+      from {
+        opacity: 0;
+        transform: translateY(5px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes typingPulse {
+      0%,
+      60%,
+      100% {
+        opacity: 0.35;
+        transform: translateY(0);
+      }
+
+      30% {
+        opacity: 1;
+        transform: translateY(-2px);
+      }
+    }
+
+    /* =========================
+       MOBILE
+       ========================= */
+
+    @media (max-width: 600px) {
+      body {
+        align-items: stretch;
+      }
+
+      .chat-container {
+        width: 100%;
+        height: 100%;
+        max-height: none;
+
+        border-radius: 0;
+        border: none;
+      }
+
+      .message {
+        max-width: 88%;
+      }
+    }
+  </style>
+
+  <!--
+    Порядок важливий:
+    memory → mood → decision → dialogue → brain
+
+    defer гарантує послідовне виконання цих класичних
+    зовнішніх скриптів після розбору HTML.
+  -->
+
+  <script src="./memory.js" defer></script>
+  <script src="./mood.js" defer></script>
+  <script src="./decision.js" defer></script>
+  <script src="./dialogue.js" defer></script>
+  <script src="./brain.js" defer></script>
+</head>
+
+<body>
+
+  <main class="chat-container">
+
+    <header class="chat-header">
+
+      <div class="avatar" aria-label="Акіра"></div>
+
+      <div class="header-info">
+        <div class="header-name">
+          Акіра Бакенеко
+        </div>
+
+        <div class="header-status">
+          <span
+            id="statusDot"
+            class="status-dot loading"
+          ></span>
+
+          <span id="statusText">
+            підключення мозку…
+          </span>
+        </div>
+      </div>
+
+    </header>
+
+
+    <section
+      id="chatMessages"
+      class="chat-messages"
+      aria-live="polite"
+      aria-label="Діалог"
+    >
+
+      <div class="message-row bot">
+        <div class="message bot">
+          …
+        </div>
+      </div>
+
+    </section>
+
+
+    <form
+      id="chatForm"
+      class="chat-input-area"
+      autocomplete="off"
+    >
+
+      <input
+        id="chatInput"
+        class="chat-input"
+        type="text"
+        placeholder="Напиши Акірі…"
+        maxlength="1000"
+        disabled
+      >
+
+      <button
+        id="sendButton"
+        class="send-button"
+        type="submit"
+        disabled
+      >
+        Надіслати
+      </button>
+
+    </form>
+
+  </main>
+
+
+  <script>
+    /*
+     * ==========================================================
+     * AKIRA CHAT UI
+     * ==========================================================
+     *
+     * Цей код НЕ містить характеру Акіри.
+     *
+     * Він відповідає лише за:
+     *
+     *   • введення повідомлення
+     *   • показ повідомлення
+     *   • виклик AkiraBrain
+     *   • стан інтерфейсу
+     *   • помилки
+     *
+     * Саме рішення, що відповісти, приймає brain/dialogue.
+     * ==========================================================
+     */
+
+    document.addEventListener("DOMContentLoaded", () => {
+
+      const messages = document.getElementById("chatMessages");
+      const input = document.getElementById("chatInput");
+      const form = document.getElementById("chatForm");
+      const sendButton = document.getElementById("sendButton");
+
+      const statusDot = document.getElementById("statusDot");
+      const statusText = document.getElementById("statusText");
+
+
+      let brainReady = false;
+      let waitingForReply = false;
+
+
+      /*
+       * ----------------------------------------------------------
+       * СТАН ПІДКЛЮЧЕННЯ
+       * ----------------------------------------------------------
+       */
+
+      function setStatus(type, text) {
+
+        statusDot.className = "status-dot";
+
+        if (type === "loading") {
+          statusDot.classList.add("loading");
         }
 
-    </script>
+        if (type === "error") {
+          statusDot.classList.add("error");
+        }
+
+        statusText.textContent = text;
+      }
+
+
+      /*
+       * ----------------------------------------------------------
+       * ПРОКРУТКА
+       * ----------------------------------------------------------
+       */
+
+      function scrollToBottom() {
+
+        messages.scrollTop = messages.scrollHeight;
+      }
+
+
+      /*
+       * ----------------------------------------------------------
+       * ДОДАВАННЯ ПОВІДОМЛЕННЯ
+       * ----------------------------------------------------------
+       */
+
+      function appendMessage(text, sender = "bot") {
+
+        const row = document.createElement("div");
+
+        row.className = `message-row ${sender}`;
+
+
+        const bubble = document.createElement("div");
+
+        bubble.className = `message ${sender}`;
+
+        bubble.textContent = text;
+
+
+        row.appendChild(bubble);
+        messages.appendChild(row);
+
+
+        scrollToBottom();
+
+
+        return row;
+      }
+
+
+      /*
+       * ----------------------------------------------------------
+       * СИСТЕМНЕ ПОВІДОМЛЕННЯ
+       * ----------------------------------------------------------
+       */
+
+      function appendSystemMessage(text) {
+
+        const row = document.createElement("div");
+
+        row.className = "message-row";
+
+
+        const bubble = document.createElement("div");
+
+        bubble.className = "message system";
+
+        bubble.textContent = text;
+
+
+        row.appendChild(bubble);
+        messages.appendChild(row);
+
+
+        scrollToBottom();
+
+
+        return row;
+      }
+
+
+      /*
+       * ----------------------------------------------------------
+       * ІНДИКАТОР ДРУКУ
+       * ----------------------------------------------------------
+       */
+
+      function showTyping() {
+
+        const row = document.createElement("div");
+
+        row.className = "message-row bot";
+        row.id = "typingIndicator";
+
+
+        const bubble = document.createElement("div");
+
+        bubble.className = "message bot";
+
+
+        const typing = document.createElement("span");
+
+        typing.className = "typing";
+
+
+        typing.innerHTML = `
+          <span></span>
+          <span></span>
+          <span></span>
+        `;
+
+
+        bubble.appendChild(typing);
+        row.appendChild(bubble);
+
+        messages.appendChild(row);
+
+
+        scrollToBottom();
+
+
+        return row;
+      }
+
+
+      function hideTyping() {
+
+        const typing = document.getElementById("typingIndicator");
+
+        if (typing) {
+          typing.remove();
+        }
+      }
+
+
+      /*
+       * ----------------------------------------------------------
+       * ОЧІКУВАННЯ МОЗКУ
+       * ----------------------------------------------------------
+       *
+       * brain.js сам створює window.akiraBrain і запускає init().
+       *
+       * Тут ми просто чекаємо, доки завантаження завершиться.
+       */
+
+      function waitForBrain() {
+
+        const startedAt = Date.now();
+
+        const timeout = 20000;
+
+
+        function check() {
+
+          const brain = window.akiraBrain;
+
+
+          if (
+            brain &&
+            brain.initialized
+          ) {
+
+            brainReady = true;
+
+
+            input.disabled = false;
+            sendButton.disabled = false;
+
+
+            setStatus(
+              "ready",
+              "мозок активний"
+            );
+
+
+            input.focus();
+
+
+            appendSystemMessage(
+              "Акіра готовий до розмови."
+            );
+
+
+            return;
+          }
+
+
+          if (
+            brain &&
+            brain.error
+          ) {
+
+            handleBrainError(
+              brain.error
+            );
+
+            return;
+          }
+
+
+          if (
+            Date.now() - startedAt >
+            timeout
+          ) {
+
+            handleBrainError(
+              new Error(
+                "Мозок не завершив завантаження."
+              )
+            );
+
+            return;
+          }
+
+
+          setTimeout(check, 100);
+        }
+
+
+        check();
+      }
+
+
+      /*
+       * ----------------------------------------------------------
+       * ПОМИЛКА МОЗКУ
+       * ----------------------------------------------------------
+       */
+
+      function handleBrainError(error) {
+
+        console.error(
+          "AkiraBrain error:",
+          error
+        );
+
+
+        brainReady = false;
+
+
+        input.disabled = true;
+        sendButton.disabled = true;
+
+
+        setStatus(
+          "error",
+          "помилка підключення"
+        );
+
+
+        appendSystemMessage(
+          "Не вдалося запустити мозок Акіри. Перевір консоль браузера."
+        );
+      }
+
+
+      /*
+       * ----------------------------------------------------------
+       * ВІДПОВІДЬ МОЗКУ
+       * ----------------------------------------------------------
+       */
+
+      async function getAkiraReply(text) {
+
+        const brain = window.akiraBrain;
+
+
+        if (
+          !brain ||
+          typeof brain.respond !== "function"
+        ) {
+
+          throw new Error(
+            "AkiraBrain.respond() недоступний."
+          );
+        }
+
+
+        /*
+         * Передаємо мозку не лише текст,
+         * а й контекст того, що це саме чат.
+         *
+         * Сам dialogue.js вирішує,
+         * що з цим контекстом робити.
+         */
+
+        const result = await brain.respond(
+          text,
+          {
+            source: "chat",
+            channel: "direct",
+            timestamp: Date.now()
+          }
+        );
+
+
+        /*
+         * dialogue.js може повернути:
+         *
+         *   рядок
+         *
+         * або об'єкт із текстом.
+         */
+
+        if (typeof result === "string") {
+          return result;
+        }
+
+
+        if (
+          result &&
+          typeof result.text === "string"
+        ) {
+          return result.text;
+        }
+
+
+        if (
+          result &&
+          typeof result.response === "string"
+        ) {
+          return result.response;
+        }
+
+
+        if (
+          result &&
+          typeof result.message === "string"
+        ) {
+          return result.message;
+        }
+
+
+        /*
+         * Останній захист від порожньої відповіді.
+         *
+         * Це НЕ характер Акіри —
+         * лише технічний fallback інтерфейсу.
+         */
+
+        return "…";
+      }
+
+
+      /*
+       * ----------------------------------------------------------
+       * НАДСИЛАННЯ
+       * ----------------------------------------------------------
+       */
+
+      async function sendMessage() {
+
+        if (!brainReady) {
+          return;
+        }
+
+
+        if (waitingForReply) {
+          return;
+        }
+
+
+        const text = input.value.trim();
+
+
+        if (!text) {
+          return;
+        }
+
+
+        /*
+         * Спочатку показуємо повідомлення користувача.
+         */
+
+        appendMessage(
+          text,
+          "user"
+        );
+
+
+        input.value = "";
+
+
+        waitingForReply = true;
+
+        input.disabled = true;
+        sendButton.disabled = true;
+
+
+        setStatus(
+          "loading",
+          "Акіра думає…"
+        );
+
+
+        const typing = showTyping();
+
+
+        try {
+
+          const reply =
+            await getAkiraReply(text);
+
+
+          hideTyping();
+
+
+          appendMessage(
+            reply,
+            "bot"
+          );
+
+
+          setStatus(
+            "ready",
+            "мозок активний"
+          );
+
+        } catch (error) {
+
+          console.error(
+            "Помилка відповіді Акіри:",
+            error
+          );
+
+
+          hideTyping();
+
+
+          appendSystemMessage(
+            "Сталася помилка під час обробки повідомлення."
+          );
+
+
+          setStatus(
+            "error",
+            "помилка відповіді"
+          );
+
+        } finally {
+
+          waitingForReply = false;
+
+
+          input.disabled = false;
+          sendButton.disabled = false;
+
+
+          input.focus();
+        }
+      }
+
+
+      /*
+       * ----------------------------------------------------------
+       * FORM
+       * ----------------------------------------------------------
+       */
+
+      form.addEventListener(
+        "submit",
+        event => {
+
+          event.preventDefault();
+
+          sendMessage();
+        }
+      );
+
+
+      /*
+       * ----------------------------------------------------------
+       * ENTER
+       * ----------------------------------------------------------
+       */
+
+      input.addEventListener(
+        "keydown",
+        event => {
+
+          if (
+            event.key === "Enter" &&
+            !event.shiftKey
+          ) {
+
+            event.preventDefault();
+
+            sendMessage();
+          }
+        }
+      );
+
+
+      /*
+       * ----------------------------------------------------------
+       * DEBUG API
+       * ----------------------------------------------------------
+       *
+       * Дає можливість у консолі написати:
+       *
+       *   akiraChat.brain()
+       *
+       * або:
+       *
+       *   akiraChat.state()
+       *
+       * Це знадобиться для тестування.
+       */
+
+      window.akiraChat = {
+
+        brain() {
+          return window.akiraBrain;
+        },
+
+        state() {
+
+          if (
+            window.akiraBrain &&
+            typeof window.akiraBrain.getPublicState === "function"
+          ) {
+
+            return window.akiraBrain.getPublicState();
+          }
+
+          return null;
+        },
+
+        send(text) {
+
+          input.value = String(text ?? "");
+
+          return sendMessage();
+        },
+
+        clear() {
+
+          messages.innerHTML = "";
+        }
+      };
+
+
+      /*
+       * ----------------------------------------------------------
+       * ЗАПУСК
+       * ----------------------------------------------------------
+       */
+
+      waitForBrain();
+
+    });
+  </script>
 
 </body>
 </html>
