@@ -69,3 +69,4 @@ if __name__ == "__main__":
     
     # Публікуємо на GitHub
     post_github_comment(reply)
+ 
