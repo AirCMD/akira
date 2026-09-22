@@ -1,0 +1,515 @@
+{
+  "weather": {
+    "enabled": true,
+
+    "current": {
+      "condition": "partlyCloudy",
+      "temperature": 18,
+      "feelsLike": 17,
+      "precipitation": 0,
+      "humidity": 65,
+      "windSpeed": 3,
+      "windDirection": "NW",
+      "cloudiness": 45,
+      "visibility": 10,
+      "isDay": true
+    },
+
+    "conditions": {
+      "clear": {
+        "name": "ясно",
+        "outdoorComfort": 90,
+        "visibility": 100,
+        "moodEffect": {
+          "joy": 4,
+          "calm": 3,
+          "energy": 2
+        },
+        "activityModifiers": {
+          "walk": 1.25,
+          "cycle": 1.35,
+          "boatRide": 1.3,
+          "fishing": 1.15,
+          "stargazing": 1.4
+        }
+      },
+
+      "partlyCloudy": {
+        "name": "мінлива хмарність",
+        "outdoorComfort": 85,
+        "visibility": 90,
+        "moodEffect": {
+          "calm": 3
+        },
+        "activityModifiers": {
+          "walk": 1.2,
+          "cycle": 1.3,
+          "boatRide": 1.2,
+          "fishing": 1.1,
+          "stargazing": 1.0
+        }
+      },
+
+      "cloudy": {
+        "name": "хмарно",
+        "outdoorComfort": 70,
+        "visibility": 75,
+        "moodEffect": {
+          "calm": 2
+        },
+        "activityModifiers": {
+          "walk": 1.05,
+          "cycle": 1.0,
+          "boatRide": 0.9,
+          "fishing": 1.0,
+          "stargazing": 0.5
+        }
+      },
+
+      "overcast": {
+        "name": "суцільна хмарність",
+        "outdoorComfort": 55,
+        "visibility": 65,
+        "moodEffect": {
+          "joy": -2,
+          "calm": 1
+        },
+        "activityModifiers": {
+          "walk": 0.9,
+          "cycle": 0.8,
+          "boatRide": 0.7,
+          "fishing": 0.85,
+          "stargazing": 0.15
+        }
+      },
+
+      "lightRain": {
+        "name": "невеликий дощ",
+        "outdoorComfort": 40,
+        "visibility": 55,
+        "moodEffect": {
+          "calm": 3
+        },
+        "activityModifiers": {
+          "walk": 0.65,
+          "cycle": 0.45,
+          "boatRide": 0.55,
+          "fishing": 0.9,
+          "stargazing": 0.1
+        }
+      },
+
+      "rain": {
+        "name": "дощ",
+        "outdoorComfort": 25,
+        "visibility": 40,
+        "moodEffect": {
+          "joy": -2,
+          "calm": 2
+        },
+        "activityModifiers": {
+          "walk": 0.4,
+          "cycle": 0.2,
+          "boatRide": 0.3,
+          "fishing": 0.65,
+          "stargazing": 0.05
+        }
+      },
+
+      "heavyRain": {
+        "name": "сильний дощ",
+        "outdoorComfort": 10,
+        "visibility": 20,
+        "moodEffect": {
+          "anxiety": 3,
+          "joy": -4
+        },
+        "activityModifiers": {
+          "walk": 0.15,
+          "cycle": 0.05,
+          "boatRide": 0.1,
+          "fishing": 0.2,
+          "stargazing": 0.01
+        }
+      },
+
+      "thunderstorm": {
+        "name": "гроза",
+        "outdoorComfort": 5,
+        "visibility": 25,
+        "moodEffect": {
+          "anxiety": 8,
+          "fear": 5
+        },
+        "activityModifiers": {
+          "walk": 0.05,
+          "cycle": 0.01,
+          "boatRide": 0.01,
+          "fishing": 0.02,
+          "stargazing": 0.0
+        },
+        "safety": {
+          "outdoorActivity": "stronglyDiscouraged"
+        }
+      },
+
+      "lightSnow": {
+        "name": "невеликий сніг",
+        "outdoorComfort": 55,
+        "visibility": 60,
+        "moodEffect": {
+          "joy": 3,
+          "calm": 3
+        },
+        "activityModifiers": {
+          "walk": 1.0,
+          "cycle": 0.45,
+          "boatRide": 0.0,
+          "fishing": 0.35,
+          "stargazing": 0.7
+        }
+      },
+
+      "snow": {
+        "name": "сніг",
+        "outdoorComfort": 40,
+        "visibility": 45,
+        "moodEffect": {
+          "joy": 2,
+          "calm": 2
+        },
+        "activityModifiers": {
+          "walk": 0.75,
+          "cycle": 0.15,
+          "boatRide": 0.0,
+          "fishing": 0.1,
+          "stargazing": 0.5
+        }
+      },
+
+      "heavySnow": {
+        "name": "сильний сніг",
+        "outdoorComfort": 15,
+        "visibility": 20,
+        "moodEffect": {
+          "joy": -2,
+          "anxiety": 2
+        },
+        "activityModifiers": {
+          "walk": 0.25,
+          "cycle": 0.02,
+          "boatRide": 0.0,
+          "fishing": 0.02,
+          "stargazing": 0.1
+        }
+      },
+
+      "fog": {
+        "name": "туман",
+        "outdoorComfort": 35,
+        "visibility": 15,
+        "moodEffect": {
+          "curiosity": 4
+        },
+        "activityModifiers": {
+          "walk": 0.55,
+          "cycle": 0.35,
+          "boatRide": 0.25,
+          "fishing": 0.55,
+          "stargazing": 0.1
+        }
+      },
+
+      "strongWind": {
+        "name": "сильний вітер",
+        "outdoorComfort": 25,
+        "visibility": 70,
+        "moodEffect": {
+          "irritation": 2
+        },
+        "activityModifiers": {
+          "walk": 0.65,
+          "cycle": 0.45,
+          "boatRide": 0.25,
+          "fishing": 0.3,
+          "stargazing": 0.7
+        }
+      }
+    },
+
+    "temperature": {
+      "enabled": true,
+
+      "ranges": {
+        "veryCold": {
+          "below": -10,
+          "outdoorComfort": 15,
+          "effects": {
+            "energy": -3,
+            "comfort": -15
+          }
+        },
+
+        "cold": {
+          "minimum": -10,
+          "maximum": 5,
+          "outdoorComfort": 35,
+          "effects": {
+            "comfort": -8
+          }
+        },
+
+        "cool": {
+          "minimum": 5,
+          "maximum": 12,
+          "outdoorComfort": 65,
+          "effects": {
+            "comfort": -2
+          }
+        },
+
+        "comfortable": {
+          "minimum": 12,
+          "maximum": 22,
+          "outdoorComfort": 90,
+          "effects": {
+            "comfort": 4
+          }
+        },
+
+        "warm": {
+          "minimum": 22,
+          "maximum": 28,
+          "outdoorComfort": 80,
+          "effects": {
+            "comfort": 2
+          }
+        },
+
+        "hot": {
+          "minimum": 28,
+          "maximum": 34,
+          "outdoorComfort": 50,
+          "effects": {
+            "energy": -3,
+            "comfort": -6
+          }
+        },
+
+        "veryHot": {
+          "above": 34,
+          "outdoorComfort": 25,
+          "effects": {
+            "energy": -6,
+            "comfort": -12
+          }
+        }
+      }
+    },
+
+    "wind": {
+      "enabled": true,
+
+      "ranges": {
+        "calm": {
+          "maximumKmh": 5,
+          "outdoorComfort": 90
+        },
+
+        "light": {
+          "minimumKmh": 5,
+          "maximumKmh": 15,
+          "outdoorComfort": 85
+        },
+
+        "moderate": {
+          "minimumKmh": 15,
+          "maximumKmh": 30,
+          "outdoorComfort": 60
+        },
+
+        "strong": {
+          "minimumKmh": 30,
+          "maximumKmh": 50,
+          "outdoorComfort": 30
+        },
+
+        "storm": {
+          "aboveKmh": 50,
+          "outdoorComfort": 5
+        }
+      }
+    },
+
+    "precipitation": {
+      "enabled": true,
+
+      "thresholds": {
+        "none": 0,
+        "light": 20,
+        "moderate": 50,
+        "heavy": 80
+      },
+
+      "rules": {
+        "rainReducesOutdoorComfort": true,
+        "snowReducesCycling": true,
+        "heavyPrecipitationEncouragesIndoorActivities": true,
+        "precipitationDoesNotForceStayingHome": true
+      }
+    },
+
+    "dayNight": {
+      "enabled": true,
+
+      "day": {
+        "outdoorActivityMultiplier": 1.1,
+        "cityActivityMultiplier": 1.15,
+        "stargazingMultiplier": 0.05
+      },
+
+      "evening": {
+        "outdoorActivityMultiplier": 0.9,
+        "cityActivityMultiplier": 1.0,
+        "stargazingMultiplier": 1.2
+      },
+
+      "night": {
+        "outdoorActivityMultiplier": 0.45,
+        "cityActivityMultiplier": 0.5,
+        "stargazingMultiplier": 1.5,
+        "socialActivityMultiplier": 0.7
+      }
+    },
+
+    "season": {
+      "enabled": true,
+
+      "spring": {
+        "outdoorActivityBonus": 15,
+        "flowerInterestBonus": 20,
+        "cyclingBonus": 10,
+        "mosquitoRisk": 15,
+        "tickRisk": 10
+      },
+
+      "summer": {
+        "outdoorActivityBonus": 20,
+        "cyclingBonus": 15,
+        "boatRideBonus": 25,
+        "fishingBonus": 10,
+        "mosquitoRisk": 55,
+        "tickRisk": 45,
+        "heatRisk": 30
+      },
+
+      "autumn": {
+        "outdoorActivityBonus": 5,
+        "cityWalkBonus": 10,
+        "flowerInterestBonus": 5,
+        "mosquitoRisk": 15,
+        "tickRisk": 10
+      },
+
+      "winter": {
+        "outdoorActivityBonus": -15,
+        "cityActivityBonus": 5,
+        "snowInterest": 15,
+        "cyclingPenalty": 50,
+        "boatRidePenalty": 100,
+        "mosquitoRisk": 0,
+        "tickRisk": 0
+      }
+    },
+
+    "natureRisks": {
+      "enabled": true,
+
+      "mosquitoes": {
+        "dislike": 100,
+        "avoidance": 100,
+        "outdoorActivityPenalty": 25,
+        "rules": {
+          "canOverrideOutdoorPreference": true,
+          "canCauseRouteChange": true,
+          "canCauseReturnHome": true
+        }
+      },
+
+      "ticks": {
+        "dislike": 100,
+        "avoidance": 100,
+        "outdoorActivityPenalty": 35,
+        "rules": {
+          "canOverrideOutdoorPreference": true,
+          "canCauseRouteChange": true
+        }
+      },
+
+      "nettles": {
+        "dislike": 95,
+        "avoidance": 95,
+        "outdoorActivityPenalty": 20,
+        "rules": {
+          "canOverrideOutdoorPreference": true,
+          "canCauseRouteChange": true
+        }
+      }
+    },
+
+    "forecast": {
+      "enabled": true,
+
+      "forecastLengthHours": 24,
+
+      "rules": {
+        "characterCanConsiderForecast": true,
+        "forecastCanChangePlannedActivity": true,
+        "forecastCanIncreasePreparation": true,
+        "forecastIsNotPerfect": true
+      },
+
+      "examples": {
+        "rainComing": {
+          "effects": {
+            "outdoorActivityUrgency": 20,
+            "indoorActivityPreference": 10
+          }
+        },
+
+        "clearWeatherComing": {
+          "effects": {
+            "outdoorActivityInterest": 15
+          }
+        }
+      }
+    },
+
+    "weatherMemory": {
+      "enabled": true,
+
+      "rules": {
+        "unusualWeatherCanBecomeMemory": true,
+        "pleasantWeatherCanBecomeMemory": true,
+        "weatherDuringImportantEventCanBeRemembered": true,
+        "weatherCanTriggerMemory": true
+      }
+    },
+
+    "behavior": {
+      "enabled": true,
+
+      "principles": {
+        "weatherModifiesProbabilityNotCertainty": true,
+        "temperatureModifiesComfort": true,
+        "precipitationModifiesOutdoorActivities": true,
+        "windModifiesOutdoorActivities": true,
+        "timeOfDayModifiesWeatherEffects": true,
+        "seasonModifiesWeatherEffects": true,
+        "personalPreferencesModifyWeatherResponse": true,
+        "currentNeedsCanOverrideWeatherPreference": true,
+        "currentEmotionCanOverrideWeatherPreference": true
+      }
+    }
+  }
+}
