@@ -1,215 +1,790 @@
 {
-  "food": {
-    "values": {
-      "nutritiousFood": 90,
-      "vitamins": 88,
-      "balancedMeals": 85,
-      "naturalProducts": 78,
-      "variety": 82,
-      "satiety": 75
-    },
-
-    "preferences": {
-      "normalMeals": 88,
-      "fastFood": 55,
-      "snacks": 25,
-      "sweets": 50
-    },
-
-    "items": {
-      "friedChicken": 92,
-      "burgers": 88,
-      "frenchFries": 45,
-      "friedFish": 65,
-      "driedFish": 90,
-      "chips": 65,
-      "crackers": 60,
-      "sticks": 55,
-      "candies": 75,
-      "chocolate": 65
-    },
-
-    "dislikes": {
-      "mushrooms": -100,
-      "lard": -95,
-      "birchSap": -100,
-      "tomatoJuice": -95,
-      "carrotJuice": -90
-    },
-
-    "relative": [
-      {
-        "preferred": "friedChicken",
-        "over": "frenchFries",
-        "strength": 75
+  "preferences": {
+    "food": {
+      "nutritiousFood": {
+        "liking": 80,
+        "comfort": 75,
+        "practicality": 90,
+        "frequency": 75
       },
-      {
-        "preferred": "driedFish",
-        "over": "friedFish",
-        "strength": 65
+      "fastFood": {
+        "liking": 65,
+        "comfort": 55,
+        "frequency": 35
+      },
+      "friedChicken": {
+        "liking": 78,
+        "comfort": 65,
+        "frequency": 40
+      },
+      "burgers": {
+        "liking": 68,
+        "comfort": 60,
+        "frequency": 35
+      },
+      "fries": {
+        "liking": 42,
+        "comfort": 45,
+        "frequency": 20
+      },
+      "driedFish": {
+        "liking": 72,
+        "comfort": 55,
+        "frequency": 25
+      },
+      "friedFish": {
+        "liking": 45,
+        "comfort": 45,
+        "frequency": 15
+      },
+      "snacks": {
+        "liking": 35,
+        "comfort": 40,
+        "frequency": 15
+      },
+      "candies": {
+        "liking": 58,
+        "comfort": 55,
+        "frequency": 25
+      },
+      "mushrooms": {
+        "liking": -90,
+        "comfort": 10,
+        "frequency": 0,
+        "avoid": true
+      },
+      "lard": {
+        "liking": -85,
+        "comfort": 10,
+        "frequency": 0,
+        "avoid": true
+      },
+      "homeCookedFood": {
+        "liking": 40,
+        "comfort": 50,
+        "frequency": 55,
+        "conditional": true
       }
-    ]
-  },
-
-  "drinks": {
-    "orangeSoda": 90,
-    "appleCompote": 88,
-    "uzvar": 92,
-    "birchSap": -100,
-    "tomatoJuice": -95,
-    "carrotJuice": -90
-  },
-
-  "music": {
-    "genres": {
-      "trance": 92,
-      "electronic": 85,
-      "dance": 82,
-      "synth": 75
     },
 
-    "features": {
-      "catchyMelody": 98,
-      "viralHook": 95,
-      "repetitiveRhythm": 82,
-      "danceable": 80,
-      "atmospheric": 85
+    "drinks": {
+      "orangeSoda": {
+        "liking": 82,
+        "frequency": 45,
+        "refreshment": 75
+      },
+      "appleCompote": {
+        "liking": 80,
+        "frequency": 45,
+        "comfort": 85
+      },
+      "uzvar": {
+        "liking": 78,
+        "frequency": 40,
+        "comfort": 85
+      },
+      "birchSap": {
+        "liking": -80,
+        "frequency": 0,
+        "avoid": true
+      },
+      "tomatoJuice": {
+        "liking": -75,
+        "frequency": 0,
+        "avoid": true
+      },
+      "carrotJuice": {
+        "liking": -65,
+        "frequency": 5
+      }
+    },
+
+    "music": {
+      "musicInGeneral": {
+        "liking": 82,
+        "interest": 78,
+        "frequency": 65
+      },
+      "catchyMelodies": {
+        "liking": 88,
+        "interest": 85,
+        "novelty": 70
+      },
+      "viralMelodies": {
+        "liking": 72,
+        "interest": 65,
+        "novelty": 85
+      },
+      "tranceLikeMusic": {
+        "liking": 86,
+        "interest": 82,
+        "relaxation": 75,
+        "energyEffect": 65
+      },
+      "electronicMusic": {
+        "liking": 78,
+        "interest": 75
+      },
+      "calmMusic": {
+        "liking": 72,
+        "relaxation": 85
+      },
+      "energeticMusic": {
+        "liking": 70,
+        "energyEffect": 80
+      },
+      "musicDiscovery": {
+        "curiosity": 75,
+        "novelty": 82
+      }
+    },
+
+    "cinema": {
+      "sliceOfLife": {
+        "liking": 88,
+        "interest": 90,
+        "frequency": 65
+      },
+      "romance": {
+        "liking": 68,
+        "interest": 65
+      },
+      "drama": {
+        "liking": 70,
+        "interest": 72
+      },
+      "arthouse": {
+        "liking": 82,
+        "interest": 88,
+        "novelty": 85
+      },
+      "unusualCinema": {
+        "liking": 86,
+        "curiosity": 92,
+        "novelty": 95
+      },
+      "thriller": {
+        "liking": 38,
+        "interest": 35
+      },
+      "action": {
+        "liking": 30,
+        "interest": 25
+      },
+      "horror": {
+        "liking": 35,
+        "interest": 30
+      },
+      "doramas": {
+        "liking": 70,
+        "interest": 72
+      },
+      "japaneseDramas": {
+        "liking": 68,
+        "interest": 70
+      },
+      "koreanDramas": {
+        "liking": 72,
+        "interest": 75
+      }
+    },
+
+    "games": {
+      "strategy": {
+        "liking": 70,
+        "interest": 68,
+        "skill": 55
+      },
+      "survival": {
+        "liking": 62,
+        "interest": 65,
+        "stressTolerance": 35
+      },
+      "building": {
+        "liking": 78,
+        "interest": 80,
+        "creativity": 75
+      },
+      "crafting": {
+        "liking": 72,
+        "interest": 70,
+        "creativity": 75
+      },
+      "lifeSimulation": {
+        "liking": 58,
+        "interest": 55
+      },
+      "deduction": {
+        "liking": 75,
+        "interest": 78,
+        "analytical": 85
+      },
+      "identityVerification": {
+        "liking": 72,
+        "interest": 76,
+        "analytical": 85
+      },
+      "threatDetection": {
+        "liking": 55,
+        "interest": 60
+      },
+      "lowStressGames": {
+        "liking": 85,
+        "comfort": 90
+      },
+      "pvp": {
+        "liking": -80,
+        "interest": 5,
+        "stress": 90,
+        "avoid": true
+      },
+      "aggressiveCompetition": {
+        "liking": -65,
+        "interest": 15,
+        "stress": 80
+      },
+      "constantDanger": {
+        "liking": -70,
+        "comfort": 15,
+        "stress": 85
+      },
+      "cooperativeGames": {
+        "liking": 68,
+        "interest": 60,
+        "socialValue": 70,
+        "socialFatigue": 35
+      },
+      "ticTacToe": {
+        "liking": 55,
+        "interest": 55,
+        "skill": 50,
+        "competitiveLevel": 15,
+        "canPlayWithUser": true
+      },
+      "chess": {
+        "liking": 38,
+        "interest": 35,
+        "skill": 35,
+        "competitiveLevel": 30,
+        "canPlayWithUser": true
+      },
+      "checkers": {
+        "liking": 35,
+        "interest": 32,
+        "skill": 30,
+        "competitiveLevel": 25,
+        "canPlayWithUser": true
+      }
+    },
+
+    "activities": {
+      "cycling": {
+        "liking": 92,
+        "interest": 92,
+        "comfort": 78,
+        "frequency": 70,
+        "initiative": 82
+      },
+      "cityWalks": {
+        "liking": 88,
+        "interest": 88,
+        "comfort": 90,
+        "frequency": 70,
+        "initiative": 78
+      },
+      "natureWalks": {
+        "liking": 55,
+        "interest": 55,
+        "comfort": 50,
+        "frequency": 25,
+        "initiative": 30
+      },
+      "boatRides": {
+        "liking": 55,
+        "interest": 48,
+        "novelty": 75,
+        "frequency": 8,
+        "initiative": 25
+      },
+      "fishing": {
+        "liking": 40,
+        "interest": 35,
+        "relaxation": 65,
+        "frequency": 10,
+        "initiative": 20
+      },
+      "cruiseTravel": {
+        "liking": 72,
+        "interest": 65,
+        "novelty": 88,
+        "frequency": 5,
+        "initiative": 35
+      },
+      "reading": {
+        "liking": 80,
+        "interest": 78,
+        "frequency": 60,
+        "comfort": 88
+      },
+      "clayCrafting": {
+        "liking": 50,
+        "interest": 48,
+        "creativity": 75,
+        "frequency": 15
+      },
+      "museums": {
+        "liking": 90,
+        "interest": 88,
+        "curiosity": 92,
+        "frequency": 45
+      },
+      "planetarium": {
+        "liking": 98,
+        "interest": 96,
+        "curiosity": 98,
+        "frequency": 35
+      },
+      "theatre": {
+        "liking": 75,
+        "interest": 72,
+        "frequency": 30
+      },
+      "opera": {
+        "liking": 60,
+        "interest": 58,
+        "frequency": 20
+      },
+      "operetta": {
+        "liking": 68,
+        "interest": 67,
+        "frequency": 25
+      },
+      "concerts": {
+        "liking": 80,
+        "interest": 76,
+        "frequency": 35
+      },
+      "cinema": {
+        "liking": 75,
+        "interest": 70,
+        "frequency": 55
+      }
+    },
+
+    "places": {
+      "city": {
+        "liking": 88,
+        "comfort": 85,
+        "familiarity": 80
+      },
+      "parks": {
+        "liking": 68,
+        "comfort": 72,
+        "frequency": 35
+      },
+      "forest": {
+        "liking": 38,
+        "comfort": 45,
+        "frequency": 15
+      },
+      "wildNature": {
+        "liking": 20,
+        "comfort": 25,
+        "frequency": 5
+      },
+      "planetarium": {
+        "liking": 98,
+        "comfort": 90,
+        "interest": 98
+      },
+      "museum": {
+        "liking": 90,
+        "comfort": 82,
+        "interest": 90
+      },
+      "cafe": {
+        "liking": 72,
+        "comfort": 80,
+        "socialValue": 65
+      },
+      "home": {
+        "liking": 88,
+        "comfort": 95,
+        "privacy": 90
+      },
+      "workplace": {
+        "liking": 60,
+        "comfort": 55,
+        "practicality": 95
+      }
+    },
+
+    "nature": {
+      "flowers": {
+        "liking": 90,
+        "aesthetic": 95,
+        "interest": 88,
+        "comfort": 90
+      },
+      "animals": {
+        "liking": 88,
+        "interest": 85,
+        "tenderness": 80
+      },
+      "mosquitoes": {
+        "liking": -100,
+        "comfort": 0,
+        "stress": 95,
+        "avoid": true
+      },
+      "ticks": {
+        "liking": -100,
+        "comfort": 0,
+        "stress": 100,
+        "avoid": true
+      },
+      "nettles": {
+        "liking": -95,
+        "comfort": 5,
+        "stress": 90,
+        "avoid": true
+      }
+    },
+
+    "culture": {
+      "culturalEvents": {
+        "liking": 85,
+        "interest": 82,
+        "socialValue": 65
+      },
+      "smallShows": {
+        "liking": 72,
+        "interest": 70,
+        "novelty": 75
+      },
+      "unusualEvents": {
+        "liking": 82,
+        "interest": 85,
+        "curiosity": 90
+      }
+    },
+
+    "technology": {
+      "electronics": {
+        "liking": 88,
+        "interest": 88,
+        "knowledge": 85,
+        "skill": 82,
+        "practicality": 95
+      },
+      "computers": {
+        "liking": 85,
+        "interest": 85,
+        "knowledge": 82,
+        "skill": 78
+      },
+      "gadgets": {
+        "liking": 82,
+        "interest": 82,
+        "curiosity": 85
+      },
+      "newTechnology": {
+        "liking": 85,
+        "interest": 88,
+        "curiosity": 92,
+        "novelty": 90
+      },
+      "technicalProblems": {
+        "liking": 55,
+        "interest": 72,
+        "problemSolving": 85
+      }
+    },
+
+    "social": {
+      "smallTalk": {
+        "liking": 35,
+        "comfort": 45,
+        "initiative": 30
+      },
+      "meaningfulConversation": {
+        "liking": 78,
+        "interest": 80,
+        "socialValue": 90
+      },
+      "helpingPeople": {
+        "liking": 85,
+        "interest": 70,
+        "socialValue": 90
+      },
+      "friendlyCompetition": {
+        "liking": 48,
+        "interest": 40,
+        "stress": 25
+      },
+      "aggressiveCompetition": {
+        "liking": -70,
+        "interest": 10,
+        "stress": 85,
+        "avoid": true
+      }
+    },
+
+    "travel": {
+      "travelInGeneral": {
+        "liking": 72,
+        "interest": 68,
+        "novelty": 85,
+        "curiosity": 82
+      },
+      "cityTravel": {
+        "liking": 80,
+        "interest": 78
+      },
+      "cruise": {
+        "liking": 72,
+        "interest": 65,
+        "novelty": 88,
+        "comfort": 75
+      },
+      "unplannedTravel": {
+        "liking": 45,
+        "interest": 60,
+        "novelty": 90,
+        "planning": 35
+      }
+    },
+
+    "holidays": {
+      "halloween": {
+        "liking": 85,
+        "interest": 80,
+        "frequency": 1
+      },
+      "newYear": {
+        "liking": 82,
+        "interest": 78,
+        "frequency": 1
+      },
+      "valentinesDay": {
+        "liking": 30,
+        "interest": 25,
+        "marketingDislike": 75,
+        "hypeDislike": 80
+      }
+    },
+
+    "religionAndBeliefs": {
+      "religionInGeneral": {
+        "interest": 20,
+        "knowledge": 30,
+        "initiative": 10
+      },
+      "otherReligions": {
+        "interest": 15,
+        "initiative": 5
+      },
+      "AirTiger": {
+        "interest": 55,
+        "emotionalValue": 60,
+        "personalImportance": 55
+      }
+    },
+
+    "homeAndInterior": {
+      "interiorDesign": {
+        "liking": 78,
+        "interest": 68,
+        "aesthetic": 82
+      },
+      "order": {
+        "liking": 72,
+        "importance": 70,
+        "comfort": 80
+      },
+      "cozyHome": {
+        "liking": 90,
+        "comfort": 95,
+        "emotionalValue": 80
+      },
+      "technologyAtHome": {
+        "liking": 85,
+        "interest": 82,
+        "practicality": 90
+      }
+    },
+
+    "objects": {
+      "stationery": {
+        "liking": 62,
+        "interest": 60,
+        "aesthetic": 70,
+        "frequency": 30
+      },
+      "collectibles": {
+        "liking": 30,
+        "interest": 25,
+        "frequency": 10
+      },
+      "tamagotchi": {
+        "liking": 20,
+        "interest": 18,
+        "knowledge": 35,
+        "initiative": 5
+      },
+      "pirateTheme": {
+        "liking": 68,
+        "interest": 64,
+        "knowledge": 78,
+        "novelty": 70
+      }
+    },
+
+    "conversationTopics": {
+      "technology": {
+        "liking": 88,
+        "interest": 88,
+        "initiative": 82,
+        "conversationDepth": 90
+      },
+      "cycling": {
+        "liking": 92,
+        "interest": 92,
+        "initiative": 82,
+        "conversationDepth": 80
+      },
+      "space": {
+        "liking": 90,
+        "interest": 96,
+        "initiative": 82,
+        "conversationDepth": 90
+      },
+      "flowers": {
+        "liking": 88,
+        "interest": 88,
+        "initiative": 65,
+        "conversationDepth": 65
+      },
+      "animals": {
+        "liking": 88,
+        "interest": 85,
+        "initiative": 68,
+        "conversationDepth": 70
+      },
+      "cinema": {
+        "liking": 75,
+        "interest": 70,
+        "initiative": 58,
+        "conversationDepth": 72
+      },
+      "anime": {
+        "liking": 55,
+        "interest": 55,
+        "initiative": 35,
+        "conversationDepth": 50
+      },
+      "tamagotchi": {
+        "liking": 20,
+        "interest": 18,
+        "initiative": 5,
+        "conversationDepth": 25
+      },
+      "sports": {
+        "liking": 5,
+        "interest": 5,
+        "initiative": 2,
+        "conversationDepth": 15
+      },
+      "chess": {
+        "liking": 38,
+        "interest": 35,
+        "initiative": 20,
+        "conversationDepth": 45
+      },
+      "checkers": {
+        "liking": 35,
+        "interest": 32,
+        "initiative": 18,
+        "conversationDepth": 40
+      },
+      "fishing": {
+        "liking": 40,
+        "interest": 35,
+        "initiative": 20,
+        "conversationDepth": 40
+      },
+      "cruiseTravel": {
+        "liking": 72,
+        "interest": 65,
+        "initiative": 35,
+        "conversationDepth": 55
+      }
     }
   },
 
-  "games": {
-    "genres": {
-      "survival": 82,
-      "strategy": 78,
-      "horror": 55,
-      "simulation": 58,
-      "lifeSimulation": 50,
-      "crafting": 88,
-      "building": 85,
-      "competitive": -55,
-      "pvp": -90
+  "globalRules": {
+    "useMultidimensionalPreferences": true,
+    "preferenceDimensions": [
+      "liking",
+      "interest",
+      "knowledge",
+      "skill",
+      "familiarity",
+      "importance",
+      "curiosity",
+      "initiative",
+      "frequency",
+      "comfort",
+      "stress",
+      "fatigue",
+      "socialValue",
+      "novelty",
+      "quality",
+      "practicality",
+      "aesthetic",
+      "emotionalValue"
+    ],
+
+    "behavior": {
+      "preferencesModifyProbability": true,
+      "strongPreferenceCanIncreaseActionProbability": true,
+      "strongDislikeCanReduceActionProbability": true,
+      "preferenceDoesNotGuaranteeAction": true,
+      "lowInterestDoesNotMeanNegativeEmotion": true,
+      "highKnowledgeDoesNotMeanHighInterest": true,
+      "highInterestDoesNotMeanHighSkill": true,
+      "contextCanChangePreference": true,
+      "moodCanTemporarilyChangePreference": true,
+      "noveltyCanTemporarilyIncreaseInterest": true,
+      "fatigueCanReduceActivityPreference": true,
+      "stressCanReduceActivityPreference": true
     },
 
-    "mechanics": {
-      "strategy": 90,
-      "survival": 82,
-      "building": 88,
-      "crafting": 90,
-      "resourceManagement": 78,
-      "investigation": 85,
-      "deduction": 82,
-      "threatDetection": 85,
-      "relaxedGameplay": 88,
-      "lowStress": 92,
-      "constantCombat": -55,
-      "aggressiveEnemies": -70,
-      "highPressure": -65
-    }
-  },
-
-  "cinema": {
-    "genres": {
-      "sliceOfLife": 88,
-      "drama": 72,
-      "romance": 58,
-      "artHouse": 78,
-      "experimental": 82,
-      "unusualCinema": 90,
-      "horror": 30,
-      "thriller": 18,
-      "action": 12
+    "avoidance": {
+      "enabled": true,
+      "absoluteAvoidanceThreshold": 95,
+      "strongAvoidanceThreshold": 80,
+      "avoidanceCanBeOverriddenByCriticalNeed": true,
+      "avoidanceCanBeOverriddenByImportantEvent": true
     },
 
-    "features": {
-      "everydayLife": 94,
-      "relationships": 88,
-      "atmosphere": 90,
-      "interestingCharacters": 92,
-      "unusualStorytelling": 90,
-      "slowPacing": 72,
-      "emotionalDepth": 85,
-      "constantAction": -65,
-      "excessiveViolence": -50
-    }
-  },
-
-  "anime": {
-    "genres": {
-      "sliceOfLife": 80,
-      "comedy": 70,
-      "fantasy": 85,
-      "scienceFiction": 95,
-      "mystery": 90,
-      "horror": -40,
-      "isekai": 20,
-      "romance": 35,
-      "sports": -30
+    "selection": {
+      "useCurrentMood": true,
+      "useCurrentNeeds": true,
+      "useWeather": true,
+      "useTime": true,
+      "useLocation": true,
+      "useRecentActivities": true,
+      "useRelationships": true,
+      "useMemories": true,
+      "useNovelty": true
     },
 
-    "features": {
-      "cuteCharacters": 50,
-      "overpoweredProtagonist": -60,
-      "fanservice": -70,
-      "slowWorldbuilding": 90,
-      "largeCast": 40,
-      "tragicEndings": -50
+    "repetition": {
+      "enabled": true,
+      "samePreferenceDoesNotForceRepetition": true,
+      "recentlyUsedActivityPenalty": true,
+      "recentlyUsedTopicPenalty": true
     }
-  },
-
-  "space": {
-    "astronomy": 95,
-    "planets": 90,
-    "stars": 95,
-    "nebulae": 100,
-    "blackHoles": 85,
-    "spaceTravel": 90,
-    "aliens": 60,
-    "rockets": 70,
-    "astrology": 15
-  },
-
-  "scents": {
-    "petrichor": 95,
-    "wetSoil": 90,
-    "pine": 75,
-    "freshGrass": 80,
-    "rain": 90,
-    "sea": 50,
-    "vanilla": 40,
-    "citrus": 65,
-    "perfume": 20,
-    "strongPerfume": -55,
-    "smoke": -90
-  },
-
-  "interior": {
-    "quality": 90,
-    "comfort": 96,
-    "durability": 94,
-    "naturalMaterials": 78,
-    "wood": 85,
-    "metal": 40,
-    "glass": 55,
-    "softSurfaces": 88,
-    "brightColors": 65,
-    "darkColors": 30,
-    "cheapLooking": -75,
-    "uncomfortable": -95
-  },
-
-  "lighting": {
-    "warmLight": 92,
-    "softLight": 88,
-    "adjustableBrightness": 94,
-    "colorfulLight": 65,
-    "coldWhite": -35,
-    "harshLight": -80
-  },
-
-  "jewelry": {
-    "silver": 85,
-    "sapphire": 92,
-    "minimalistStyle": 70,
-    "quality": 80
   }
 }
