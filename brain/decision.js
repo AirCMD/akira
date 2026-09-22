@@ -1165,6 +1165,12 @@ class AkiraDecision {
             );
 
 
+        // Власний досвід і ставлення Акіри можуть трохи змінювати
+        // практичний вибір, але не перекривають потреби, погоду чи цілі.
+        factors.opinions =
+            this.brain.opinions?.scoreAction?.(action, situation) ?? 0;
+
+
         factors.time =
             this.scoreTime(
                 action,
