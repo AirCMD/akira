@@ -1224,5 +1224,34 @@
     });
   </script>
 
+<!-- DEBUG PANEL -->
+<div id="debug" style="position:fixed; bottom:12px; right:12px; background:rgba(0,0,0,0.85); color:#0f0; padding:12px 14px; font-family:monospace; font-size:13px; border-radius:10px; z-index:9999; min-width:220px;">
+  <div id="debug-needs">Needs: …</div>
+  <div style="margin-top:8px; display:flex; gap:6px; flex-wrap:wrap;">
+    <button onclick="forceAction('eat')">Eat</button>
+    <button onclick="forceAction('sleep')">Sleep</button>
+    <button onclick="forceAction('drink')">Drink</button>
+    <button onclick="window.akiraBrain?.finishAction()">Finish</button>
+  </div>
+</div>
+
+<script>
+  function forceAction(id) {
+    if (!window.akiraBrain) return;
+    window.akiraBrain.executeAction({ actionId: id, duration: 1 });
+  }
+
+  setInterval(() => {
+    const brain = window.akiraBrain;
+    if (!brain?.state?.needs) return;
+
+    const n = brain.state.needs;
+    document.getElementById('debug-needs').innerHTML =
+      `E:${Math.round(n.energy ?? 0)}  S:${Math.round(n.sleep ?? 0)}<br>` +
+      `H:${Math.round(n.hunger ?? 0)}  T:${Math.round(n.thirst ?? 0)}`;
+  }, 400);
+</script>
+
+
 </body>
 </html>
