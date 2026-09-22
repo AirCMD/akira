@@ -443,19 +443,22 @@ class AkiraBrain {
 
                 interestInLife:
                     this.number(
-                        person.relationship?.interestInLife,
+                        person.relationship?.interestInLife ??
+                        person.interestInLife,
                         0
                     ),
 
                 desireForContact:
                     this.number(
-                        person.relationship?.desireForContact,
+                        person.relationship?.desireForContact ??
+                        person.desireForContact,
                         0
                     ),
 
                 desireToKnowMore:
                     this.number(
-                        person.relationship?.desireToKnowMore,
+                        person.relationship?.desireToKnowMore ??
+                        person.desireToKnowMore,
                         0
                     )
             };
@@ -998,12 +1001,17 @@ finishAction() {
 
     this.social?.completeAction?.(action);
 
+    const memoryPerson = action.targetPerson ||
+        (action.actionId === "talkToYani" ? "Yani_Bakeneko" : null);
+
     this.memory?.remember?.({
         type: "activity",
+        title: `Завершена дія: ${action.actionId}`,
+        content: `Акіра завершив дію: ${action.actionId}`,
         importance: 20,
-        details: [`Акіра завершив дію: ${action.actionId}`],
-        associations: [action.actionId],
-        people: action.targetPerson ? [action.targetPerson] : []
+        topics: [action.actionId],
+        keywords: [action.actionId],
+        people: memoryPerson ? [memoryPerson] : []
     });
 
     this.actionHistory.push({

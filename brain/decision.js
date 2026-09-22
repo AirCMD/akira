@@ -2658,6 +2658,7 @@ scoreTime(
         const target =
             action.targetPerson ||
             action.target ||
+            action.person ||
             null;
 
 
@@ -3296,6 +3297,7 @@ scoreTime(
         const target =
             action.targetPerson ||
             action.target ||
+            action.person ||
             null;
 
 
