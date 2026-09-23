@@ -57,6 +57,7 @@ class AkiraDailyLife {
       cookMeal:"kitchen", eatMeal:"kitchen", prepareDrink:"kitchen", drinkSelected:"kitchen", washDishes:"kitchen",
       startLaundry:"bathroom", takeLaundryOut:"bathroom", hangLaundry:"balcony", foldLaundry:"cozyRoom",
       wipeDust:"cozyRoom", vacuumRoom:"cozyRoom", mopFloor:"kitchen", washWindows:"cozyRoom",
+      cleanSpill:"kitchen", changeDirtyClothes:"glassBedroom", pickUpDroppedItem:"cozyRoom", cleanBrokenDish:"kitchen", recoverFromStumble:"cozyRoom",
       washFace:"bathroom", shave:"bathroom", takeBath:"bathroom",
       lookOutWindow:"balcony", stargazing:"balcony", lookAtFlowers:"balcony",
       commuteToWork:"hallway"
