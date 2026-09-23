@@ -451,7 +451,10 @@ class AkiraDialogue {
         }
 
         // Причина поточної реальної дії та найближчі плани.
-        if (/^(чому|навіщо|а\s+чому|а\s+навіщо|чого)\s+(ти\s+)?(це\s+)?(робиш|пішов|їдеш|йдеш|готуєш|прибираєш|гуляєш|читаєш|граєш|дивишся|миєш|переш|пилососиш)[\s?!.,]*$/iu.test(normalized) || /^(навіщо|чому)\s*[?!.,]*$/iu.test(normalized)) return "ask_action_reason";
+        if (/^(навіщо|а\s+навіщо)\s+(ти\s+)?(це\s+)?(робиш|пішов|їдеш|йдеш|готуєш|прибираєш|гуляєш|читаєш|граєш|дивишся|миєш|переш|пилососиш)[\s?!.,]*$/iu.test(normalized) || /^навіщо\s*[?!.,]*$/iu.test(normalized)) return "ask_action_goal";
+        if (/^(чому|а\s+чому|чого)\s+(ти\s+)?(це\s+)?(робиш|пішов|їдеш|йдеш|готуєш|прибираєш|гуляєш|читаєш|граєш|дивишся|миєш|переш|пилососиш)[\s?!.,]*$/iu.test(normalized) || /^чому\s*[?!.,]*$/iu.test(normalized)) return "ask_action_reason";
+        if (/^(що\s+(буде|вийде)\s+(потім|після\s+цього)|який\s+результат)[\s?!.,]*$/iu.test(normalized)) return "ask_action_outcome";
+        if (/^(що\s+(потім|далі)|а\s+далі|а\s+потім)[\s?!.,]*$/iu.test(normalized)) return "ask_action_next";
         if (/^(що\s+ти\s+плануєш|які\s+в\s+тебе\s+плани|що\s+будеш\s+робити|що\s+збираєшся\s+робити|є\s+плани)(\s+(сьогодні|на\s+сьогодні))?[\s?!.,]*$/iu.test(normalized)) return "ask_current_plan";
 
         const identityPatterns = [
@@ -1819,6 +1822,26 @@ class AkiraDialogue {
         ]);
     }
 
+    composeActionGoalAnswer() {
+        const action = this.brain.state?.action || null;
+        if (!action || action.actionId === "idle") return "Та ні для чого конкретного. Я зараз нічим не зайнятий.";
+        const goal = this.brain.intentions?.getGoal?.();
+        return goal ? `Щоб ${String(goal).replace(/[.!?]+$/u, "")}.` : "Без якоїсь окремої мети.";
+    }
+
+    composeActionOutcomeAnswer() {
+        const outcome = this.brain.intentions?.getExpectedOutcome?.();
+        return outcome ? `Якщо все нормально, ${String(outcome).replace(/[.!?]+$/u, "")}.` : "Нічого особливого після цього не очікую.";
+    }
+
+    composeActionNextAnswer() {
+        const next = this.brain.intentions?.getNextAction?.();
+        if (next?.label) return `Потім ${next.label}.`;
+        const plan = this.brain.intentions?.getNextPlan?.();
+        if (plan) { const goal=this.brain.intentions?.planGoal?.(plan)||plan.actionId; return `Потім, якщо нічого не зміниться, планую ${goal} приблизно о ${plan.time}.`; }
+        return "Поки не вирішив, що робитиму далі.";
+    }
+
     composeStructuredResponse(profile) {
         // Запити, що читають живий стан, не повинні залежати від випадкового
         // dialogue action. Те саме стосується економічних подій/opinions.
@@ -1836,9 +1859,10 @@ class AkiraDialogue {
         if (intent === "ask_current_drink") return [this.composeFoodStateAnswer("drink")];
         if (intent === "ask_current_cooking") return [this.composeFoodStateAnswer("cooking")];
         if (intent === "ask_activity") return [this.composeActivityAnswer(profile)];
-        if (intent === "ask_action_reason") {
-            return [this.composeActionReasonAnswer(profile)];
-        }
+        if (intent === "ask_action_reason") return [this.composeActionReasonAnswer(profile)];
+        if (intent === "ask_action_goal") return [this.composeActionGoalAnswer(profile)];
+        if (intent === "ask_action_outcome") return [this.composeActionOutcomeAnswer(profile)];
+        if (intent === "ask_action_next") return [this.composeActionNextAnswer(profile)];
         if (intent === "ask_current_plan") {
             const plan = this.brain.intentions?.getNextPlan?.();
             if (!plan) return ["Поки нічого конкретного не запланував."];
@@ -1911,9 +1935,10 @@ class AkiraDialogue {
         if (profile.analysis.intent === "ask_activity") {
             return [this.composeActivityAnswer(profile)];
         }
-        if (profile.analysis.intent === "ask_action_reason") {
-            return [this.composeActionReasonAnswer(profile)];
-        }
+        if (profile.analysis.intent === "ask_action_reason") return [this.composeActionReasonAnswer(profile)];
+        if (profile.analysis.intent === "ask_action_goal") return [this.composeActionGoalAnswer(profile)];
+        if (profile.analysis.intent === "ask_action_outcome") return [this.composeActionOutcomeAnswer(profile)];
+        if (profile.analysis.intent === "ask_action_next") return [this.composeActionNextAnswer(profile)];
         if (profile.analysis.intent === "ask_current_plan") {
             const plan = this.brain.intentions?.getNextPlan?.();
             if (!plan) return ["Поки нічого конкретного не запланував."];
@@ -2503,6 +2528,9 @@ class AkiraDialogue {
             "ask_state",
             "ask_activity",
             "ask_action_reason",
+            "ask_action_goal",
+            "ask_action_outcome",
+            "ask_action_next",
             "ask_current_location",
             "ask_current_movie"
         ].includes(intent);

@@ -53,7 +53,7 @@ class AkiraFood {
     }
     if(hunger>=this.n(this.data.settings?.hungerCookThreshold,42)){
       const m=this.chooseMeal();
-      if(m){ s.currentMeal={...m}; return this.action('cookMeal',this.n(m.minutes,15),`зголоднів, вирішив приготувати ${m.name}`,{mealId:m.id,mealName:m.name,ingredients:m.ingredients,homeRoom:'kitchen'}); }
+      if(m){ s.currentMeal={...m}; return this.action('cookMeal',this.n(m.minutes,15),`зголоднів і захотів ${m.name}`,{mealId:m.id,mealName:m.name,ingredients:m.ingredients,homeRoom:'kitchen',goal:`приготувати ${m.name}, щоб поїсти`,expectedOutcome:`${m.name} буде готовий`,nextAction:{actionId:'eatMeal',label:`поїсти ${m.name}`}}); }
       if(t>=8*60 && t<=21*60) return this.action('travelToMassmarket',8,'вдома немає з чого нормально приготувати',{targetLocation:'massmarket'});
     }
     const low=this.lowInventory();
@@ -68,7 +68,7 @@ class AkiraFood {
   completeAction(a){
     if(!a) return; const s=this.brain.state.food, now=new Date().toISOString();
     if(a.actionId==='cookMeal'){
-      this.consume(a.ingredients); this.queue(this.action('eatMeal',20,`приготував ${a.mealName}, тепер можна поїсти`,{mealId:a.mealId,mealName:a.mealName,homeRoom:'kitchen'}));
+      this.consume(a.ingredients); this.queue(this.action('eatMeal',20,`щойно приготував ${a.mealName}`,{mealId:a.mealId,mealName:a.mealName,homeRoom:'kitchen',goal:'втамувати голод',expectedOutcome:'стану менш голодним'}));
     } else if(a.actionId==='eatMeal'){
       s.mealHistory.push({id:a.mealId,name:a.mealName,at:now}); if(s.mealHistory.length>20)s.mealHistory.shift(); s.dirtyDishes+=1; s.currentMeal=null;
       this.brain.needs?.applyActivity?.('eat');

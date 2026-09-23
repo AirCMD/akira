@@ -43,8 +43,10 @@ class AkiraIntentions {
     const i={
       id:`intent_${this.now()}_${Math.floor(Math.random()*10000)}`,
       actionId:action.actionId,
-      goal:this.describeAction(action),
+      goal:action.goal || this.inferGoal(action),
       reason:action.reason || this.inferReason(action),
+      expectedOutcome:action.expectedOutcome || this.inferOutcome(action),
+      nextAction:action.nextAction || this.inferNextAction(action),
       trigger:action.trigger || null,
       startedAt:this.now(),
       status:"active",
@@ -55,6 +57,48 @@ class AkiraIntentions {
       const p=this.brain.state.intentions.plans.find(x=>x.id===action.plannedId);
       if(p){ p.status="in_progress"; p.startedAt=this.now(); }
     }
+  }
+
+  inferGoal(action){
+    const id=action?.actionId;
+    if(id==="cookMeal") return action.mealName ? `приготувати ${action.mealName}, щоб поїсти` : "приготувати їжу, щоб поїсти";
+    if(id==="eatMeal") return "втамувати голод";
+    if(id==="prepareDrink") return "приготувати собі напій";
+    if(id==="drinkSelected") return "втамувати спрагу";
+    if(id==="washDishes") return "залишити кухню чистою";
+    if(["wipeDust","vacuumRoom","mopFloor","washWindows"].includes(id)) return "прибрати вдома";
+    if(id==="commuteHome") return "дістатися додому";
+    if(id==="commuteToWork") return "дістатися на роботу";
+    if(id==="sleep") return "виспатися";
+    if(id==="rest") return "відновити сили";
+    return this.describeAction(action);
+  }
+
+  inferOutcome(action){
+    const id=action?.actionId;
+    if(id==="cookMeal") return action.mealName ? `${action.mealName} буде готовий` : "їжа буде готова";
+    if(id==="eatMeal") return "стану менш голодним";
+    if(id==="prepareDrink") return action.drinkName ? `${action.drinkName} буде готовий` : "напій буде готовий";
+    if(id==="drinkSelected") return "стану менш спраглим";
+    if(id==="washDishes") return "брудного посуду не залишиться";
+    if(id==="wipeDust") return "у кімнаті стане менше пилу";
+    if(id==="vacuumRoom") return "підлога стане чистішою";
+    if(id==="mopFloor") return "підлога буде вимита";
+    if(id==="washWindows") return "вікна стануть чистішими";
+    if(id==="commuteHome") return "буду вдома";
+    if(id==="commuteToWork") return "буду на роботі";
+    if(id==="sleep") return "відпочину і матиму більше сил";
+    return null;
+  }
+
+  inferNextAction(action){
+    const id=action?.actionId;
+    if(id==="cookMeal") return {actionId:"eatMeal", label: action.mealName ? `поїсти ${action.mealName}` : "поїсти"};
+    if(id==="prepareDrink") return {actionId:"drinkSelected", label: action.drinkName ? `випити ${action.drinkName}` : "випити напій"};
+    if(id==="startLaundry") return {actionId:"takeLaundryOut", label:"дістати випрану білизну"};
+    if(id==="takeLaundryOut") return {actionId:"hangLaundry", label:"розвісити білизну"};
+    if(id==="hangLaundry") return {actionId:"foldLaundry", label:"скласти суху білизну"};
+    return null;
   }
 
   inferReason(action){
@@ -170,13 +214,25 @@ class AkiraIntentions {
       plannedId:due.id,score:1400,factors:{intention:1400}};
   }
 
-  getWhy(){
-    const cur=this.brain.state.intentions?.current;
-    if(cur?.reason) return cur.reason;
+  getCurrentIntention(){
     const action=this.brain.state.action;
-    if(action?.reason) return action.reason;
-    return null;
+    const cur=this.brain.state.intentions?.current;
+    // Не дозволяємо старому/черговому наміру пояснювати іншу поточну дію.
+    if(cur && action && cur.actionId===action.actionId) return cur;
+    if(!action) return null;
+    return {
+      actionId:action.actionId,
+      reason:action.reason || this.inferReason(action),
+      goal:action.goal || this.inferGoal(action),
+      expectedOutcome:action.expectedOutcome || this.inferOutcome(action),
+      nextAction:action.nextAction || this.inferNextAction(action)
+    };
   }
+
+  getWhy(){ return this.getCurrentIntention()?.reason || null; }
+  getGoal(){ return this.getCurrentIntention()?.goal || null; }
+  getExpectedOutcome(){ return this.getCurrentIntention()?.expectedOutcome || null; }
+  getNextAction(){ return this.getCurrentIntention()?.nextAction || null; }
 
   getNextPlan(){
     return (this.brain.state.intentions?.plans||[])
