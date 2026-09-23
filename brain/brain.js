@@ -1073,7 +1073,13 @@ finishAction() {
 
     this.actionHistory.push({
         ...action,
-        finishedAt: Date.now()
+        finishedAt: Date.now(),
+        worldFinished: {
+            date: this.state.world?.date || null,
+            time: this.state.world?.time || null,
+            location: this.state.world?.location || null,
+            homeRoom: this.state.homeRoom || null
+        }
     });
 
     if (this.actionHistory.length > 50) {
@@ -1328,8 +1334,30 @@ finishAction() {
         const now =
             Date.now();
 
+        // Для автобіографічної історії фіксуємо не лише epoch, а й
+        // календар/симульований час світу на момент початку.
+        const worldSnapshot = {
+            date: this.state.world?.date || null,
+            time: this.state.world?.time || null,
+            location: this.state.world?.location || null,
+            homeRoom: this.state.homeRoom || null
+        };
+
+        // Соціальна дія повинна знати, з ким саме Акіра говорить.
+        // Інакше follow-up «з ким?» принципово неможливо відповісти чесно.
+        if (action.actionId === "talkToSomeone" && !action.targetPerson) {
+            const location = this.state.world?.location;
+            if (location === "techsmith") {
+                const coworkers = ["Taras", "Kent_White"];
+                action.targetPerson = coworkers[Math.floor(Math.random() * coworkers.length)];
+            } else {
+                action.targetPerson = this.social?.choosePerson?.() || null;
+            }
+        }
+
         this.state.action = {
             ...action,
+            worldStarted: worldSnapshot,
 
             startedAt: now,
 

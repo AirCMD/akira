@@ -422,11 +422,26 @@ class AkiraDialogue {
         ];
         if (askWeatherPatterns.some(pattern => pattern.test(normalized))) return "ask_weather";
 
+        // Поточне фізичне здоров'я — вузький запит до Health Engine.
+        // Важливо: це НЕ те саме, що «як ти себе почуваєш?», де релевантні
+        // також енергія, настрій, голод, втома та загальний стан.
+        const askCurrentHealthPatterns = [
+            /^(як|що)\s+(там\s+)?(твоє|у\s+тебе)\s+здоров['’ʼ]?я[\s?!.,]*$/iu,
+            /^як\s+зі\s+здоров['’ʼ]?ям[\s?!.,]*$/iu,
+            /^що\s+зі\s+здоров['’ʼ]?ям[\s?!.,]*$/iu,
+            /^ти\s+здоровий[\s?!.,]*$/iu,
+            /^(ти\s+)?не\s+захворів[\s?!.,]*$/iu,
+            /^ти\s+(захворів|хворієш)[\s?!.,]*$/iu,
+            /^в\s+тебе\s+(є\s+)?температура[\s?!.,]*$/iu
+        ];
+        if (askCurrentHealthPatterns.some(pattern => pattern.test(normalized))) return "ask_current_health";
+
         const askWellbeingPatterns = [
             /^(ну\s+)?як\s+ти[\s?!.,]*$/iu,
             /^(ну\s+)?як\s+(твої|у\s+тебе)\s+справи[\s?!.,]*$/iu,
             /^(ну\s+)?як\s+справи[\s?!.,]*$/iu,
             /^(як|що)\s+ти\s+себе\s+почуваєш[\s?!.,]*$/iu,
+            /^як\s+самопочуття[\s?!.,]*$/iu,
             /^як\s+(твій\s+)?настрій[\s?!.,]*$/iu,
             /^ти\s+як[\s?!.,]*$/iu
         ];
@@ -449,6 +464,19 @@ class AkiraDialogue {
         if (askActivityPatterns.some(pattern => pattern.test(normalized))) {
             return "ask_activity";
         }
+
+        // Деталі поточної соціальної дії. Коротке «з якими?» працює як
+        // follow-up лише коли поточна дія справді є розмовою.
+        if (/^(з\s+ким|з\s+якими|з\s+якими\s+людьми|з\s+ким\s+ти\s+розмовляєш|з\s+якими\s+людьми\s+розмовляєш)[\s?!.,]*$/iu.test(normalized)) {
+            return "ask_current_people";
+        }
+
+        // Реальна історія дій. Не віддаємо ці питання topic/fallback шару.
+        if (/^(що\s+(ти\s+)?робив|чим\s+(ти\s+)?займався)(\s+перед\s+цим)?[\s?!.,]*$/iu.test(normalized)) return "ask_recent_activity";
+        if (/^(що\s+(ти\s+)?робив|чим\s+(ти\s+)?займався)\s+(весь\s+)?(ранок|зранку|вранці)[\s?!.,]*$/iu.test(normalized)) return "ask_history_morning";
+        if (/^(що\s+(ти\s+)?робив|чим\s+(ти\s+)?займався)\s+(весь\s+)?(день|сьогодні)[\s?!.,]*$/iu.test(normalized)) return "ask_history_today";
+        if (/^(що\s+(ти\s+)?робив|чим\s+(ти\s+)?займався)\s+(весь\s+)?(вечір|увечері|вечором)[\s?!.,]*$/iu.test(normalized)) return "ask_history_evening";
+        if (/^(що\s+(ти\s+)?робив|чим\s+(ти\s+)?займався)\s+вчора[\s?!.,]*$/iu.test(normalized)) return "ask_history_yesterday";
 
         // Причина поточної реальної дії та найближчі плани.
         if (/^(навіщо|а\s+навіщо)\s+(ти\s+)?(це\s+)?(робиш|пішов|їдеш|йдеш|готуєш|прибираєш|гуляєш|читаєш|граєш|дивишся|миєш|переш|пилососиш)[\s?!.,]*$/iu.test(normalized) || /^навіщо\s*[?!.,]*$/iu.test(normalized)) return "ask_action_goal";
@@ -477,8 +505,6 @@ class AkiraDialogue {
         if (/^(якщо\s+не\s+вдома[,\s]+то\s+де|то\s+де|а\s+де|де\s+саме|де\s+ти\s+зараз|ти\s+де|де\s+ти)[\s?!.,]*$/iu.test(normalized)) {
             return "ask_current_location";
         }
-
-        if (/(як\s+ти\s+себе\s+почуваєш|як\s+самопочуття|ти\s+захворів|ти\s+хворієш|тобі\s+погано|в\s+тебе\s+температура)/iu.test(normalized)) return "ask_current_health";
 
         // Біографія та повсякденне життя. Канон з life_profile.json.
         const lifePatterns = [
@@ -1844,6 +1870,114 @@ class AkiraDialogue {
         return "Поки не вирішив, що робитиму далі.";
     }
 
+    personDisplayName(personId) {
+        if (!personId) return null;
+        const people = this.brain.data?.people?.people || this.brain.data?.people || {};
+        if (people[personId]?.name) return people[personId].name;
+        const aliases = { Yani_Bakeneko: "Яні", Kent_White: "Кент", Taras: "Тарас" };
+        return aliases[personId] || String(personId).replaceAll("_", " ");
+    }
+
+    composeCurrentPeopleAnswer() {
+        const action = this.brain.state?.action;
+        if (!action || !["talkToSomeone", "talkToYani"].includes(action.actionId)) {
+            return "Зараз я ні з ким не розмовляю.";
+        }
+        const personId = action.targetPerson || (action.actionId === "talkToYani" ? "Yani_Bakeneko" : null);
+        const name = this.personDisplayName(personId);
+        if (name) return `З ${name}.`;
+        return "Не можу сказати конкретніше, у цій розмові не збережено співрозмовника.";
+    }
+
+    actionHistoryLabel(action) {
+        if (!action) return null;
+        const id = action.actionId;
+        const dynamic = {
+            cookMeal: action.mealName ? `готував ${action.mealName}` : "готував їсти",
+            eatMeal: action.mealName ? `їв ${action.mealName}` : "їв",
+            prepareDrink: action.drinkName ? `готував ${action.drinkName}` : "готував напій",
+            drinkSelected: action.drinkName ? `пив ${action.drinkName}` : "щось пив",
+            travelToLeisure: action.destinationName ? `їхав у ${action.destinationName}` : "їхав у місто"
+        };
+        if (dynamic[id]) return dynamic[id];
+        const labels = {
+            sleep:"спав", rest:"відпочивав", walk:"гуляв", cycle:"катався на велосипеді",
+            read:"читав", listenToMusic:"слухав музику", playGame:"грав",
+            work:"працював", talkToSomeone:"розмовляв з людьми", talkToYani:"розмовляв з Яні",
+            checkSocialNetwork:"перевіряв соцмережі", writePost:"писав допис", think:"думав про всяке",
+            commuteToWork:"їхав на роботу", commuteHome:"їхав додому", washFace:"умивався",
+            shave:"голився", changeClothes:"перевдягався", takeBath:"приймав ванну",
+            startLaundry:"запускав прання", takeLaundryOut:"діставав білизну", hangLaundry:"розвішував білизну",
+            foldLaundry:"складав білизну", wipeDust:"витирав пил", vacuumRoom:"пилососив",
+            mopFloor:"мив підлогу", washWindows:"мив вікна", washDishes:"мив посуд",
+            travelToMassmarket:"йшов у масмаркет", groceryShopping:"купував продукти",
+            returnHomeGroceries:"повертався з продуктами", watchStreamer:"дивився стрім або огляд",
+            returnHomeLeisure:"повертався додому", visitMuseum:"був у музеї", visitPlanetarium:"був у планетарії",
+            visitTheatre:"був у театрі", visitConcert:"був на концерті", goToCinema:"був у кіно",
+            moveRoom:"переходив в іншу кімнату"
+        };
+        return labels[id] || null;
+    }
+
+    historyDateKey(entry) {
+        return entry?.worldFinished?.date || entry?.worldStarted?.date || null;
+    }
+
+    historyMinute(entry) {
+        const time = entry?.worldStarted?.time || entry?.worldFinished?.time;
+        if (!/^\d{1,2}:\d{2}$/u.test(String(time || ""))) return null;
+        const [h,m] = String(time).split(":").map(Number);
+        return h * 60 + m;
+    }
+
+    localDateKey(offsetDays=0) {
+        const d = new Date();
+        d.setDate(d.getDate() + offsetDays);
+        const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,"0"), day=String(d.getDate()).padStart(2,"0");
+        return `${y}-${m}-${day}`;
+    }
+
+    selectHistory(range) {
+        const history = Array.isArray(this.brain.actionHistory) ? this.brain.actionHistory : [];
+        const today = this.localDateKey(0), yesterday = this.localDateKey(-1);
+        return history.filter(entry => {
+            const date = this.historyDateKey(entry);
+            const minute = this.historyMinute(entry);
+            if (range === "yesterday") return date === yesterday;
+            if (date && date !== today) return false;
+            if (range === "morning") return minute != null && minute >= 5*60 && minute < 12*60;
+            if (range === "evening") return minute != null && minute >= 17*60 && minute < 24*60;
+            return range === "today" ? (!date || date === today) : true;
+        });
+    }
+
+    composeRecentActivityAnswer() {
+        const history = Array.isArray(this.brain.actionHistory) ? this.brain.actionHistory : [];
+        const last = [...history].reverse().find(a => this.actionHistoryLabel(a));
+        if (!last) return "Поки не маю збереженої попередньої дії.";
+        return `Перед цим ${this.actionHistoryLabel(last)}.`;
+    }
+
+    composeHistoryAnswer(range) {
+        const selected = this.selectHistory(range).filter(a => this.actionHistoryLabel(a));
+        if (!selected.length) {
+            const empty = {morning:"за цей ранок", evening:"за цей вечір", yesterday:"за вчора", today:"за сьогодні"}[range] || "за цей час";
+            return `У мене немає збережених дій ${empty}. Не хочу вигадувати.`;
+        }
+        // Прибираємо послідовні дублікати і технічні переходи, якщо є змістовні дії.
+        const compact=[];
+        for (const a of selected) {
+            const label=this.actionHistoryLabel(a);
+            if (!label || (compact.length && compact[compact.length-1]===label)) continue;
+            compact.push(label);
+        }
+        const meaningful=compact.filter(x=>x!=="переходив в іншу кімнату");
+        const items=(meaningful.length?meaningful:compact).slice(-8);
+        if (!items.length) return "Нічого помітного за цей час не збереглося.";
+        if (items.length===1) return `Переважно ${items[0]}.`;
+        return `За цей час ${items.slice(0,-1).join(", ")}, а потім ${items[items.length-1]}.`;
+    }
+
     composeStructuredResponse(profile) {
         // Запити, що читають живий стан, не повинні залежати від випадкового
         // dialogue action. Те саме стосується економічних подій/opinions.
@@ -1861,6 +1995,12 @@ class AkiraDialogue {
         if (intent === "ask_current_drink") return [this.composeFoodStateAnswer("drink")];
         if (intent === "ask_current_cooking") return [this.composeFoodStateAnswer("cooking")];
         if (intent === "ask_activity") return [this.composeActivityAnswer(profile)];
+        if (intent === "ask_current_people") return [this.composeCurrentPeopleAnswer()];
+        if (intent === "ask_recent_activity") return [this.composeRecentActivityAnswer()];
+        if (intent === "ask_history_morning") return [this.composeHistoryAnswer("morning")];
+        if (intent === "ask_history_today") return [this.composeHistoryAnswer("today")];
+        if (intent === "ask_history_evening") return [this.composeHistoryAnswer("evening")];
+        if (intent === "ask_history_yesterday") return [this.composeHistoryAnswer("yesterday")];
         if (intent === "ask_current_health") return [this.brain.health?.describe?.() || "Нормально почуваюся."];
         if (intent === "ask_action_reason") return [this.composeActionReasonAnswer(profile)];
         if (intent === "ask_action_goal") return [this.composeActionGoalAnswer(profile)];
