@@ -1293,7 +1293,7 @@ finishAction() {
 
         // Домашній простір є окремим шаром усередині location=home.
         // Це зберігає сумісність зі старими правилами activities, які очікують саме "home".
-        this.dailyLife?.prepareAction?.(action);
+        action = this.dailyLife?.prepareAction?.(action) || action;
 
         const duration =
             this.number(
@@ -1375,7 +1375,8 @@ finishAction() {
 
             think: "thinking",
 
-            organizeDesk: "organizing"
+            organizeDesk: "organizing",
+            moveRoom: "moving"
         };
 
         return (

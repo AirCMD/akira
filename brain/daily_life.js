@@ -4,11 +4,12 @@ class AkiraDailyLife {
   init() {
     this.profile = this.brain.data?.life_profile?.lifeProfile || {};
     const state = this.brain.state;
-    state.dailyLife = state.dailyLife || { routines: {}, commute: {}, homeRoom: "cozyRoom", roomHistory: [] };
+    state.dailyLife = state.dailyLife || { routines: {}, commute: {}, homeRoom: "cozyRoom", roomHistory: [], queuedAction: null };
     state.dailyLife.routines = state.dailyLife.routines || {};
     state.dailyLife.commute = state.dailyLife.commute || {};
     state.dailyLife.homeRoom ||= "cozyRoom";
     state.dailyLife.roomHistory = Array.isArray(state.dailyLife.roomHistory) ? state.dailyLife.roomHistory : [];
+    state.dailyLife.queuedAction = state.dailyLife.queuedAction || null;
     return this;
   }
 
@@ -61,9 +62,58 @@ class AkiraDailyLife {
   }
 
   prepareAction(action) {
-    if (!action || this.location() !== "home") return;
+    if (!action || this.location() !== "home" || action.actionId === "moveRoom") return action;
     const target = action.homeRoom || this.roomForAction(action.actionId);
-    if (target) this.setHomeRoom(target, `action:${action.actionId}`);
+    if (!target || !this.getRoom(target) || target === this.currentRoomId()) return action;
+
+    // Не телепортуємо Акіру. Спочатку він реально переходить у потрібну кімнату,
+    // а початкова дія чекає в черзі до завершення переходу.
+    const room = this.getRoom(target);
+    const queued = { ...action, homeRoom: target };
+    this.brain.state.dailyLife.queuedAction = queued;
+    return {
+      type: "action",
+      actionId: "moveRoom",
+      category: "movement",
+      duration: this.roomTravelMinutes(this.currentRoomId(), target),
+      reason: `треба перейти до: ${room?.name || target}`,
+      targetRoom: target,
+      targetRoomName: room?.name || target,
+      targetRoomPhrase: this.roomDestinationPhrase(target),
+      score: 1100,
+      factors: { spatialMovement: 1100 }
+    };
+  }
+
+  roomDestinationPhrase(roomId) {
+    const forms = {
+      glassBedroom: "скляну спальню",
+      cozyRoom: "затишну другу кімнату",
+      spaceRoom: "кімнату в космічному стилі",
+      seaRoom: "кімнату в морському стилі",
+      kitchen: "кухню",
+      bathroom: "ванну",
+      toilet: "туалет",
+      balcony: "на балкон",
+      hallway: "коридор"
+    };
+    return forms[roomId] || (this.getRoom(roomId)?.name || roomId);
+  }
+
+  roomTravelMinutes(from, to) {
+    if (!from || from === to) return 1;
+    const near = new Set([
+      "glassBedroom:balcony", "balcony:glassBedroom",
+      "cozyRoom:balcony", "balcony:cozyRoom",
+      "cozyRoom:hallway", "hallway:cozyRoom",
+      "glassBedroom:hallway", "hallway:glassBedroom",
+      "kitchen:hallway", "hallway:kitchen",
+      "bathroom:hallway", "hallway:bathroom",
+      "toilet:hallway", "hallway:toilet",
+      "spaceRoom:hallway", "hallway:spaceRoom",
+      "seaRoom:hallway", "hallway:seaRoom"
+    ]);
+    return near.has(`${from}:${to}`) ? 2 : 4;
   }
 
   action(actionId, duration, reason, extra={}) {
@@ -72,6 +122,17 @@ class AkiraDailyLife {
 
   getPriorityAction(situation={}) {
     if (this.brain.state.action) return null;
+
+    // Дія, заради якої Акіра перейшов у кімнату, має виконатися наступною,
+    // а не загубитися через новий цикл прийняття рішень.
+    const queued = this.brain.state.dailyLife?.queuedAction;
+    if (queued) {
+      const target = queued.homeRoom || this.roomForAction(queued.actionId);
+      if (!target || target === this.currentRoomId()) {
+        this.brain.state.dailyLife.queuedAction = null;
+        return queued;
+      }
+    }
     const t = this.minutes(situation.time || this.brain.state.world?.time);
     const loc = this.location();
     const work = this.profile.work || {};
@@ -114,6 +175,10 @@ class AkiraDailyLife {
     const now = new Date().toISOString();
     const routines = this.brain.state.dailyLife.routines;
     if (["washFace","shave","changeClothes","doLaundry","takeBath"].includes(id)) routines[id] = now;
+
+    if (id === "moveRoom" && action.targetRoom) {
+      this.setHomeRoom(action.targetRoom, action.reason || "movement");
+    }
 
     if (id === "commuteToWork") {
       this.brain.state.world.location = "techsmith";

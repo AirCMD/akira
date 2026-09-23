@@ -1412,6 +1412,16 @@ class AkiraDialogue {
         const action = profile.state?.action;
         const id = action?.actionId || "";
 
+        if (id === "moveRoom") {
+            const destination = action?.targetRoomPhrase || "іншу кімнату";
+            const prefix = String(destination).startsWith("на ") ? "" : "в ";
+            return this.chooseTemplate([
+                `Йду ${prefix}${destination}.`,
+                `Переходжу зараз ${prefix}${destination}.`,
+                `Та йду ${prefix}${destination}.`
+            ]);
+        }
+
         const names = {
             sleep: "Сплю. Хоча якщо я тобі відповідаю, то вже не дуже переконливо.",
             eat: "Їм зараз.",
