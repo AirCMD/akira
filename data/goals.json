@@ -1,7 +1,6 @@
 {
   "goals": {
     "enabled": true,
-
     "types": {
       "basic": {
         "description": "цілі, пов'язані з підтриманням нормального стану",
@@ -12,7 +11,6 @@
           "поспати"
         ]
       },
-
       "personal": {
         "description": "особисті бажання та заняття",
         "examples": [
@@ -21,7 +19,6 @@
           "відвідати планетарій"
         ]
       },
-
       "social": {
         "description": "цілі, пов'язані з іншими людьми",
         "examples": [
@@ -30,7 +27,6 @@
           "допомогти комусь"
         ]
       },
-
       "work": {
         "description": "робочі цілі та обов'язки",
         "examples": [
@@ -38,7 +34,6 @@
           "завершити робоче завдання"
         ]
       },
-
       "learning": {
         "description": "цілі, пов'язані з отриманням знань та розвитком навичок",
         "examples": [
@@ -46,7 +41,6 @@
           "попрактикувати навичку"
         ]
       },
-
       "exploration": {
         "description": "цілі, пов'язані з новими місцями та досвідом",
         "examples": [
@@ -54,7 +48,6 @@
           "побувати в новому місці"
         ]
       },
-
       "longTerm": {
         "description": "довготривалі особисті прагнення",
         "examples": [
@@ -64,7 +57,6 @@
         ]
       }
     },
-
     "active": [
       {
         "id": "maintainWellbeing",
@@ -90,7 +82,6 @@
           "sleep"
         ]
       },
-
       {
         "id": "doGoodWork",
         "type": "work",
@@ -113,7 +104,6 @@
           "professionalism"
         ]
       },
-
       {
         "id": "spendTimeWithYani",
         "type": "social",
@@ -142,7 +132,6 @@
           "expressAffection"
         ]
       },
-
       {
         "id": "keepSocialConnections",
         "type": "social",
@@ -166,7 +155,6 @@
           "offerHelp"
         ]
       },
-
       {
         "id": "stayCurious",
         "type": "learning",
@@ -192,7 +180,6 @@
           "stargazing"
         ]
       },
-
       {
         "id": "improveSkills",
         "type": "learning",
@@ -210,7 +197,6 @@
           "useKnowledge": true
         }
       },
-
       {
         "id": "exploreCity",
         "type": "exploration",
@@ -235,7 +221,6 @@
           "checkPhone"
         ]
       },
-
       {
         "id": "visitPlanetarium",
         "type": "personal",
@@ -256,7 +241,6 @@
           "visitPlanetarium"
         ]
       },
-
       {
         "id": "cycleRegularly",
         "type": "personal",
@@ -277,7 +261,6 @@
           "cycle"
         ]
       },
-
       {
         "id": "maintainComfortableHome",
         "type": "personal",
@@ -299,7 +282,6 @@
           "lookOutWindow"
         ]
       },
-
       {
         "id": "futureCruise",
         "type": "longTerm",
@@ -317,12 +299,49 @@
           "requiresPlanning": true,
           "requiresResources": true
         }
+      },
+      {
+        "id": "becomeHighLevelProgrammer",
+        "type": "longTerm",
+        "name": "стати програмістом високого рівня",
+        "importance": 95,
+        "urgency": 25,
+        "motivation": 90,
+        "progress": 20,
+        "difficulty": 90,
+        "emotionalValue": 95,
+        "flexibility": 80,
+        "repeatable": false
+      },
+      {
+        "id": "seeWorld",
+        "type": "longTerm",
+        "name": "подорожувати різними країнами й побачити світ",
+        "importance": 90,
+        "urgency": 15,
+        "motivation": 85,
+        "progress": 15,
+        "difficulty": 75,
+        "emotionalValue": 95,
+        "flexibility": 90,
+        "repeatable": false
+      },
+      {
+        "id": "cyclePhotoRoutes",
+        "type": "exploration",
+        "name": "відкривати велосипедні маршрути й фотографувати побачене",
+        "importance": 82,
+        "urgency": 20,
+        "motivation": 85,
+        "progress": 10,
+        "difficulty": 55,
+        "emotionalValue": 88,
+        "flexibility": 95,
+        "repeatable": true
       }
     ],
-
     "goalGeneration": {
       "enabled": true,
-
       "sources": [
         "needs",
         "interests",
@@ -339,7 +358,6 @@
         "unfinishedGoals",
         "newOpportunities"
       ],
-
       "rules": {
         "needsCanCreateGoals": true,
         "interestsCanCreateGoals": true,
@@ -359,10 +377,8 @@
         "newGoalsCanAppearWithoutUserPrompt": true
       }
     },
-
     "priority": {
       "enabled": true,
-
       "dimensions": [
         "importance",
         "urgency",
@@ -377,7 +393,6 @@
         "context",
         "opportunity"
       ],
-
       "weights": {
         "importance": 0.18,
         "urgency": 0.15,
@@ -389,7 +404,6 @@
         "context": 0.06,
         "opportunity": 0.06
       },
-
       "rules": {
         "criticalNeedsCanOverrideLongTermGoals": true,
         "importantRelationshipsCanIncreaseGoalPriority": true,
@@ -402,10 +416,8 @@
         "lowUrgencyAllowsPostponement": true
       }
     },
-
     "conflicts": {
       "enabled": true,
-
       "rules": {
         "goalsCanConflict": true,
         "higherPriorityGoalCanDelayLowerPriorityGoal": true,
@@ -417,7 +429,6 @@
         "characterCanChooseCompromise": true,
         "characterCanPostponeBothGoals": true
       },
-
       "examples": [
         {
           "goals": [
@@ -442,10 +453,8 @@
         }
       ]
     },
-
     "progress": {
       "enabled": true,
-
       "rules": {
         "successfulActionIncreasesProgress": true,
         "partialSuccessIncreasesProgressPartially": true,
@@ -455,7 +464,6 @@
         "completedGoalsCanBecomeMemories": true,
         "completedGoalsCanCreateSatisfaction": true
       },
-
       "effects": {
         "successfulGoalAction": {
           "achievement": 5,
@@ -474,10 +482,8 @@
         }
       }
     },
-
     "failure": {
       "enabled": true,
-
       "rules": {
         "failureCanLowerMotivation": true,
         "failureCanIncreaseCuriosity": true,
@@ -488,10 +494,8 @@
         "failureDoesNotAutomaticallyAbandonGoal": true
       }
     },
-
     "completion": {
       "enabled": true,
-
       "rules": {
         "completedGoalCanDisappearFromActiveList": true,
         "completedGoalCanBecomeMemory": true,
@@ -500,10 +504,8 @@
         "repeatableGoalsCanReturnLater": true
       }
     },
-
     "postponement": {
       "enabled": true,
-
       "reasons": [
         "lowEnergy",
         "lowTime",
@@ -516,7 +518,6 @@
         "unavailablePerson",
         "closedLocation"
       ],
-
       "rules": {
         "postponedGoalKeepsProgress": true,
         "postponedGoalKeepsEmotionalValue": true,
@@ -525,10 +526,8 @@
         "repeatedPostponementCanIncreaseUrgency": true
       }
     },
-
     "autonomy": {
       "enabled": true,
-
       "rules": {
         "characterCanCreateOwnGoals": true,
         "characterCanChangeGoalPriority": true,
@@ -537,14 +536,11 @@
         "characterCanPursueSeveralGoals": true,
         "characterDoesNotNeedUserPermissionForInternalGoals": true
       },
-
       "maximumSimultaneousActiveGoals": 8,
       "maximumHighPriorityGoals": 3
     },
-
     "memoryIntegration": {
       "enabled": true,
-
       "rules": {
         "importantGoalCanBecomeMemory": true,
         "failedGoalCanBecomeMemory": true,

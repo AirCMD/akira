@@ -1,13 +1,11 @@
 {
   "world": {
     "enabled": true,
-
     "calendar": {
       "year": 2026,
       "month": 9,
       "day": 22,
       "dayOfWeek": "tuesday",
-
       "week": {
         "monday": 1,
         "tuesday": 2,
@@ -17,12 +15,10 @@
         "saturday": 6,
         "sunday": 7
       },
-
       "season": {
         "current": "autumn",
         "northernHemisphere": true
       },
-
       "holidays": {
         "halloween": {
           "month": 10,
@@ -38,15 +34,12 @@
         }
       }
     },
-
     "time": {
       "enabled": true,
-
       "current": {
         "hour": 16,
         "minute": 0
       },
-
       "dayPeriods": {
         "night": {
           "start": 0,
@@ -73,12 +66,10 @@
           "end": 24
         }
       },
-
       "sun": {
         "sunrise": "06:40",
         "sunset": "18:50"
       },
-
       "simulation": {
         "enabled": true,
         "realTime": true,
@@ -87,10 +78,8 @@
         "allowPause": true
       }
     },
-
     "location": {
       "current": "home",
-
       "places": {
         "home": {
           "name": "квартира Акіри",
@@ -125,7 +114,6 @@
             "stargazing"
           ]
         },
-
         "techsmith": {
           "name": "Техсмітник",
           "type": "workplace",
@@ -142,7 +130,6 @@
             "talkToSomeone"
           ]
         },
-
         "cityCenter": {
           "name": "центр Демо",
           "type": "city",
@@ -155,7 +142,6 @@
             "talkToSomeone"
           ]
         },
-
         "park": {
           "name": "міський парк",
           "type": "park",
@@ -172,7 +158,6 @@
             "stargazing"
           ]
         },
-
         "museum": {
           "name": "міський музей",
           "type": "museum",
@@ -185,7 +170,6 @@
             "visitMuseum"
           ]
         },
-
         "planetarium": {
           "name": "планетарій",
           "type": "planetarium",
@@ -199,7 +183,6 @@
             "stargazing"
           ]
         },
-
         "theatre": {
           "name": "міський театр",
           "type": "theatre",
@@ -212,7 +195,6 @@
             "visitTheatre"
           ]
         },
-
         "cinema": {
           "name": "кінотеатр",
           "type": "cinema",
@@ -225,7 +207,6 @@
             "goToCinema"
           ]
         },
-
         "concertHall": {
           "name": "концертна зала",
           "type": "concertHall",
@@ -238,7 +219,6 @@
             "visitConcert"
           ]
         },
-
         "cafe": {
           "name": "міське кафе",
           "type": "cafe",
@@ -255,7 +235,6 @@
             "talkToSomeone"
           ]
         },
-
         "water": {
           "name": "міська водойма",
           "type": "water",
@@ -265,7 +244,6 @@
             "fishing"
           ]
         },
-
         "rooftop": {
           "name": "дах будинку",
           "type": "rooftop",
@@ -276,7 +254,6 @@
             "lookOutWindow"
           ]
         },
-
         "workshop": {
           "name": "майстерня",
           "type": "workshop",
@@ -288,38 +265,35 @@
         }
       }
     },
-
     "workSchedule": {
       "enabled": true,
-
       "workplace": "techsmith",
       "position": "продавець-консультант",
-
       "weeklySchedule": {
         "monday": {
           "working": true,
           "start": "10:00",
-          "end": "18:00"
+          "end": "16:00"
         },
         "tuesday": {
           "working": true,
           "start": "10:00",
-          "end": "18:00"
+          "end": "16:00"
         },
         "wednesday": {
           "working": true,
           "start": "10:00",
-          "end": "18:00"
+          "end": "16:00"
         },
         "thursday": {
           "working": true,
           "start": "10:00",
-          "end": "18:00"
+          "end": "16:00"
         },
         "friday": {
           "working": true,
           "start": "10:00",
-          "end": "18:00"
+          "end": "16:00"
         },
         "saturday": {
           "working": false
@@ -328,7 +302,6 @@
           "working": false
         }
       },
-
       "breaks": [
         {
           "start": "13:00",
@@ -339,19 +312,22 @@
           "end": "16:15"
         }
       ],
-
       "rules": {
         "workHasPriorityDuringShift": true,
         "canTakeBreak": true,
         "canLeaveAfterShift": true,
         "canStayAfterShift": false,
         "canRefuseExtraWorkWhenExhausted": true
+      },
+      "commute": {
+        "durationMinutes": 45,
+        "metroStation": "Сутінки",
+        "trolleybus": 25,
+        "stops": 3
       }
     },
-
     "events": {
       "enabled": true,
-
       "types": {
         "personal": {
           "importance": 80
@@ -372,11 +348,8 @@
           "importance": 40
         }
       },
-
       "current": [],
-
       "scheduled": [],
-
       "rules": {
         "eventsCanInterruptActivities": true,
         "importantEventsCanOverridePreferences": true,
@@ -386,7 +359,6 @@
         "eventsCanChangeLocation": true
       }
     },
-
     "availability": {
       "people": {
         "Yani_Bakeneko": {
@@ -435,7 +407,6 @@
           "canTalk": true
         }
       },
-
       "rules": {
         "availabilityCanChange": true,
         "unavailablePeopleCannotBeSelectedForMeeting": true,
@@ -443,23 +414,19 @@
         "locationMattersForPhysicalMeeting": true
       }
     },
-
     "transport": {
       "available": [
         "walk",
         "bicycle",
         "publicTransport"
       ],
-
       "bicycle": {
         "available": true,
         "condition": 90
       },
-
       "publicTransport": {
         "available": true
       },
-
       "rules": {
         "weatherCanModifyTransportChoice": true,
         "energyCanModifyTransportChoice": true,
@@ -467,7 +434,6 @@
         "bicycleRequiresSuitableConditions": true
       }
     },
-
     "environment": {
       "city": {
         "name": "Демо",
@@ -475,13 +441,11 @@
         "urban": true,
         "populationLevel": "medium"
       },
-
       "neighborhood": {
         "type": "residential",
         "noiseLevel": 35,
         "safetyLevel": 90
       },
-
       "homeEnvironment": {
         "comfort": 90,
         "privacy": 85,
@@ -489,12 +453,9 @@
         "naturalLight": 85
       }
     },
-
     "simulation": {
       "enabled": true,
-
       "updateIntervalMinutes": 5,
-
       "systems": [
         "time",
         "calendar",
@@ -507,7 +468,6 @@
         "activities",
         "events"
       ],
-
       "rules": {
         "worldContinuesWithoutUser": true,
         "timeContinuesWithoutUser": true,

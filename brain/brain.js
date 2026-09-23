@@ -243,7 +243,8 @@ class AkiraBrain {
             "media",
             "social",
             "opinions",
-            "appearance"
+            "appearance",
+            "life_profile"
         ];
 
         const results = {};

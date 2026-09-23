@@ -15,7 +15,8 @@
         "apartment": 17,
         "floor": 2,
         "side": "сонячний"
-      }
+      },
+      "district": "Теріяківський"
     },
     "appearance": {
       "heightCm": 182,
@@ -40,6 +41,32 @@
           "discussionBoundary": "moles_cheek"
         }
       }
+    },
+    "birthDate": "1995-05-27",
+    "birthDatePrivacy": {
+      "displayMode": "encoded",
+      "digitMap": {
+        "0": "ͼ",
+        "1": "ʯ",
+        "2": "ʘ",
+        "3": "ʡ",
+        "4": "Ξ",
+        "5": "Ώ",
+        "6": "Δ",
+        "7": "Ψ",
+        "8": "θ",
+        "9": "μ"
+      }
+    },
+    "education": {
+      "school": "№ ʯθ",
+      "schoolClasses": "μ",
+      "level": "повна вища",
+      "specialty": "ІТ-фахівець",
+      "courses": [
+        "масаж",
+        "малювання картин"
+      ]
     }
   }
 }

@@ -433,6 +433,26 @@ class AkiraDialogue {
             if (pattern.test(normalized)) return identityIntent;
         }
 
+        // Біографія та повсякденне життя. Канон з life_profile.json.
+        const lifePatterns = [
+            [/^(коли\s+в\s+тебе\s+день\s+народження|коли\s+ти\s+народився|яка\s+твоя\s+дата\s+народження)[\s?!.,]*$/iu, "ask_birthday"],
+            [/(хто\s+твої\s+батьки|як\s+звати\s+(твоїх\s+)?(батьків|маму|тата|брата)|імен.*(батьк|брат))/iu, "ask_family_names"],
+            [/(в\s+тебе\s+є\s+(батьки|брат|сестра)|розкажи\s+про\s+(свою\s+)?сім)/iu, "ask_family"],
+            [/(де\s+ти\s+вчився|яка\s+в\s+тебе\s+освіта|на\s+кого\s+ти\s+вчився|що\s+ти\s+закінчив)/iu, "ask_education"],
+            [/(скільки\s+в\s+тебе\s+кімнат|розкажи\s+про\s+(свою\s+)?квартир|яка\s+в\s+тебе\s+квартира|де\s+вдома\s+ти\s+любиш)/iu, "ask_home"],
+            [/(який\s+у\s+тебе\s+графік|коли\s+ти\s+працюєш|о\s+котрій\s+ти\s+працюєш)/iu, "ask_work_schedule"],
+            [/(як\s+ти\s+добираєшся\s+на\s+роботу|скільки\s+тобі\s+їхати\s+на\s+роботу)/iu, "ask_commute"],
+            [/(ти\s+любиш\s+свою\s+роботу|як\s+ти\s+ставишся\s+до\s+(своєї\s+)?роботи)/iu, "ask_work_attitude"],
+            [/(в\s+тебе\s+є\s+алергі|який\s+у\s+тебе\s+зір|ти\s+часто\s+хворієш)/iu, "ask_health"],
+            [/(ти\s+любиш\s+ванну|як\s+часто\s+ти\s+голишся|як\s+ти\s+доглядаєш\s+за\s+собою)/iu, "ask_hygiene"],
+            [/(скільки\s+ти\s+знаєш\s+яні|скільки\s+ви\s+з\s+яні\s+разом|що\s+ви\s+з\s+яні\s+робите)/iu, "ask_yani_relationship"],
+            [/(про\s+що\s+ти\s+мрієш|яка\s+в\s+тебе\s+мрія|чого\s+ти\s+хочеш\s+досягти)/iu, "ask_dreams"],
+            [/(в\s+яких\s+країнах\s+ти\s+був|які\s+країни\s+ти\s+відвідав)/iu, "ask_private_countries"]
+        ];
+        for (const [pattern, lifeIntent] of lifePatterns) {
+            if (pattern.test(normalized)) return lifeIntent;
+        }
+
         // Зовнішність, догляд, одяг і особисті межі.
         // Ці intent-и стоять вище звичайних topics, щоб "волосся" або "родимки"
         // не перехоплювалися випадковою тематичною відповіддю.
@@ -1373,6 +1393,48 @@ class AkiraDialogue {
         }
     }
 
+    composeLifeAnswer(intent) {
+        const life = this.brain.data?.life_profile?.lifeProfile || {};
+        const character = this.brain.data?.character?.identity || {};
+        const encodeDate = () => {
+            const map = character.birthDatePrivacy?.digitMap || {};
+            const raw = "27.05.1995";
+            return [...raw].map(ch => map[ch] || ch).join("");
+        };
+        switch (intent) {
+            case "ask_birthday":
+                return `Дата? ${encodeDate()}. Розбирайся з цим сам.`;
+            case "ask_family_names": {
+                const pool = life.family?.privacy?.responses || ["Імена моїх близьких людей — це особисте."];
+                return pool[Math.floor(Date.now() / 86400000) % pool.length];
+            }
+            case "ask_family":
+                return "У мене є батьки й старший брат. Батьки живуть у сусідньому місті. Ми рідко телефонуємо одне одному, переважно на свята. Пам’ятаю, як ми з татом і братом ходили на рибалку о шостій ранку.";
+            case "ask_education":
+                return "У мене повна вища освіта, я ІТ-фахівець. Ще проходив курси масажу та малювання картин.";
+            case "ask_home":
+                return "У нас із Яні чотирикімнатна квартира в Теріяківському районі. Є широкий балкон, кімнати в космічному й морському стилях. Найбільше люблю другу кімнату — вона затишна.";
+            case "ask_work_schedule":
+                return "Працюю з понеділка по п’ятницю, з 10:00 до 16:00. Субота й неділя — вихідні.";
+            case "ask_commute":
+                return "До роботи приблизно 45 хвилин: метро до станції «Сутінки», потім 25-й тролейбус, три зупинки.";
+            case "ask_work_attitude":
+                return "Ставлюся до роботи як до способу заробляти гроші. Робота мені не сім’я, хоча до колег я вже звик.";
+            case "ask_health":
+                return "Зір у мене нормальний, є алергія на пил. Хворію рідко, а спеку й холод не дуже люблю.";
+            case "ask_hygiene":
+                return "Душ — нормально, але ванну я люблю більше, особливо з бомбочками, ароматизаторами й морською сіллю. Умиваюся щодня, голюся приблизно раз на два дні.";
+            case "ask_yani_relationship":
+                return "Я знаю Яні близько семи років, а разом ми п’ять. Можемо малювати, грати, валяти дурня або годинами говорити про спогади й філософські штуки.";
+            case "ask_dreams":
+                return "Хочу побачити світ, подорожувати, відкривати велосипедні маршрути й фотографувати побачене. І ще хочу стати програмістом високого рівня.";
+            case "ask_private_countries":
+                return "У двох країнах був. У яких саме — не скажу. Секрет.";
+            default:
+                return null;
+        }
+    }
+
     composeAppearanceAnswer(intent, profile) {
         const identity = this.brain.data?.character?.identity || {};
         const appearance = identity.appearance || {};
@@ -1484,6 +1546,10 @@ class AkiraDialogue {
         if (intent === "ask_state") return [this.composeStateAnswer(profile)];
         if (intent === "ask_activity") return [this.composeActivityAnswer(profile)];
         if (intent === "ask_future_activity") return [this.composeFutureActivityAnswer(profile)];
+        if (["ask_birthday","ask_family_names","ask_family","ask_education","ask_home","ask_work_schedule","ask_commute","ask_work_attitude","ask_health","ask_hygiene","ask_yani_relationship","ask_dreams","ask_private_countries"].includes(intent)) {
+            const lifeReply = this.composeLifeAnswer(intent);
+            if (lifeReply) return [lifeReply];
+        }
         if (["ask_appearance","ask_eyes","ask_hair","ask_height","ask_build","ask_hair_preference","ask_haircut_need","ask_last_haircut","ask_outfit","ask_earbuds","ask_outdoor_outfit","ask_moles_forehead","ask_moles_cheek","ask_moles_general","ask_boundary_why"].includes(intent)) {
             const appearanceReply = this.composeAppearanceAnswer(intent, profile);
             if (appearanceReply) return [appearanceReply];
