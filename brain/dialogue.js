@@ -1423,7 +1423,7 @@ class AkiraDialogue {
             listenToMusic: "Слухаю музику.",
             playGame: "Граю трохи.",
             work: "Працюю зараз.",
-            talkToSomeone: "Розмовляю дещо з людьми.",
+            talkToSomeone: "Розмовляю з людьми.",
             talkToYani: "Розмовляю з Яні.",
             checkSocialNetwork: "Перевіряю соцмережі.",
             writePost: "Пишу допис.",
@@ -1447,10 +1447,12 @@ class AkiraDialogue {
             return `Зараз я зайнятий: ${activity}.`;
         }
 
+        // idle означає саме відсутність конкретної дії. Не вигадуємо
+        // «відпочиваю», якщо мозок не виконує action=rest.
         return this.chooseTemplate([
-            "Зараз нічим особливим. Просто відпочиваю.",
             "Та нічим конкретним зараз.",
-            "Поки нічим особливим не зайнятий."
+            "Поки нічим особливим не зайнятий.",
+            "Зараз нічим конкретним не займаюся."
         ]);
     }
 
@@ -2385,6 +2387,16 @@ class AkiraDialogue {
     // ФІНАЛІЗАЦІЯ
     // =========================================================
 
+    isLiveStateIntent(intent) {
+        return [
+            "ask_sleeping",
+            "ask_state",
+            "ask_activity",
+            "ask_current_location",
+            "ask_current_movie"
+        ].includes(intent);
+    }
+
     finalizeResponse(parts, profile) {
 
         let text =
@@ -2418,12 +2430,15 @@ class AkiraDialogue {
                 this.settings.maxEmoji
             );
 
+        // Для запитів про живий стан повтор тієї самої правдивої відповіді
+        // кращий за випадковий fallback. Інакше п'яте «спиш?» раптом
+        // перетворювалося на «Щось я втратив нитку».
         if (
             this.settings.avoidImmediateRepeat &&
-            this.isImmediateRepeat(text)
+            this.isImmediateRepeat(text) &&
+            !this.isLiveStateIntent(profile?.analysis?.intent)
         ) {
-            text =
-                this.fallbackResponse(profile);
+            text = this.fallbackResponse(profile);
         }
 
         return {
