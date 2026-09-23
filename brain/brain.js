@@ -258,7 +258,8 @@ class AkiraBrain {
             "yani",
             "yani_interactions",
             "work_life",
-            "inventory_money"
+            "inventory_money",
+            "self_model"
         ];
 
         const results = {};
@@ -684,7 +685,8 @@ class AkiraBrain {
             ["yaniLife", "AkiraYaniLife"],
             ["yaniInteractions", "AkiraYaniInteractions"],
             ["workLife", "AkiraWorkLife"],
-            ["inventoryMoney", "AkiraInventoryMoney"]
+            ["inventoryMoney", "AkiraInventoryMoney"],
+            ["selfModel", "AkiraSelfModel"]
         ];
         for (const [property, globalName] of modules) {
             const Ctor = window[globalName];
@@ -785,6 +787,7 @@ class AkiraBrain {
         this.yaniLife?.update?.(simulatedMinutes);
         this.yaniInteractions?.update?.(simulatedMinutes);
         this.workLife?.ensureDay?.();
+        this.selfModel?.update?.(simulatedMinutes);
 
         this.updateMemory(
             simulatedMinutes
@@ -1770,7 +1773,13 @@ finishAction() {
             conversation:
                 {
                     ...this.state.conversation
-                }
+                },
+
+            selfModel: this.state.selfModel ? {
+                current: { ...(this.state.selfModel.current || {}) },
+                desires: [...(this.state.selfModel.desires || [])],
+                conflicts: [...(this.state.selfModel.conflicts || [])]
+            } : null
         };
     }
 
