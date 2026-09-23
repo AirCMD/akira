@@ -6,6 +6,7 @@ class AkiraContextualKnowledge {
         this.brain = brain;
         this.context = { entityId: null, property: null, at: 0 };
         this.contextTtl = 5 * 60 * 1000;
+        this.topicTurns = {};
     }
 
     init() {}
@@ -26,7 +27,11 @@ class AkiraContextualKnowledge {
         for (const [id, entity] of Object.entries(this.entities())) {
             for (const alias of (entity.aliases || [])) {
                 const a = this.normalize(alias);
-                if (a && n.includes(a) && (!best || a.length > best.alias.length)) best = { id, entity, alias: a };
+                // Шукаємо цілу фразу, а не підрядок усередині іншого слова.
+                // Інакше «кіноцефали» легко перетворюються на «кіно».
+                const haystack = ` ${n} `;
+                const needle = ` ${a} `;
+                if (a && haystack.includes(needle) && (!best || a.length > best.alias.length)) best = { id, entity, alias: a };
             }
         }
         return best;
@@ -34,10 +39,11 @@ class AkiraContextualKnowledge {
 
     inferProperty(text) {
         const n = this.normalize(text);
-        if (/\b(які саме|який саме|які конкретно|детальніше|розкажи детальніше)\b/u.test(n)) return "details";
-        if (/\b(подобається|подобаються|любиш|улюблен)/u.test(n)) return "preference";
-        if (/\b(у тебе є|є у тебе|маєш)\b/u.test(n)) return "ownership";
-        if (/\b(що думаєш|як ставишся|ставлення)\b/u.test(n)) return "opinion";
+        if (/(^| )(хто такі|хто такий|хто така|що таке|що означає|що значить)( |$)/u.test(n)) return "definition";
+        if (/(^| )(які саме|який саме|які конкретно|детальніше|розкажи детальніше)( |$)/u.test(n)) return "details";
+        if (/(^| )(подобається|подобаються|любиш|улюблен)/u.test(n)) return "preference";
+        if (/(^| )(у тебе є|є у тебе|маєш)( |$)/u.test(n)) return "ownership";
+        if (/(^| )(що думаєш|як ставишся|ставлення)( |$)/u.test(n)) return "opinion";
         return null;
     }
 
@@ -102,6 +108,18 @@ class AkiraContextualKnowledge {
         if (!entity) return null;
         this.remember(q);
 
+        if (q.property === "definition") {
+            if (entity.category === "low_interest_terms") {
+                const turns = (this.topicTurns[q.entityId] || 0) + 1;
+                this.topicTurns[q.entityId] = turns;
+                if (turns >= 3) return "Я знаю, що це означає, але вже казав: мені ця тема не цікава. Давай не будемо її розкручувати.";
+                const ending = entity.discussion === "avoid"
+                    ? " Але такі теми я не хочу особливо обговорювати."
+                    : " Але я цим особливо не цікавлюся.";
+                return (entity.definition || entity.summary || "Знаю, що це таке.") + ending;
+            }
+            return entity.definition || entity.detailAnswer || entity.summary || null;
+        }
         if (q.property === "details") return entity.detailAnswer || entity.summary || null;
         if (q.property === "preference") return entity.detailAnswer || entity.summary || null;
         if (q.property === "ownership") {
@@ -112,6 +130,12 @@ class AkiraContextualKnowledge {
             return entity.summary || "Не пам'ятаю, чи є в мене таке.";
         }
         if (q.entityId === "nightlights" && /батарей/u.test(this.normalize(text))) return entity.batteryRelation || entity.summary;
+        if (entity.category === "low_interest_terms") {
+            const turns = (this.topicTurns[q.entityId] || 0) + 1;
+            this.topicTurns[q.entityId] = turns;
+            if (turns >= 3) return "Я вже сказав, що мене ця тема не дуже цікавить. Давай про щось інше.";
+            if (q.property === "opinion") return entity.summary || "Особливої думки не маю. Просто не моя тема.";
+        }
         return entity.summary || entity.detailAnswer || null;
     }
 }
