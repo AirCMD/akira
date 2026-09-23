@@ -1,0 +1,24 @@
+{
+  "health": {
+    "baseline": {"temperature": 36.6, "wellbeing": 88},
+    "illness": {
+      "enabled": true,
+      "seasonRiskPerSimDay": {"winter": 0.018, "spring": 0.010, "summer": 0.004, "autumn": 0.016},
+      "fatigueMultiplierAbove": 65,
+      "lowEnergyMultiplierBelow": 35,
+      "types": {
+        "cold": {"weight": 0.78, "durationSimHours": [36, 84], "peakTemperature": [37.0, 38.0], "symptoms": ["нежить", "першіння в горлі", "слабкість"]},
+        "flu": {"weight": 0.22, "durationSimHours": [60, 120], "peakTemperature": [37.8, 39.0], "symptoms": ["слабкість", "ломота", "головний біль", "озноб"]}
+      }
+    },
+    "allergy": {
+      "enabled": true,
+      "trigger": "dust",
+      "dustThreshold": 58,
+      "riskPerSimHourAtThreshold": 0.012,
+      "durationSimMinutes": [25, 120],
+      "symptoms": ["чхання", "подразнення носа", "сльозяться очі"]
+    },
+    "behavior": {"restSeverity": 55, "strongRestSeverity": 72, "avoidLeisureSeverity": 45}
+  }
+}

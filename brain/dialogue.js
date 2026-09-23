@@ -478,6 +478,8 @@ class AkiraDialogue {
             return "ask_current_location";
         }
 
+        if (/(як\s+ти\s+себе\s+почуваєш|як\s+самопочуття|ти\s+захворів|ти\s+хворієш|тобі\s+погано|в\s+тебе\s+температура)/iu.test(normalized)) return "ask_current_health";
+
         // Біографія та повсякденне життя. Канон з life_profile.json.
         const lifePatterns = [
             [/^(коли\s+в\s+тебе\s+день\s+народження|коли\s+ти\s+народився|яка\s+твоя\s+дата\s+народження)[\s?!.,]*$/iu, "ask_birthday"],
@@ -1859,6 +1861,7 @@ class AkiraDialogue {
         if (intent === "ask_current_drink") return [this.composeFoodStateAnswer("drink")];
         if (intent === "ask_current_cooking") return [this.composeFoodStateAnswer("cooking")];
         if (intent === "ask_activity") return [this.composeActivityAnswer(profile)];
+        if (intent === "ask_current_health") return [this.brain.health?.describe?.() || "Нормально почуваюся."];
         if (intent === "ask_action_reason") return [this.composeActionReasonAnswer(profile)];
         if (intent === "ask_action_goal") return [this.composeActionGoalAnswer(profile)];
         if (intent === "ask_action_outcome") return [this.composeActionOutcomeAnswer(profile)];
