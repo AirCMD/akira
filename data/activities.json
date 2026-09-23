@@ -1118,6 +1118,30 @@
         "bath",
         "relaxing"
       ]
+    },
+    "watchStreamer": {
+      "category": "entertainment",
+      "name": "дивитися стрім",
+      "canInitiate": true,
+      "canRepeat": true,
+      "locations": [
+        "home"
+      ],
+      "duration": {
+        "minimumMinutes": 15,
+        "usualMinutes": 55,
+        "maximumMinutes": 180
+      },
+      "purposes": [
+        "entertainment",
+        "curiosity",
+        "relaxation"
+      ],
+      "selection": {
+        "useMood": true,
+        "useBoredom": true,
+        "useInterests": true
+      }
     }
   },
   "autonomousBehavior": {

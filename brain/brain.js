@@ -245,7 +245,8 @@ class AkiraBrain {
             "opinions",
             "appearance",
             "life_profile",
-            "home"
+            "home",
+            "leisure"
         ];
 
         const results = {};
@@ -658,7 +659,8 @@ class AkiraBrain {
             ["weather", "AkiraWeather"],
             ["opinions", "AkiraOpinions"],
             ["appearance", "AkiraAppearance"],
-            ["dailyLife", "AkiraDailyLife"]
+            ["dailyLife", "AkiraDailyLife"],
+            ["leisure", "AkiraLeisure"]
         ];
         for (const [property, globalName] of modules) {
             const Ctor = window[globalName];
@@ -1030,6 +1032,7 @@ finishAction() {
 
     this.social?.completeAction?.(action);
     this.dailyLife?.completeAction?.(action);
+    this.leisure?.completeAction?.(action);
 
     // Використовуємо тільки тригери, які прямо описані в emotions.json.
     if (action.actionId === "rest") {
@@ -1109,7 +1112,8 @@ finishAction() {
             this.evaluateSituation();
 
         const priorityAction =
-            this.dailyLife?.getPriorityAction?.(situation) || null;
+            this.dailyLife?.getPriorityAction?.(situation) ||
+            this.leisure?.getPriorityAction?.(situation) || null;
 
         const result = priorityAction ||
             this.decision.decide(
@@ -1376,6 +1380,14 @@ finishAction() {
             think: "thinking",
 
             organizeDesk: "organizing",
+            watchStreamer: "watching",
+            travelToLeisure: "traveling",
+            returnHomeLeisure: "traveling",
+            visitMuseum: "visiting",
+            visitPlanetarium: "visiting",
+            visitTheatre: "visiting",
+            visitConcert: "visiting",
+            goToCinema: "watching",
             moveRoom: "moving"
         };
 

@@ -1445,7 +1445,15 @@ class AkiraDialogue {
             shave: "Голюся.",
             changeClothes: "Перевдягаюся.",
             doLaundry: "Займаюся пранням.",
-            takeBath: "Приймаю ванну."
+            takeBath: "Приймаю ванну.",
+            watchStreamer: "Дивлюся стрім або огляд.",
+            travelToLeisure: action?.destinationName ? `Їду зараз у ${action.destinationName}.` : "Кудись вибрався з дому.",
+            returnHomeLeisure: "Повертаюся додому.",
+            visitMuseum: "Я зараз у музеї.",
+            visitPlanetarium: "Я зараз у планетарії.",
+            visitTheatre: "Я зараз у театрі.",
+            visitConcert: "Я зараз на концерті.",
+            goToCinema: "Я зараз у кіно."
         };
 
         if (id && names[id]) {

@@ -53,7 +53,7 @@ class AkiraDailyLife {
     const map = {
       sleep:"glassBedroom", rest:"cozyRoom", read:"cozyRoom", playGame:"cozyRoom",
       checkPhone:"cozyRoom", checkSocialNetwork:"cozyRoom", writePost:"cozyRoom",
-      listenToMusic:"cozyRoom", eat:"kitchen", drink:"kitchen",
+      listenToMusic:"cozyRoom", watchStreamer:"cozyRoom", eat:"kitchen", drink:"kitchen",
       washFace:"bathroom", shave:"bathroom", takeBath:"bathroom",
       lookOutWindow:"balcony", stargazing:"balcony", lookAtFlowers:"balcony",
       commuteToWork:"hallway"
