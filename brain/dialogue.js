@@ -511,8 +511,9 @@ class AkiraDialogue {
             if (pattern.test(normalized)) return appearanceIntent;
         }
 
-        if (/^(чому|а\s+чому|чому\s+ні|чому\s+не\s+хочеш)[\s?!.,]*$/iu.test(normalized) && this.brain.state?.conversation?.lastBoundaryTopic) {
-            return "ask_boundary_why";
+        if (/^(чому|а\s+чому|чому\s+ні|чому\s+не\s+хочеш|чому\s+не\s+скажеш|а\s+чому\s+не\s+скажеш)[\s?!.,]*$/iu.test(normalized)) {
+            if (this.brain.state?.conversation?.lastPrivateTopic) return "ask_private_why";
+            if (this.brain.state?.conversation?.lastBoundaryTopic) return "ask_boundary_why";
         }
 
         const askFutureActivityPatterns = [
@@ -1310,11 +1311,28 @@ class AkiraDialogue {
         ]);
     }
 
+    roomNameLocative(room) {
+        if (!room) return null;
+        const forms = {
+            kitchen: "кухні",
+            bathroom: "ванній",
+            toilet: "туалеті",
+            balcony: "широкому балконі",
+            hallway: "коридорі",
+            glassBedroom: "скляній спальні",
+            cozyRoom: "затишній другій кімнаті",
+            spaceRoom: "кімнаті в космічному стилі",
+            seaRoom: "кімнаті в морському стилі"
+        };
+        return forms[room.id] || forms[room.key] || room.locativeName || room.name;
+    }
+
     composeCurrentLocationAnswer() {
         const loc = this.brain.state?.world?.location || "home";
         if (loc === "home") {
             const room = this.brain.dailyLife?.currentRoom?.();
-            return room?.name ? `Я вдома, зараз у ${room.name}.` : "Я зараз удома.";
+            const roomName = this.roomNameLocative(room);
+            return roomName ? `Я вдома, зараз у ${roomName}.` : "Я зараз удома.";
         }
         const places = this.brain.data?.world?.world?.location?.places || {};
         const place = places?.[loc];
@@ -1355,7 +1373,7 @@ class AkiraDialogue {
             "Ні, не сплю.",
             "Не сплю. Що сталося?",
             "Ні. Я ще не сплю.",
-            "Не-а, я тут."
+            "Ніт, я тут."
         ]);
     }
 
@@ -1543,10 +1561,27 @@ class AkiraDialogue {
         };
         switch (intent) {
             case "ask_birthday":
-                return `Дата? ${encodeDate()}. Розбирайся з цим сам.`;
+                return `Дата? ${encodeDate()}. Розбирайся самостійно.`;
             case "ask_family_names": {
                 const pool = life.family?.privacy?.responses || ["Імена моїх близьких людей — це особисте."];
+                this.brain.state.conversation = this.brain.state.conversation || {};
+                this.brain.state.conversation.lastPrivateTopic = "family_names";
+                this.brain.state.conversation.lastPrivateAt = Date.now();
                 return pool[Math.floor(Date.now() / 86400000) % pool.length];
+            }
+            case "ask_private_why": {
+                const topic = this.brain.state?.conversation?.lastPrivateTopic;
+                if (topic === "family_names") return this.chooseTemplate([
+                    "Бо імена моїх близьких людей — це особисте.",
+                    "Не хочу називати імена близьких. Нехай це залишиться особистим.",
+                    "Бо це вже їхня приватність, не тільки моя.",
+                    "Таємниця. Родинний архів з іменами, мабуть, знову з’їв кіт."
+                ]);
+                if (topic === "visited_countries") return this.chooseTemplate([
+                    "Бо не хочу про це розповідати. Нехай залишиться секретом.",
+                    "Не скажу. Мені подобається залишати деякі речі при собі."
+                ]);
+                return "Не хочу про це розповідати. Це особисте.";
             }
             case "ask_family":
                 return "У мене є батьки й старший брат. Батьки живуть у сусідньому місті. Ми рідко телефонуємо одне одному, переважно на свята. Пам’ятаю, як ми з татом і братом ходили на рибалку о шостій ранку.";
@@ -1561,7 +1596,8 @@ class AkiraDialogue {
                     "У жодній. Я ж зараз не вдома 🙂"
                 ]);
                 const room = this.brain.dailyLife?.currentRoom?.();
-                return room?.name ? `Я зараз у ${room.name}.` : "Я вдома, але конкретну кімнату зараз не відмітив.";
+                const roomName = this.roomNameLocative(room);
+                return roomName ? `Я зараз у ${roomName}.` : "Я вдома, але конкретну кімнату зараз не відмітив.";
             }
             case "ask_current_location":
                 return this.composeCurrentLocationAnswer();
@@ -1580,6 +1616,9 @@ class AkiraDialogue {
             case "ask_dreams":
                 return "Хочу побачити світ, подорожувати, відкривати велосипедні маршрути й фотографувати побачене. І ще хочу стати програмістом високого рівня.";
             case "ask_private_countries":
+                this.brain.state.conversation = this.brain.state.conversation || {};
+                this.brain.state.conversation.lastPrivateTopic = "visited_countries";
+                this.brain.state.conversation.lastPrivateAt = Date.now();
                 return "У двох країнах був. У яких саме — не скажу. Секрет.";
             default:
                 return null;
@@ -1702,7 +1741,7 @@ class AkiraDialogue {
         if (intent === "ask_state") return [this.composeStateAnswer(profile)];
         if (intent === "ask_activity") return [this.composeActivityAnswer(profile)];
         if (intent === "ask_future_activity") return [this.composeFutureActivityAnswer(profile)];
-        if (["ask_birthday","ask_family_names","ask_family","ask_education","ask_home","ask_home_room","ask_current_location","ask_work_schedule","ask_commute","ask_work_attitude","ask_health","ask_hygiene","ask_yani_relationship","ask_dreams","ask_private_countries"].includes(intent)) {
+        if (["ask_birthday","ask_family_names","ask_family","ask_education","ask_home","ask_home_room","ask_current_location","ask_work_schedule","ask_commute","ask_work_attitude","ask_health","ask_hygiene","ask_yani_relationship","ask_dreams","ask_private_countries","ask_private_why"].includes(intent)) {
             const lifeReply = this.composeLifeAnswer(intent);
             if (lifeReply) return [lifeReply];
         }
