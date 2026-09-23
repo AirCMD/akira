@@ -22,6 +22,11 @@ class AkiraDailyLife {
   dayName() { return String(this.brain.state?.world?.day || "").toLowerCase(); }
   isWorkday() { return (this.profile.work?.days || []).includes(this.dayName()); }
   location() { return this.brain.state?.world?.location || "home"; }
+  isWorkTime() {
+    if (!this.isWorkday()) return false;
+    const work=this.profile.work||{}, t=this.minutes(this.brain.state?.world?.time);
+    return t>=this.minutes(work.start||"10:00") && t<this.minutes(work.end||"16:00");
+  }
   last(id) { return this.brain.state.dailyLife?.routines?.[id] || null; }
   daysSince(id) {
     const value = this.last(id); if (!value) return Infinity;
@@ -149,8 +154,8 @@ class AkiraDailyLife {
     if (this.isWorkday() && loc === "home" && t >= start - travel - 10 && t < start) {
       return this.action("commuteToWork", travel, "час вирушати на роботу", {targetLocation:"techsmith"});
     }
-    if (this.isWorkday() && loc === "techsmith" && t >= end && t < end + 120) {
-      return this.action("commuteHome", travel, "робочий день закінчився", {targetLocation:"home"});
+    if (loc === "techsmith" && (!this.isWorkday() || t >= end || t < start - travel - 10)) {
+      return this.action("commuteHome", travel, "робочий день закінчився, час додому", {targetLocation:"home"});
     }
 
     if (loc !== "home") return null;

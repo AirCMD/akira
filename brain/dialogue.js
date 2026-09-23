@@ -399,6 +399,30 @@ class AkiraDialogue {
         if (/^(акіра)[\s?!.,]*$/iu.test(normalized)) return "name_ping";
         if (/^(акіра[,!\s]*)?(привіт[,!\s]*)?(ти\s+)?спиш[\s?!.,]*$/iu.test(normalized)) return "ask_sleeping";
 
+
+        // v45: живі питання про календар/час/місце мають одне джерело істини.
+        if (/^добр(ого|ий)\s+ран(ку|ок)[\s?!.,]*$/iu.test(normalized)) return "greet_morning";
+        if (/^(який|котра|скільки)\s+(зараз\s+)?(час|година)|^котра\s+година/iu.test(normalized)) return "ask_current_time";
+        if (/^зараз\s+(ранок|день|вечір|ніч|полудень|світанок|сутінки)[\s?!.,]*$/iu.test(normalized)) return "check_day_period";
+        if (/^(який\s+зараз\s+місяць|який\s+місяць\s+зараз)[\s?!.,]*$/iu.test(normalized)) return "ask_current_month";
+        if (/^(зараз|надворі\s+зараз)\s+(весна|літо|осінь|зима)[\s?!.,]*$/iu.test(normalized)) return "check_season";
+        if (/^сьогодні\s+(понеділок|вівторок|середа|четвер|п['’ʼ]?ятниця|субота|неділя)[\s?!.,]*$/iu.test(normalized)) return "check_weekday";
+        if (/^сьогодні\s+(вихідний|робочий\s+день)[\s?!.,]*$/iu.test(normalized)) return "check_workday";
+        if (/^(тобі\s+)?сьогодні\s+треба\s+на\s+роботу[\s?!.,]*$/iu.test(normalized)) return "ask_need_work_today";
+        if (/^(ти\s+)?вдома[\s?!.,]*$/iu.test(normalized)) return "ask_is_home";
+        if (/^(чому|чого)\s+ти\s+там[\s?!.,]*$/iu.test(normalized)) return "ask_why_there";
+        if (/^(ти\s+)?втомився[\s?!.,]*$/iu.test(normalized)) return "ask_fatigue";
+        if (/^хто\s+(така\s+)?яні[\s?!.,]*$/iu.test(normalized) || /^яні\s+це\s+хто[\s?!.,]*$/iu.test(normalized)) return "ask_yani_identity";
+        if (/^яні\s+(людина|звичайна\s+людина)[\s?!.,]*$/iu.test(normalized)) return "ask_yani_species";
+        if (/^(чому|чого)\s+ти\s+хочеш\s+спати[\s?!.,]*$/iu.test(normalized)) return "ask_sleep_desire_reason";
+        if (/^(тоді\s+)?(чому|чого)\s+(ти\s+)?не\s+спиш[\s?!.,]*$/iu.test(normalized)) return "ask_why_not_sleeping";
+        if (/^коли\s+(ти\s+)?(підеш|ляжеш)\s+спати[\s?!.,]*$/iu.test(normalized)) return "ask_when_sleep";
+        if (/^що\s+тобі\s+заважає\s+(піти|лягти)\s+спати[\s?!.,]*$/iu.test(normalized)) return "ask_sleep_obstacle";
+        if (/^(ти\s+)?можеш\s+зараз\s+піти\s+додому[\s?!.,]*$/iu.test(normalized)) return "ask_can_go_home";
+        if (/^(чому|чого)\s+ти\s+досі\s+на\s+роботі[\s?!.,]*$/iu.test(normalized)) return "ask_why_still_work";
+        if (/^на\s+вулиці\s+\d{1,2}:\d{2}.*як\s+ти\s+можеш\s+працювати/iu.test(normalized)) return "ask_why_still_work";
+        if (/^(в|о)\s*\d{1,2}:\d{2}[\s?!.,]*$/iu.test(normalized) && this.lastIntent === "ask_activity") return "ask_previous_time_consistency";
+
         // «Яке кіно ти дивишся?» = поточна дія. «Яке кіно подобається?» = смак.
         if (/^(яке|який|що\s+за)\s+(кіно|фільм)\s+ти\s+(зараз\s+)?дивишся[\s?!.,]*$/iu.test(normalized)) return "ask_current_movie";
         if (/^(яке|які|який|що\s+за)\s+(кіно|фільми?|жанри?\s+кіно)\s+(тобі\s+)?(подобається|подобаються|любиш)[\s?!.,]*$/iu.test(normalized) || /^(які\s+фільми\s+ти\s+любиш)[\s?!.,]*$/iu.test(normalized)) return "ask_movie_preferences";
@@ -455,7 +479,7 @@ class AkiraDialogue {
         }
 
         // v40.2: сновидіння окремі від життєвих мрій (ask_dreams).
-        if (/^(що\s+(тобі\s+)?(снилося|наснилося)|що\s+ти\s+бачив\s+уві\s+сні|який\s+тобі\s+(сон\s+)?наснився|тобі\s+щось\s+снилося)(\s+(сьогодні|цієї\s+ночі|вночі))?[\s?!.,]*$/iu.test(normalized)) return "ask_last_dream";
+        if (/^(що\s+(тобі\s+)?(снилося|снилось|наснилося)|які\s+сни\s+(тобі\s+)?(снилися|снились)|що\s+ти\s+бачив\s+уві\s+сні|який\s+(сон\s+)?ти\s+бачив|який\s+тобі\s+(сон\s+)?наснився|тобі\s+щось\s+снилося|пам['’ʼ]?ятаєш\s+(свій\s+)?(останній\s+)?сон|розкажи\s+(якийсь\s+|про\s+)?(свій\s+)?сон)(\s+(сьогодні|цієї\s+ночі|вночі))?[\s?!.,]*$/iu.test(normalized)) return "ask_last_dream";
         if (/^(ти\s+бачиш\s+сни|тобі\s+сняться\s+сни|в\s+тебе\s+бувають\s+сни)[\s?!.,]*$/iu.test(normalized)) return "ask_dreaming_general";
 
         // v40.3: широка розмова про фізіологію сну та феномени сновидінь.
@@ -1576,6 +1600,7 @@ class AkiraDialogue {
             listenToMusic: "Слухаю музику.",
             playGame: "Граю трохи.",
             work: "Працюю зараз.",
+            working: "Працюю зараз.",
             talkToSomeone: "Розмовляю з людьми.",
             talkToYani: "Розмовляю з Яні.",
             checkSocialNetwork: "Перевіряю соцмережі.",
@@ -1626,7 +1651,8 @@ class AkiraDialogue {
 
         const activity = profile.state?.activity;
         if (activity && activity !== "idle") {
-            return `Зараз я зайнятий: ${activity}.`;
+            const activityNames={working:"Працюю зараз.",resting:"Відпочиваю трохи.",talking:"Розмовляю.",sleeping:"Сплю.",eating:"Їм зараз.",drinking:"Щось п’ю.",walking:"Гуляю.",cycling:"Катаюся на велосипеді.",reading:"Читаю.",gaming:"Граю.",thinking:"Думаю про всяке.",traveling:"Я зараз у дорозі."};
+            return activityNames[activity] || "Зараз чимось зайнятий.";
         }
 
         // idle означає саме відсутність конкретної дії. Не вигадуємо
@@ -1638,6 +1664,45 @@ class AkiraDialogue {
         ]);
     }
 
+
+    composeRealityAnswer(intent, profile) {
+        const world=this.brain.state?.world||{};
+        const time=String(world.time||"00:00");
+        const m=time.match(/(\d{1,2}):(\d{2})/); const mins=m?(+m[1]*60 + +m[2]):0;
+        const hour=Math.floor(mins/60);
+        const period = mins>=5*60 && mins<7*60 ? "світанок" : mins>=7*60 && mins<12*60 ? "ранок" : mins>=12*60 && mins<13*60 ? "полудень" : mins>=13*60 && mins<18*60 ? "день" : mins>=18*60 && mins<21*60 ? "вечір" : mins>=21*60 && mins<22*60 ? "сутінки" : "ніч";
+        const n=String(profile?.analysis?.normalized||"");
+        const dayMap={monday:"понеділок",tuesday:"вівторок",wednesday:"середа",thursday:"четвер",friday:"п’ятниця",saturday:"субота",sunday:"неділя"};
+        const day=dayMap[String(world.day||this.brain.state?.calendar?.weekday||"").toLowerCase()]||String(world.day||"").toLowerCase();
+        const monthNames=["січень","лютий","березень","квітень","травень","червень","липень","серпень","вересень","жовтень","листопад","грудень"];
+        const cal=this.brain.state?.calendar||{}; const month=monthNames[(Number(cal.month)||new Date().getMonth()+1)-1];
+        const seasonMap={spring:"весна",summer:"літо",autumn:"осінь",fall:"осінь",winter:"зима"};
+        const season=seasonMap[String(world.season||"").toLowerCase()] || ([12,1,2].includes(Number(cal.month))?"зима":[3,4,5].includes(Number(cal.month))?"весна":[6,7,8].includes(Number(cal.month))?"літо":"осінь");
+        const work=this.brain.data?.life_profile?.lifeProfile?.work||{}; const start=this.brain.dailyLife?.minutes?.(work.start||"10:00")??600; const end=this.brain.dailyLife?.minutes?.(work.end||"16:00")??960;
+        const workday=this.brain.dailyLife?.isWorkday?.()??false; const loc=world.location||"home";
+        if(intent==="greet_morning") {
+            if(period==="ранок"||period==="світанок") return "Доброго ранку.";
+            return this.chooseTemplate([`Доброго ранку? Зараз ${time}. Ти дійсно думаєш, що це ранок?`,`Ранку? Зараз ${time}. Якщо це ранок, то ти точно з іншої країни чи планети.`,`Доброго ранку о ${time}? У твого ранку дуже дивний графік.`]);
+        }
+        if(intent==="ask_current_time") return `Зараз ${time}.`;
+        if(intent==="check_day_period") { const claimed=(n.match(/зараз\s+(ранок|день|вечір|ніч|полудень|світанок|сутінки)/u)||[])[1]; if(claimed===period) return `Так. Зараз ${period}, ${time}.`; return `Ні. Зараз ${time}, це ${period}.`; }
+        if(intent==="ask_current_month") return `Зараз ${month}.`;
+        if(intent==="check_season") { const claimed=(n.match(/(весна|літо|осінь|зима)/u)||[])[1]; if(claimed===season) return `Так, зараз ${season}.`; return this.chooseTemplate([`Ні, зараз ${season}.`,`Якщо зараз ${claimed}, то ти десь з іншого квадранта. Насправді зараз ${season}.`,`Календар трохи протестує: зараз ${season}, а не ${claimed}.`]); }
+        if(intent==="check_weekday") { const claimed=(n.match(/(понеділок|вівторок|середа|четвер|п['’ʼ]?ятниця|субота|неділя)/u)||[])[1]?.replace("п'ятниця","п’ятниця"); return claimed===day?`Так, сьогодні ${day}.`:`Ні. Сьогодні ${day}.`; }
+        if(intent==="check_workday") { const asksWeekend=/вихідний/u.test(n); return asksWeekend?(workday?`Ні. Сьогодні робочий день.`:`Так, сьогодні вихідний.`):(workday?`Так, сьогодні робочий день.`:`Ні, сьогодні вихідний.`); }
+        if(intent==="ask_need_work_today") { if(!workday) return "Ні. Сьогодні в мене вихідний."; if(mins>=end) return `Сьогодні робочий день був, але моя зміна закінчилася о ${work.end||"16:00"}.`; if(mins<start) return `Так. Сьогодні працюю з ${work.start||"10:00"} до ${work.end||"16:00"}.`; return `Так. У мене зараз робочий час, до ${work.end||"16:00"}.`; }
+        if(intent==="ask_is_home") return loc==="home"?"Так, я зараз удома.":`Ні. ${this.composeCurrentLocationAnswer()}`;
+        if(intent==="ask_why_there") { if(loc==="techsmith") return this.brain.workLife?.inShift?.()?"Бо зараз моя робоча зміна.":`Власне, уже не повинен тут бути. Зміна закінчилася о ${work.end||"16:00"}, час їхати додому.`; if(loc==="home") return "Бо я зараз удома і нікуди не виходив."; const a=this.brain.state?.action; return a?.reason?`Бо ${String(a.reason).replace(/[.!?]+$/u,"")}.`:"Так склалося за поточною справою."; }
+        if(intent==="ask_fatigue") { const f=Number(this.brain.state?.fatigue??(100-Number(this.brain.state?.energy??70))); return f>=65?"Так, уже добряче втомився.":f>=35?"Трохи втомився, але ще нормально.":"Ні, особливої втоми зараз немає."; }
+        if(intent==="ask_yani_identity") return "Яні моя дружина. Вона звіролюдина, ближча до котячих. Ми знаємо одне одного близько семи років і п’ять років разом.";
+        if(intent==="ask_yani_species") return "Ні. Яні звіролюдина, ближча до котячих.";
+        if(intent==="ask_sleep_desire_reason") return this.brain.selfModel?.describeWhyWant?.() || "Бо втомився і хочеться відпочити.";
+        if(intent==="ask_why_not_sleeping"||intent==="ask_sleep_obstacle") { if(this.isCurrentlySleeping()) return "Я якраз сплю."; if(loc==="techsmith" && this.brain.workLife?.inShift?.()) return "Бо я ще на роботі й зміна не закінчилася."; if(loc==="techsmith") return `Власне, нічого нормального. Зміна закінчилася о ${work.end||"16:00"}, мені вже треба додому.`; const a=this.brain.state?.action; return a?.reason?`Поки не лягаю, бо ${String(a.reason).replace(/[.!?]+$/u,"")}.`:"Поки просто ще не ліг. Якщо втома переможе, піду спати."; }
+        if(intent==="ask_when_sleep") { const plan=this.brain.intentions?.getNextPlan?.(); if(plan?.actionId==="sleep") return `Планую лягти приблизно о ${plan.time}.`; return "Точного часу ще не вирішив. Піду, коли вже справді захочу спати й не буде незакінченої справи."; }
+        if(intent==="ask_can_go_home") { if(loc==="home") return "Я вже вдома."; if(loc==="techsmith" && this.brain.workLife?.inShift?.()) return `Зараз ще зміна. Додому поїду після ${work.end||"16:00"}.`; if(loc==="techsmith") return "Так. Зміна вже закінчилася, мені якраз треба їхати додому."; return "Так, якщо тут більше нічого не тримає."; }
+        if(intent==="ask_why_still_work"||intent==="ask_previous_time_consistency") { const a=this.brain.state?.action; const workAction=a?.source==="work_life" || ["work","consultCustomer","compareDevices","explainSpecs","quietAtWork","workBreak","talkToKent","talkToTaras","commuteToWork"].includes(a?.actionId); if((mins>=end || !workday) && (loc==="techsmith"||workAction)) return `Справді, це не сходиться. Зараз ${time}, а моя зміна до ${work.end||"16:00"}. Я вже не повинен працювати, треба завершити це й їхати додому.`; return a?.reason?`Бо ${String(a.reason).replace(/[.!?]+$/u,"")}.`:"Зараз не бачу тут суперечності."; }
+        return "Не знаю.";
+    }
 
     composeWeatherAnswer() {
         const weather = this.brain.state?.world?.weather;
@@ -2186,6 +2251,7 @@ class AkiraDialogue {
         const intent = profile.analysis.intent;
         if (intent === "name_ping") return [this.composeNamePingAnswer(profile)];
         if (intent === "ask_sleeping") return [this.composeSleepingAnswer(profile)];
+        if (["greet_morning","ask_current_time","check_day_period","ask_current_month","check_season","check_weekday","check_workday","ask_need_work_today","ask_is_home","ask_why_there","ask_fatigue","ask_yani_identity","ask_yani_species","ask_sleep_desire_reason","ask_why_not_sleeping","ask_when_sleep","ask_sleep_obstacle","ask_can_go_home","ask_why_still_work","ask_previous_time_consistency"].includes(intent)) return [this.composeRealityAnswer(intent, profile)];
         if (intent === "ask_current_movie") return [this.composeCurrentMovieAnswer(profile)];
         if (intent === "ask_movie_preferences") return [this.composeMoviePreferencesAnswer(profile)];
         if (intent === "ask_current_location") return [this.composeCurrentLocationAnswer(profile)];

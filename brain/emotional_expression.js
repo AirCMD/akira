@@ -51,7 +51,9 @@ class AkiraEmotionalExpression {
   apply(text, dialogueProfile={}){
     let out=String(text||"").trim(); if(!out) return out;
     const p=this.profile(dialogueProfile); const intent=dialogueProfile?.analysis?.intent;
-    const isBoundary=this.protectedIntent(intent) || /це особисте|не хочу (говорити|відповідати|обговорювати)/iu.test(out);
+    const factualIntents=new Set(["ask_current_time","check_day_period","ask_current_month","check_season","check_weekday","check_workday","ask_need_work_today","ask_is_home","ask_current_location","ask_date","ask_holiday","ask_yani_identity","ask_yani_species"]);
+    const isFallback=/не зовсім зрозумів|втратив нитку|можливо, я щось упускаю|треба було б розібратися детальніше|мм, цікаво/i.test(out);
+    const isBoundary=this.protectedIntent(intent) || factualIntents.has(intent) || isFallback || /це особисте|не хочу (говорити|відповідати|обговорювати)/iu.test(out);
     // Втома і соціальне виснаження змінюють насамперед кількість інформації.
     if(!isBoundary && (p.fatigue>=82 || p.social<=18) && out.split(/\s+/).length>18) out=this.shorten(out,1);
     // Сильне роздратування робить довгі відповіді прямішими, не змінюючи фактів.
