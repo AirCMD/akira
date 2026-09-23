@@ -450,6 +450,10 @@ class AkiraDialogue {
             return "ask_state";
         }
 
+        // v40.2: сновидіння окремі від життєвих мрій (ask_dreams).
+        if (/^(що\s+(тобі\s+)?(снилося|наснилося)|що\s+ти\s+бачив\s+уві\s+сні|який\s+тобі\s+(сон\s+)?наснився|тобі\s+щось\s+снилося)(\s+(сьогодні|цієї\s+ночі|вночі))?[\s?!.,]*$/iu.test(normalized)) return "ask_last_dream";
+        if (/^(ти\s+бачиш\s+сни|тобі\s+сняться\s+сни|в\s+тебе\s+бувають\s+сни)[\s?!.,]*$/iu.test(normalized)) return "ask_dreaming_general";
+
         // v40: самоспостереження. Це не загальне «як справи?», а питання
         // про власні відчуття, бажання, мотиви й внутрішній конфлікт.
         if (/^(що\s+ти\s+(зараз\s+)?відчуваєш|які\s+в\s+тебе\s+(зараз\s+)?відчуття)[\s?!.,]*$/iu.test(normalized)) return "ask_self_feeling";
@@ -2173,6 +2177,8 @@ class AkiraDialogue {
         if (intent === "ask_history_today") return [this.composeHistoryAnswer("today")];
         if (intent === "ask_history_evening") return [this.composeHistoryAnswer("evening")];
         if (intent === "ask_history_yesterday") return [this.composeHistoryAnswer("yesterday")];
+        if (intent === "ask_last_dream") return [this.brain.dreams?.answerLastDream?.() || "Не пам\'ятаю, що мені снилося."];
+        if (intent === "ask_dreaming_general") return [this.brain.dreams?.answerDreamingGenerally?.() || "Сни іноді бувають."];
         if (intent === "ask_self_feeling") return [this.brain.selfModel?.describeFeeling?.() || "Зараз складно це сформулювати."];
         if (intent === "ask_self_want") return [this.brain.selfModel?.describeWant?.() || "Зараз не знаю, чого саме хочу."];
         if (intent === "ask_self_want_why") return [this.brain.selfModel?.describeWhyWant?.() || "Не знаю, як це пояснити."];

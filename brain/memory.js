@@ -368,7 +368,7 @@ class AkiraMemory {
     // Епізоди не зливаємо лише через однакову тему. Інакше десять вечерь
     // перетворюються на один безсмертний «їв». Дубль можливий лише для
     // буквально того самого запису в ту саму хвилину.
-    if (["episode", "activity", "conversation", "event"].includes(memory.type)) {
+    if (["episode", "activity", "conversation", "event", "dream"].includes(memory.type)) {
       return this.memories.find(candidate =>
         candidate.type === memory.type &&
         candidate.content === memory.content &&

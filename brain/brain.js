@@ -259,7 +259,8 @@ class AkiraBrain {
             "yani_interactions",
             "work_life",
             "inventory_money",
-            "self_model"
+            "self_model",
+            "dreams"
         ];
 
         const results = {};
@@ -686,7 +687,8 @@ class AkiraBrain {
             ["yaniInteractions", "AkiraYaniInteractions"],
             ["workLife", "AkiraWorkLife"],
             ["inventoryMoney", "AkiraInventoryMoney"],
-            ["selfModel", "AkiraSelfModel"]
+            ["selfModel", "AkiraSelfModel"],
+            ["dreams", "AkiraDreams"]
         ];
         for (const [property, globalName] of modules) {
             const Ctor = window[globalName];
@@ -788,6 +790,7 @@ class AkiraBrain {
         this.yaniInteractions?.update?.(simulatedMinutes);
         this.workLife?.ensureDay?.();
         this.selfModel?.update?.(simulatedMinutes);
+        this.dreams?.update?.(simulatedMinutes);
 
         this.updateMemory(
             simulatedMinutes
@@ -1076,6 +1079,7 @@ finishAction() {
     this.health?.completeAction?.(action);
     this.accidents?.completeAction?.(action);
     this.workLife?.completeAction?.(action);
+    this.dreams?.completeAction?.(action);
 
     // Використовуємо тільки тригери, які прямо описані в emotions.json.
     if (action.actionId === "rest") {
