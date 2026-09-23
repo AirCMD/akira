@@ -486,6 +486,14 @@ class AkiraDialogue {
             return "ask_past_people";
         }
 
+        // v40.1: майбутнє не вгадується. Відповідаємо лише з явного плану/наміру.
+        if (/^з\s+ким\s+(ти\s+)?(будеш\s+розмовляти|розмовлятимеш|будеш\s+говорити|говоритимеш|будеш\s+спілкуватися|спілкуватимешся)[\s?!.,]*$/iu.test(normalized)) return "ask_future_people";
+
+        // Загальна часовa трійка для дії та місця.
+        if (/^(що\s+(ти\s+)?(будеш\s+робити|робитимеш)|чим\s+(ти\s+)?будеш\s+займатися)[\s?!.,]*$/iu.test(normalized)) return "ask_future_general_activity";
+        if (/^(де\s+(ти\s+)?був|де\s+був\s+перед\s+цим)[\s?!.,]*$/iu.test(normalized)) return "ask_past_location";
+        if (/^(куди\s+(ти\s+)?(підеш|поїдеш|збираєшся)|де\s+(ти\s+)?будеш)[\s?!.,]*$/iu.test(normalized)) return "ask_future_location";
+
         // v39: автобіографічна пам'ять. Це не енциклопедичні факти, а власні епізоди Акіри.
         if (/^(що\s+(ти\s+)?(найбільше\s+)?пам['’ʼ]?ятаєш|що\s+тобі\s+(найбільше\s+)?запам['’ʼ]?яталося|які\s+в\s+тебе\s+спогади)[\s?!.,]*$/iu.test(normalized)) return "ask_salient_memory";
         if (/^(що\s+(ти\s+)?пам['’ʼ]?ятаєш\s+про\s+яні|що\s+тобі\s+запам['’ʼ]?яталося\s+з\s+яні)[\s?!.,]*$/iu.test(normalized)) return "ask_memory_yani";
@@ -2152,8 +2160,12 @@ class AkiraDialogue {
         if (intent === "ask_current_drink") return [this.composeFoodStateAnswer("drink")];
         if (intent === "ask_current_cooking") return [this.composeFoodStateAnswer("cooking")];
         if (intent === "ask_activity") return [this.composeActivityAnswer(profile)];
-        if (intent === "ask_current_people") return [this.composeCurrentPeopleAnswer()];
-        if (intent === "ask_past_people") return [this.composePastPeopleAnswer()];
+        if (intent === "ask_current_people") return [this.brain.temporalContext?.answerPeople?.("present") || this.composeCurrentPeopleAnswer()];
+        if (intent === "ask_past_people") return [this.brain.temporalContext?.answerPeople?.("past") || this.composePastPeopleAnswer()];
+        if (intent === "ask_future_people") return [this.brain.temporalContext?.answerPeople?.("future") || "Не знаю. Я ж не планую наперед кожну розмову."];
+        if (intent === "ask_future_general_activity") return [this.brain.temporalContext?.answerActivity?.("future", a=>this.actionHistoryLabel(a)) || "Поки не знаю, що робитиму далі."];
+        if (intent === "ask_past_location") return [this.brain.temporalContext?.answerLocation?.("past", r=>this.roomNameLocative(r)) || "Не пам'ятаю, де саме був перед цим."];
+        if (intent === "ask_future_location") return [this.brain.temporalContext?.answerLocation?.("future", r=>this.roomNameLocative(r)) || "Поки не планував, куди піду далі."];
         if (intent === "ask_recent_activity") return [this.composeRecentActivityAnswer()];
         if (intent === "ask_salient_memory") return [this.composeSalientMemoryAnswer()];
         if (intent === "ask_memory_yani") return [this.composePersonMemoryAnswer("Yani_Bakeneko", "Яні")];
