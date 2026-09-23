@@ -20,11 +20,11 @@ class AkiraDailyLife {
 
   dayKey() { return this.brain.state?.world?.date || new Date().toISOString().slice(0,10); }
   dayName() { return String(this.brain.state?.world?.day || "").toLowerCase(); }
-  isWorkday() { return (this.profile.work?.days || []).includes(this.dayName()); }
+  isWorkday() { const day=new Date().toLocaleDateString("en-US",{weekday:"long"}).toLowerCase(); return (this.profile.work?.days || []).includes(day); }
   location() { return this.brain.state?.world?.location || "home"; }
   isWorkTime() {
     if (!this.isWorkday()) return false;
-    const work=this.profile.work||{}, t=this.minutes(this.brain.state?.world?.time);
+    const work=this.profile.work||{}, now=new Date(), t=now.getHours()*60+now.getMinutes();
     return t>=this.minutes(work.start||"10:00") && t<this.minutes(work.end||"16:00");
   }
   last(id) { return this.brain.state.dailyLife?.routines?.[id] || null; }
@@ -142,7 +142,8 @@ class AkiraDailyLife {
         return queued;
       }
     }
-    const t = this.minutes(situation.time || this.brain.state.world?.time);
+    const now = new Date();
+    const t = now.getHours()*60 + now.getMinutes();
     const loc = this.location();
     const work = this.profile.work || {};
     const commute = work.commute || {};

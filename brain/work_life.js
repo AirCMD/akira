@@ -8,7 +8,7 @@ class AkiraWorkLife {
     this.ensureDay(); return this;
   }
   mins(v){ const m=String(v||"00:00").match(/(\d{1,2}):(\d{2})/); return m?+m[1]*60 + +m[2]:0; }
-  now(){ return this.mins(this.brain.state.world?.time); }
+  now(){ const d=new Date(); return d.getHours()*60+d.getMinutes(); }
   isWorkday(){ return this.brain.dailyLife?.isWorkday?.() ?? false; }
   atWork(){ return this.brain.state.world?.location==="techsmith"; }
   inShift(){ const p=this.brain.data?.life_profile?.lifeProfile?.work||{}; const t=this.now(); return this.isWorkday() && t>=this.mins(p.start||"10:00") && t<this.mins(p.end||"16:00"); }
