@@ -80,8 +80,12 @@ class AkiraFood {
     } else if(a.actionId==='travelToMassmarket'){
       this.brain.state.world.location='massmarket'; this.brain.state.dailyLife.homeRoom=null;
     } else if(a.actionId==='groceryShopping'){
-      const inv=s.inventory,target=this.data.restockTo||{}; for(const [k,v] of Object.entries(target)) if(this.n(inv[k])<this.n(v)) inv[k]=this.n(v);
-      s.lastShoppingAt=now; this.queue(this.action('returnHomeGroceries',8,'купив продукти, повертаюся додому',{targetLocation:'home'}));
+      const inv=s.inventory,target=this.data.restockTo||{};
+      const missing=Object.entries(target).filter(([k,v])=>this.n(inv[k])<this.n(v)).map(([k])=>k);
+      const cost=this.brain.inventoryMoney?.groceryCost?.(missing)||0;
+      const paid=!cost || this.brain.inventoryMoney?.spend?.('akira',cost,'продукти',missing.join(', '));
+      if(paid){ for(const [k,v] of Object.entries(target)) if(this.n(inv[k])<this.n(v)) inv[k]=this.n(v); s.lastShoppingAt=now; }
+      this.queue(this.action('returnHomeGroceries',8,paid?'купив продукти, повертаюся додому':'не вистачило грошей на покупки, повертаюся додому',{targetLocation:'home'}));
     } else if(a.actionId==='returnHomeGroceries'){
       this.brain.state.world.location='home'; this.brain.state.dailyLife.homeRoom='hallway';
     } else if(a.actionId==='washDishes') s.dirtyDishes=0;

@@ -59,6 +59,7 @@ class AkiraYaniLife {
     if(["playTamagotchi","walk","browseCollectibles","visitJeannieShop"].includes(a.actionId)) y.fun=this.clamp(y.fun+18);
     if(["draw","decorateNotebook","workOnScripts"].includes(a.actionId)) y.creativity=this.clamp(y.creativity+12);
     if(a.actionId==="rest") {y.fatigue=this.clamp(y.fatigue-20);y.energy=this.clamp(y.energy+15);}
+    this.brain.inventoryMoney?.onYaniActionFinished?.(a);
     y.lastAction=a.actionId; y.action=null; y.activity="idle"; y.nextDecisionAt=Date.now()+3000;
   }
   record(actionId,reason){

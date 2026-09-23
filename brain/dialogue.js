@@ -545,6 +545,9 @@ class AkiraDialogue {
             [/(скільки\s+(сьогодні\s+)?(було\s+)?(покупців|клієнтів)|багато\s+(сьогодні\s+)?покупців)/iu, "ask_work_customers"],
             [/(скільки\s+(сьогодні\s+)?(продав|продажів)|як\s+(сьогодні\s+)?з\s+продажами)/iu, "ask_work_sales"],
             [/(з\s+ким\s+ти\s+працюєш|хто\s+сьогодні\s+з\s+тобою\s+на\s+роботі|розкажи\s+про\s+(тарас|кент))/iu, "ask_work_coworkers"],
+            [/(скільки\s+в\s+тебе\s+(грошей|грошів)|скільки\s+грошей\s+залишилось|який\s+в\s+тебе\s+баланс)/iu, "ask_money_balance"],
+            [/(на\s+що\s+ти\s+(витрачаєш|витратив)\s+гроші|що\s+ти\s+(останнім\s+часом\s+)?купував|які\s+в\s+тебе\s+витрати)/iu, "ask_money_spending"],
+            [/(у\s+тебе\s+є\s+гроші|ти\s+без\s+грошей)/iu, "ask_money_general"],
             [/(в\s+тебе\s+є\s+алергі|який\s+у\s+тебе\s+зір|ти\s+часто\s+хворієш)/iu, "ask_health"],
             [/(ти\s+любиш\s+ванну|як\s+часто\s+ти\s+голишся|як\s+ти\s+доглядаєш\s+за\s+собою)/iu, "ask_hygiene"],
             [/(скільки\s+ти\s+знаєш\s+яні|скільки\s+ви\s+з\s+яні\s+разом|що\s+ви\s+з\s+яні\s+робите)/iu, "ask_yani_relationship"],
@@ -1751,6 +1754,16 @@ class AkiraDialogue {
             }
             case "ask_work_coworkers":
                 return "Працюю з Тарасом і Кентом. Тарас мовчазний і більше сам по собі. Кент інколи починає розповідати про свої стосунки з дружиною.";
+            case "ask_money_balance":
+                return this.brain.inventoryMoney?.moneyAnswer?.() || "Не рахував зараз.";
+            case "ask_money_spending":
+                return this.brain.inventoryMoney?.recentSpendingAnswer?.() || "Не пам’ятаю останні витрати.";
+            case "ask_money_general": {
+                const b=this.brain.inventoryMoney?.balance?.('akira');
+                if(b==null) return "Не рахував зараз.";
+                if(b<300) return "Зараз грошей небагато. Треба обережніше з витратами.";
+                return "Так, гроші є. Але це не означає, що їх треба одразу витратити.";
+            }
             case "ask_health":
                 return "Зір у мене нормальний, є алергія на пил. Хворію рідко, а спеку й холод не дуже люблю.";
             case "ask_hygiene":

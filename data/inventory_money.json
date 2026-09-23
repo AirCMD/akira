@@ -1,0 +1,20 @@
+{
+  "inventoryMoney": {
+    "currency": "умовних одиниць",
+    "startingBalances": {"akira": 5000, "yani": 3200, "household": 1500},
+    "income": {"akiraWorkday": 650, "payAtShiftEnd": true},
+    "prices": {
+      "groceriesUnit": 45,
+      "deliveryFood": 420,
+      "snacks": 140,
+      "stationery": 180,
+      "collectible": 650,
+      "tamagotchi": 1200
+    },
+    "owned": {
+      "shared": ["телевізор", "ігрова консоль", "пилосос", "пральна машина"],
+      "akira": ["телефон", "сірий парасоля"],
+      "yani": ["матеріали для малювання", "блокноти", "канцелярія", "колекція тамагочі", "парфуми", "косметика"]
+    }
+  }
+}

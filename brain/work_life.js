@@ -44,6 +44,8 @@ class AkiraWorkLife {
     }
     if(a.actionId==="makeSale") x.sales++;
     if(a.actionId==="workBreak") x.breaks++;
+    const end=this.mins(this.brain.data?.life_profile?.lifeProfile?.work?.end||"16:00");
+    if(this.now()>=end-10) this.brain.inventoryMoney?.payAkiraForWorkday?.();
     x.lastEvent=a.actionId;
     x.history.push({actionId:a.actionId,targetPerson:a.targetPerson||null,date:this.brain.state.world?.date,time:this.brain.state.world?.time,sales:x.sales,at:Date.now()});
     if(x.history.length>80)x.history.splice(0,x.history.length-80);

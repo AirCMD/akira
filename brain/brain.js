@@ -257,7 +257,8 @@ class AkiraBrain {
             "contextual_knowledge",
             "yani",
             "yani_interactions",
-            "work_life"
+            "work_life",
+            "inventory_money"
         ];
 
         const results = {};
@@ -682,7 +683,8 @@ class AkiraBrain {
             ["contextualKnowledge", "AkiraContextualKnowledge"],
             ["yaniLife", "AkiraYaniLife"],
             ["yaniInteractions", "AkiraYaniInteractions"],
-            ["workLife", "AkiraWorkLife"]
+            ["workLife", "AkiraWorkLife"],
+            ["inventoryMoney", "AkiraInventoryMoney"]
         ];
         for (const [property, globalName] of modules) {
             const Ctor = window[globalName];
