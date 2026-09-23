@@ -392,7 +392,7 @@ class AkiraDialogue {
 
         // Питання про самого Акіру мають пріоритет над загальним question.
         // Інакше «як ти?» бачиться лише як слово «як» + знак питання.
-        const normalized = String(text || "").toLowerCase().replace(/[’`ʼ]/g, "'").trim();
+        const normalized = String(text || "").toLowerCase().replace(/[’`ʼ]/g, "'").replace(/^[«»„“”"\s]+/u, "").trim();
 
         // Коротке звертання на ім'я і питання, чи Акіра спить,
         // повинні читати живий стан, а не провалюватися в greeting/topic fallback.
@@ -443,6 +443,31 @@ class AkiraDialogue {
             if (/^що\s+вона\s+робить[\s?!.,]*$/iu.test(normalized)) return "ask_yani_activity";
             if (/^де\s+(зараз\s+)?вона[\s?!.,]*$/iu.test(normalized)) return "ask_yani_location";
         }
+
+        // v45.2: канон, робота, пам'ять і сон мають семантичні intent-и, а не topic fallback.
+        if (/^(я\s+тв(ій|оя)\s+(чоловік|коханець|коханка|кохана)|я\s+твій\s+коханий)[\s?!.,]*$/iu.test(normalized)) return "claim_user_relationship";
+        if (/^(з\s+ким\s+(ти\s+)?живеш|хто\s+живе\s+з\s+тобою)[\s?!.,]*$/iu.test(normalized)) return "ask_lives_with";
+        if (/^(у\s+тебе\s+є\s+брат|маєш\s+брата)[\s?!.,]*$/iu.test(normalized)) return "ask_has_brother";
+        if (/^хто\s+твої\s+батьки[\s?!.,]*$/iu.test(normalized)) return "ask_parents";
+        if (/^(ти\s+зараз\s+працюєш|зараз\s+працюєш)[\s?!.,]*$/iu.test(normalized)) return "ask_working_now";
+        if (/^(як\s+(ти\s+)?добираєшся\s+на\s+роботу|як\s+(ти\s+)?їздиш\s+на\s+роботу)[\s?!.,]*$/iu.test(normalized)) return "ask_commute";
+        if (/^з\s+ким\s+(ти\s+)?працюєш[\s?!.,]*$/iu.test(normalized)) return "ask_work_coworkers";
+        if (/^хто\s+такий\s+кент[\s?!.,]*$/iu.test(normalized)) return "ask_kent";
+        if (/^хто\s+такий\s+тарас[\s?!.,]*$/iu.test(normalized)) return "ask_taras";
+        if (/^(були\s+(сьогодні\s+)?покупці|сьогодні\s+були\s+покупці)[\s?!.,]*$/iu.test(normalized)) return "ask_work_customers";
+        if (/^(щось\s+(сьогодні\s+)?продав|продав\s+щось\s+сьогодні)[\s?!.,]*$/iu.test(normalized)) return "ask_work_sales";
+        if (/^(тобі\s+подобається\s+твоя\s+робота|ти\s+любиш\s+свою\s+роботу)[\s?!.,]*$/iu.test(normalized)) return "ask_work_attitude";
+        if (/^(що\s+(ти\s+)?робив\s+годину\s+тому)[\s?!.,]*$/iu.test(normalized)) return "ask_hour_ago";
+        if (/^з\s+ким\s+(ти\s+)?сьогодні\s+(розмовляв|говорив|спілкувався)[\s?!.,]*$/iu.test(normalized)) return "ask_people_today";
+        if (/^що\s+(ти\s+)?їв\s+сьогодні[\s?!.,]*$/iu.test(normalized)) return "ask_food_today";
+        if (/^що\s+хорошого\s+сталося\s+(останнім\s+часом|нещодавно)[\s?!.,]*$/iu.test(normalized)) return "ask_recent_good";
+        if (/^пам['’ʼ]?ятаєш[,\s]*про\s+що\s+ми\s+щойно\s+говорили[\s?!.,]*$/iu.test(normalized)) return "ask_recent_conversation";
+        if (/^(сьогодні\s+щось\s+снилося|щось\s+снилося\s+сьогодні)[\s?!.,]*$/iu.test(normalized)) return "ask_dream_today";
+        if (/^(тобі\s+снилася\s+яні|яні\s+тобі\s+снилася)[\s?!.,]*$/iu.test(normalized)) return "ask_dream_yani";
+        if (/^(тобі\s+бувають\s+кошмари|у\s+тебе\s+бувають\s+кошмари)[\s?!.,]*$/iu.test(normalized)) { this.pendingDreamTopic="nightmare"; return "ask_nightmare_wording"; }
+        if (/^(у\s+тебе\s+був\s+сонний\s+параліч|був\s+у\s+тебе\s+сонний\s+параліч)[\s?!.,]*$/iu.test(normalized)) { this.pendingDreamTopic="paralysis"; return "ask_dream_topic"; }
+        if (/^(ти\s+ходиш\s+уві\s+сні|ти\s+лунатиш)[\s?!.,]*$/iu.test(normalized)) { this.pendingDreamTopic="sleepwalking"; return "ask_dream_topic"; }
+        if (/^(що\s+ти\s+думаєш\s+про\s+спільні\s+сни|що\s+думаєш\s+про\s+спільні\s+сни)[\s?!.,]*$/iu.test(normalized)) { this.pendingDreamTopic="shared"; return "ask_dream_topic"; }
 
         // «Яке кіно ти дивишся?» = поточна дія. «Яке кіно подобається?» = смак.
         if (/^(яке|який|що\s+за)\s+(кіно|фільм)\s+ти\s+(зараз\s+)?дивишся[\s?!.,]*$/iu.test(normalized)) return "ask_current_movie";
@@ -1729,7 +1754,7 @@ class AkiraDialogue {
         if(intent==="ask_akira_identity_kind") return "Так. Я людина, чоловік.";
         if(intent==="ask_akira_wife"||intent==="ask_yani_relation_to_akira") return "Яні моя дружина.";
         if(intent==="ask_yani_husband") return "Я чоловік Яні.";
-        if(intent==="ask_love_yani") return "Так, люблю. Вона моя дружина і дуже близька мені людина.";
+        if(intent==="ask_love_yani") return "Так, люблю. Вона моя дружина і дуже мені близька.";
         if(intent==="ask_love_user") return "Ти не Яні. Я не буду вигадувати почуття, яких у мене немає в пам’яті наших стосунків.";
         if(intent==="ask_why_with_yani") return "Бо я люблю Яні. Те, що я людина, а вона звіролюдина, для мене не суперечність.";
         if(intent==="claim_user_is_wife") return "Ні. Моя дружина — Яні.";
@@ -1738,7 +1763,12 @@ class AkiraDialogue {
         if(intent==="ask_when_met_yani") return "Ми познайомилися близько семи років тому. Точної дати я не називав.";
         if(intent==="ask_yani_today_together") { const h=this.brain.state?.yaniInteractions?.history||[]; const today=String(this.brain.state?.calendar?.date||world.date||""); const xs=h.filter(x=>String(x.date||"")===today); if(!xs.length) return "Сьогодні в пам’яті немає збереженої спільної події з Яні."; const labels={proposal:"щось планували разом",accepted:"проводили час разом",refusal:"не домовилися про спільну справу",conflict:"трохи посварилися",reconcile:"помирилися"}; const last=xs[xs.length-1]; return `Останнє, що збереглося за сьогодні: ${labels[last.type]||"ми проводили час разом"}.`; }
         if(intent==="ask_last_talk_yani") { const h=Array.isArray(this.brain.actionHistory)?this.brain.actionHistory:[]; const a=[...h].reverse().find(x=>x?.actionId==="talkToYani"||x?.targetPerson==="Yani_Bakeneko"); if(!a) return "Не пам’ятаю сьогодні збереженої розмови з Яні."; return `Востаннє збережена розмова з Яні була ${a.time?`о ${a.time}`:"нещодавно"}.`; }
-        if(intent==="ask_sleep_desire_reason") return this.brain.selfModel?.describeWhyWant?.() || "Бо втомився і хочеться відпочити.";
+        if(intent==="claim_user_relationship") return "Ні. Моя дружина і кохана — Яні. Не буду вигадувати між нами інші стосунки.";
+        if(intent==="ask_lives_with") return "Живу з Яні, моєю дружиною.";
+        if(intent==="ask_has_brother") return "Так. У мене є старший брат.";
+        if(intent==="ask_parents") return "У мене є батьки, я їх люблю. Вони живуть у сусідньому місті. Їхні імена я не називаю.";
+        if(intent==="ask_working_now") { if(!workday || mins<start || mins>=end) return `Ні. Зараз ${time}, моя зміна з ${work.start||"10:00"} до ${work.end||"16:00"}.`; return loc==="techsmith"?`Так. Я зараз на роботі, зміна до ${work.end||"16:00"}.`:`За графіком зараз робочий час, але я не на роботі.`; }
+                if(intent==="ask_sleep_desire_reason") return this.brain.selfModel?.describeWhyWant?.() || "Бо втомився і хочеться відпочити.";
         if(intent==="ask_why_not_sleeping"||intent==="ask_sleep_obstacle") { if(this.isCurrentlySleeping()) return "Я якраз сплю."; if(loc==="techsmith" && this.brain.workLife?.inShift?.()) return "Бо я ще на роботі й зміна не закінчилася."; if(loc==="techsmith") return `Власне, нічого нормального. Зміна закінчилася о ${work.end||"16:00"}, мені вже треба додому.`; const a=this.brain.state?.action; return a?.reason?`Поки не лягаю, бо ${String(a.reason).replace(/[.!?]+$/u,"")}.`:"Поки просто ще не ліг. Якщо втома переможе, піду спати."; }
         if(intent==="ask_when_sleep") { const plan=this.brain.intentions?.getNextPlan?.(); if(plan?.actionId==="sleep") return `Планую лягти приблизно о ${plan.time}.`; return "Точного часу ще не вирішив. Піду, коли вже справді захочу спати й не буде незакінченої справи."; }
         if(intent==="ask_can_go_home") { if(loc==="home") return "Я вже вдома."; if(loc==="techsmith" && this.brain.workLife?.inShift?.()) return `Зараз ще зміна. Додому поїду після ${work.end||"16:00"}.`; if(loc==="techsmith") return "Так. Зміна вже закінчилася, мені якраз треба їхати додому."; return "Так, якщо тут більше нічого не тримає."; }
@@ -1913,10 +1943,14 @@ class AkiraDialogue {
             case "ask_work_sales": {
                 const w=this.brain.state.workLife;
                 if(!w || w.date!==this.brain.state.world?.date) return "За сьогодні ще нічого не записав.";
-                return w.sales ? `Поки що ${w.sales} продажів. Подивимося, що буде до кінця зміни.` : "Поки без продажів. Зміна ще не закінчилась.";
+                return w.sales ? `Сьогодні було ${w.sales} продажів.` : "Сьогодні продажів не було.";
             }
             case "ask_work_coworkers":
                 return "Працюю з Тарасом і Кентом. Тарас мовчазний і більше сам по собі. Кент інколи починає розповідати про свої стосунки з дружиною.";
+            case "ask_kent":
+                return "Кент — мій колега. Він інколи скаржиться, що дружина його уникає.";
+            case "ask_taras":
+                return "Тарас — мій колега. Він тихий і більше тримається сам по собі.";
             case "ask_money_balance":
                 return this.brain.inventoryMoney?.moneyAnswer?.() || "Не рахував зараз.";
             case "ask_money_spending":
@@ -2305,13 +2339,44 @@ class AkiraDialogue {
         return `За цей час ${items.slice(0,-1).join(", ")}, а потім ${items[items.length-1]}.`;
     }
 
+    composeHourAgoAnswer(){
+        const h=Array.isArray(this.brain.actionHistory)?this.brain.actionHistory:[];
+        const target=Date.now()-3600000;
+        const candidates=h.filter(a=>a?.startedAt||a?.finishedAt).map(a=>({a,t:Number(a.finishedAt||a.startedAt)})).filter(x=>Number.isFinite(x.t));
+        if(!candidates.length) return "Не можу точно пригадати, що робив саме годину тому.";
+        candidates.sort((x,y)=>Math.abs(x.t-target)-Math.abs(y.t-target));
+        const label=this.actionHistoryLabel(candidates[0].a);
+        return label?`Приблизно годину тому ${label}.`:"Не можу точно пригадати, що робив саме годину тому.";
+    }
+    composePeopleTodayAnswer(){
+        const h=Array.isArray(this.brain.actionHistory)?this.brain.actionHistory:[];
+        const today=new Date().toISOString().slice(0,10); const names=[];
+        for(const a of h){ const d=String(a?.finishedAt?new Date(a.finishedAt).toISOString().slice(0,10):a?.worldFinished?.date||""); if(d!==today) continue; const id=a?.targetPerson||(a?.actionId==="talkToYani"?"Yani_Bakeneko":null); if(id) names.push(({Yani_Bakeneko:"Яні",Kent_White:"Кент",Taras:"Тарас"})[id]||id); }
+        const u=[...new Set(names)]; return u.length?`Сьогодні розмовляв з ${u.join(", ")}.`:"Не пам’ятаю збережених розмов з кимось сьогодні.";
+    }
+    composeFoodTodayAnswer(){
+        const xs=this.brain.state?.food?.mealHistory||[]; const today=new Date().toISOString().slice(0,10);
+        const names=xs.filter(x=>String(x.at||"").slice(0,10)===today).map(x=>x.name).filter(Boolean);
+        return names.length?`Сьогодні їв: ${names.join(", ")}.`:"За сьогодні в пам’яті ще немає збереженої їжі.";
+    }
+    composeRecentConversationAnswer(){
+        const c=this.brain.state?.conversation; const i=this.lastIntent;
+        if(c?.personId==="Yani_Bakeneko") return "Щойно ми говорили про Яні.";
+        if(i?.includes("work")) return "Щойно ми говорили про мою роботу.";
+        if(i?.includes("dream")) return "Щойно ми говорили про сни.";
+        if(i?.includes("family")||i?.includes("brother")||i?.includes("parents")) return "Щойно ми говорили про мою сім’ю.";
+        return "Пам’ятаю саму розмову, але останню тему зараз не можу надійно назвати.";
+    }
+    composeDreamTodayAnswer(){ const d=this.brain.dreams?.lastRememberedDream?.(); const today=new Date().toISOString().slice(0,10); if(!d) return "Не пам’ятаю сьогоднішнього сну."; const dd=String(d.createdAt?new Date(d.createdAt).toISOString().slice(0,10):d.worldDate||""); return dd===today?(d.fragment?`Уривками. ${d.text}`:d.text):"Не пам’ятаю, щоб сьогодні після пробудження лишився сон."; }
+    composeDreamYaniAnswer(){ const xs=this.brain.state?.dreams?.history||[]; const d=[...xs].reverse().find(x=>x?.remembered && String(x?.person||"").toLowerCase().includes("yani")); return d?`Так, пам’ятаю сон із Яні. ${d.text}`:"Не пригадую збереженого сну з Яні."; }
+
     composeStructuredResponse(profile) {
         // Запити, що читають живий стан, не повинні залежати від випадкового
         // dialogue action. Те саме стосується економічних подій/opinions.
         const intent = profile.analysis.intent;
         if (intent === "name_ping") return [this.composeNamePingAnswer(profile)];
         if (intent === "ask_sleeping") return [this.composeSleepingAnswer(profile)];
-        if (["greet_morning","ask_current_time","check_day_period","ask_current_month","check_season","check_weekday","check_workday","ask_need_work_today","ask_is_home","ask_why_there","ask_fatigue","ask_yani_identity","ask_yani_species","ask_akira_identity_kind","ask_akira_wife","ask_yani_husband","ask_yani_relation_to_akira","ask_love_yani","ask_love_user","ask_why_with_yani","claim_user_is_wife","claim_identity_contradiction","ask_see_yani","ask_when_met_yani","ask_yani_today_together","ask_last_talk_yani","ask_sleep_desire_reason","ask_why_not_sleeping","ask_when_sleep","ask_sleep_obstacle","ask_can_go_home","ask_why_still_work","ask_previous_time_consistency"].includes(intent)) return [this.composeRealityAnswer(intent, profile)];
+        if (["greet_morning","ask_current_time","check_day_period","ask_current_month","check_season","check_weekday","check_workday","ask_need_work_today","ask_is_home","ask_why_there","ask_fatigue","ask_yani_identity","ask_yani_species","ask_akira_identity_kind","ask_akira_wife","ask_yani_husband","ask_yani_relation_to_akira","ask_love_yani","ask_love_user","ask_why_with_yani","claim_user_is_wife","claim_identity_contradiction","ask_see_yani","ask_when_met_yani","ask_yani_today_together","ask_last_talk_yani","ask_sleep_desire_reason","ask_why_not_sleeping","ask_when_sleep","ask_sleep_obstacle","ask_can_go_home","ask_why_still_work","ask_previous_time_consistency","claim_user_relationship","ask_lives_with","ask_has_brother","ask_parents","ask_working_now"].includes(intent)) return [this.composeRealityAnswer(intent, profile)];
         if (intent === "ask_current_movie") return [this.composeCurrentMovieAnswer(profile)];
         if (intent === "ask_movie_preferences") return [this.composeMoviePreferencesAnswer(profile)];
         if (intent === "ask_current_location") return [this.composeCurrentLocationAnswer(profile)];
@@ -2323,7 +2388,12 @@ class AkiraDialogue {
         if (intent === "ask_current_drink") return [this.composeFoodStateAnswer("drink")];
         if (intent === "ask_current_cooking") return [this.composeFoodStateAnswer("cooking")];
         if (intent === "ask_activity") return [this.composeActivityAnswer(profile)];
-        if (intent === "ask_current_people") return [this.brain.temporalContext?.answerPeople?.("present") || this.composeCurrentPeopleAnswer()];
+        if (intent === "ask_current_people") return ["З тобою."];
+        if (intent === "ask_people_today") return [this.composePeopleTodayAnswer()];
+        if (intent === "ask_food_today") return [this.composeFoodTodayAnswer()];
+        if (intent === "ask_hour_ago") return [this.composeHourAgoAnswer()];
+        if (intent === "ask_recent_conversation") return [this.composeRecentConversationAnswer()];
+        if (intent === "ask_recent_good") return [this.composeSalientMemoryAnswer() || "Не пригадую зараз нічого конкретного хорошого за останній час."];
         if (intent === "ask_past_people") return [this.brain.temporalContext?.answerPeople?.("past") || this.composePastPeopleAnswer()];
         if (intent === "ask_future_people") return [this.brain.temporalContext?.answerPeople?.("future") || "Не знаю. Я ж не планую наперед кожну розмову."];
         if (intent === "ask_future_general_activity") return [this.brain.temporalContext?.answerActivity?.("future", a=>this.actionHistoryLabel(a)) || "Поки не знаю, що робитиму далі."];
@@ -2336,6 +2406,9 @@ class AkiraDialogue {
         if (intent === "ask_history_today") return [this.composeHistoryAnswer("today")];
         if (intent === "ask_history_evening") return [this.composeHistoryAnswer("evening")];
         if (intent === "ask_history_yesterday") return [this.composeHistoryAnswer("yesterday")];
+        if (intent === "ask_dream_today") return [this.composeDreamTodayAnswer()];
+        if (intent === "ask_dream_yani") return [this.composeDreamYaniAnswer()];
+        if (intent === "ask_nightmare_wording") return [`Може, все ж жахи? ${this.brain.dreams?.answerTopic?.("nightmare") || "Жахи іноді можливі."}`];
         if (intent === "ask_last_dream") return [this.brain.dreams?.answerLastDream?.() || "Не пам\'ятаю, що мені снилося."];
         if (intent === "ask_dreaming_general") return [this.brain.dreams?.answerDreamingGenerally?.() || "Сни іноді бувають."];
         if (intent === "ask_dream_topic") return [this.brain.dreams?.answerTopic?.(this.pendingDreamTopic || this.brain.state.dreams?.lastTopic || "general") || "Про сон можна багато говорити."];
@@ -2375,7 +2448,7 @@ class AkiraDialogue {
         if (intent === "ask_plan_why") return [this.brain.goalsPlanning?.answerPlanWhy?.() || "Зараз немає конкретного довгого плану."];
         if (intent === "ask_plan_progress") return [this.brain.goalsPlanning?.answerPlanProgress?.() || "Зараз немає плану, який я виконую."];
         if (intent === "ask_future_activity") return [this.composeFutureActivityAnswer(profile)];
-        if (["ask_birthday","ask_family_names","ask_family","ask_education","ask_home","ask_home_room","ask_current_location","ask_work_schedule","ask_commute","ask_work_attitude","ask_health","ask_hygiene","ask_yani_relationship","ask_dreams","ask_private_countries","ask_private_why"].includes(intent)) {
+        if (["ask_birthday","ask_family_names","ask_family","ask_education","ask_home","ask_home_room","ask_current_location","ask_work_schedule","ask_commute","ask_work_attitude","ask_work_customers","ask_work_sales","ask_work_coworkers","ask_kent","ask_taras","ask_health","ask_hygiene","ask_yani_relationship","ask_dreams","ask_private_countries","ask_private_why"].includes(intent)) {
             const lifeReply = this.composeLifeAnswer(intent);
             if (lifeReply) return [lifeReply];
         }
