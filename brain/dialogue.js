@@ -487,6 +487,10 @@ class AkiraDialogue {
         if (/^(ти\s+передумав|ти\s+не\s+передумав|ти\s+сумніваєшся\s+в\s+тому\s+що\s+робиш|ти\s+переосмислюєш\s+це|ти\s+переоцінюєш\s+свій\s+план)[\s?!.,]*$/iu.test(normalized)) return "ask_metacognition";
         if (/^(що\s+ти\s+про\s+себе\s+думаєш|як\s+ти\s+сам\s+себе\s+сприймаєш)[\s?!.,]*$/iu.test(normalized)) return "ask_self_model";
         if (/^(у\s+тебе\s+є\s+внутрішній\s+конфлікт|ти\s+вагаєшся|тобі\s+важко\s+вирішити\s+чого\s+хочеш)[\s?!.,]*$/iu.test(normalized)) return "ask_self_conflict";
+        if (/^(які\s+в\s+тебе\s+звички|що\s+ти\s+часто\s+робиш|ти\s+помітив\s+у\s+себе\s+якісь\s+звички)[\s?!.,]*$/iu.test(normalized)) return "ask_learned_habits";
+        if (/^(що\s+ти\s+(останнім\s+часом\s+)?зрозумів\s+про\s+себе|що\s+ти\s+про\s+себе\s+помітив\s+останнім\s+часом)[\s?!.,]*$/iu.test(normalized)) return "ask_autobiographical_self";
+        if (/^(ти\s+чогось\s+навчився\s+з\s+досвіду|чого\s+ти\s+навчився\s+про\s+себе|що\s+тобі\s+показав\s+досвід)[\s?!.,]*$/iu.test(normalized)) return "ask_self_learning";
+        if (/^(у\s+тебе\s+є\s+незавершені\s+справи|ти\s+щось\s+не\s+доробив|що\s+в\s+тебе\s+лишилося\s+незавершеним)[\s?!.,]*$/iu.test(normalized)) return "ask_unfinished_goals";
 
         const askActivityPatterns = [
             /^що\s+(ти\s+)?(зараз\s+)?робиш[\s?!.,]*$/iu,
@@ -2219,6 +2223,10 @@ class AkiraDialogue {
             const conflict=this.brain.selfModel?.getPrimaryConflict?.();
             return [conflict?.text || "Зараз наче ні. Немає двох сильних бажань, які тягнуть мене в різні боки."];
         }
+        if (intent === "ask_learned_habits") return [this.brain.autobiographicalSelf?.answerHabit?.() || "Поки не помітив якоїсь нової сталої звички."];
+        if (intent === "ask_autobiographical_self") return [this.brain.autobiographicalSelf?.answerRecentSelf?.() || "Поки не робив про себе нових висновків."];
+        if (intent === "ask_self_learning") return [this.brain.autobiographicalSelf?.answerLearning?.() || "Поки замало досвіду для нового висновку."];
+        if (intent === "ask_unfinished_goals") return [this.brain.autobiographicalSelf?.answerUnfinished?.() || "Зараз не бачу важливої незавершеної справи."];
         if (intent === "ask_current_health") return [this.brain.health?.describe?.() || "Нормально почуваюся."];
         if (intent === "ask_contextual_why") {
             const reply = this.brain.contextualKnowledge?.answerWhy?.();

@@ -261,6 +261,7 @@ class AkiraBrain {
             "work_life",
             "inventory_money",
             "self_model",
+            "autobiographical_self",
             "dreams",
             "internal_stream",
             "emotional_expression"
@@ -692,6 +693,7 @@ class AkiraBrain {
             ["workLife", "AkiraWorkLife"],
             ["inventoryMoney", "AkiraInventoryMoney"],
             ["selfModel", "AkiraSelfModel"],
+            ["autobiographicalSelf", "AkiraAutobiographicalSelf"],
             ["dreams", "AkiraDreams"],
             ["internalStream", "AkiraInternalStream"],
             ["emotionalExpression", "AkiraEmotionalExpression"]
@@ -797,6 +799,7 @@ class AkiraBrain {
         this.yaniInteractions?.update?.(simulatedMinutes);
         this.workLife?.ensureDay?.();
         this.selfModel?.update?.(simulatedMinutes);
+        this.autobiographicalSelf?.update?.(simulatedMinutes);
         this.dreams?.update?.(simulatedMinutes);
         this.internalStream?.update?.(simulatedMinutes);
 
@@ -1090,6 +1093,7 @@ finishAction() {
     this.workLife?.completeAction?.(action);
     this.dreams?.completeAction?.(action);
     this.internalStream?.onActionFinished?.(action);
+    this.autobiographicalSelf?.onActionFinished?.(action);
 
     // Використовуємо тільки тригери, які прямо описані в emotions.json.
     if (action.actionId === "rest") {

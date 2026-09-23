@@ -1,0 +1,11 @@
+{
+  "autobiographicalSelf": {
+    "updateIntervalMinutes": 30,
+    "historyWindow": 180,
+    "minPatternCount": 3,
+    "maxLearnedPatterns": 24,
+    "maxObservations": 80,
+    "learningRate": 0.12,
+    "protectedCanon": true
+  }
+}
