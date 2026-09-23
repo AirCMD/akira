@@ -371,6 +371,14 @@ class AkiraDialogue {
         // Інакше «як ти?» бачиться лише як слово «як» + знак питання.
         const normalized = String(text || "").toLowerCase().replace(/[’`ʼ]/g, "'").trim();
 
+        // Коротке звертання на ім'я і питання, чи Акіра спить,
+        // повинні читати живий стан, а не провалюватися в greeting/topic fallback.
+        if (/^(акіра)[\s?!.,]*$/iu.test(normalized)) return "name_ping";
+        if (/^(привіт[,!\s]*)?(ти\s+)?спиш[\s?!.,]*$/iu.test(normalized)) return "ask_sleeping";
+
+        // «Яке кіно ти дивишся?» = питання про поточну дію, а не про смаки в кіно.
+        if (/^(яке|який|що\s+за)\s+(кіно|фільм)\s+ти\s+(зараз\s+)?дивишся[\s?!.,]*$/iu.test(normalized)) return "ask_current_movie";
+
         const askDatePatterns = [
             /^(який|котрий)\s+сьогодні\s+(день|день\s+тижня|дата)[\s?!.,]*$/iu,
             /^що\s+сьогодні\s+за\s+(день|дата)[\s?!.,]*$/iu,
@@ -426,7 +434,7 @@ class AkiraDialogue {
             [/^(з\s+якого\s+ти\s+міста|звідки\s+ти\s+родом)[\s?!.,]*$/iu, "ask_hometown"],
             [/^(з\s+якої\s+ти\s+країни|яка\s+твоя\s+країна)[\s?!.,]*$/iu, "ask_country"],
             [/^(де\s+ти\s+живеш|у\s+якому\s+місті\s+ти\s+живеш)[\s?!.,]*$/iu, "ask_residence"],
-            [/^(ким\s+ти\s+працюєш|яка\s+в\s+тебе\s+професія|хто\s+ти\s+за\s+професією)[\s?!.,]*$/iu, "ask_occupation"],
+            [/^(ким\s+(ти\s+)?працюєш|яка\s+в\s+тебе\s+професія|хто\s+ти\s+за\s+професією)[\s?!.,]*$/iu, "ask_occupation"],
             [/^(де\s+ти\s+працюєш|яке\s+твоє\s+місце\s+роботи)[\s?!.,]*$/iu, "ask_workplace"]
         ];
         for (const [pattern, identityIntent] of identityPatterns) {
@@ -1257,6 +1265,55 @@ class AkiraDialogue {
         return "Поки не вирішив. Подивлюся на час, погоду й свій стан.";
     }
 
+    isCurrentlySleeping() {
+        const id = this.brain.state?.action?.actionId || "";
+        return id === "sleep" || this.brain.state?.activity === "sleeping";
+    }
+
+    composeSleepingAnswer() {
+        if (this.isCurrentlySleeping()) {
+            return this.chooseTemplate([
+                "Так, сплю.",
+                "Сплю. Точніше, спав до цього повідомлення.",
+                "Так. Я зараз сплю, не питай як я тобі відповідаю.",
+                "Мгм... сплю.",
+                "Сплю. Що сталося?"
+            ]);
+        }
+        return this.chooseTemplate([
+            "Ні, не сплю.",
+            "Не сплю. Що сталося?",
+            "Ні. Я ще не сплю.",
+            "Не-а, я тут."
+        ]);
+    }
+
+    composeNamePingAnswer() {
+        if (this.isCurrentlySleeping()) {
+            return this.chooseTemplate(["Мм?..", "Що?..", "Я сплю...", "Чого?.. я спав."]);
+        }
+        return this.chooseTemplate([
+            "?",
+            "Що?",
+            "Чого тобі?",
+            "Так, я Акіра. Ти про щось хочеш поговорити?"
+        ]);
+    }
+
+    composeCurrentMovieAnswer() {
+        const action = this.brain.state?.action || {};
+        const id = action.actionId || "";
+        const title = action.movieTitle || action.filmTitle || action.title || null;
+        if (["watchMovie", "watchFilm", "cinema"].includes(id)) {
+            return title ? `Зараз дивлюся «${title}».` : "Дивлюся зараз кіно, але назву я не зафіксував.";
+        }
+        return this.chooseTemplate([
+            "Зараз ніяке. Я кіно не дивлюся.",
+            "Ніяке зараз не дивлюся.",
+            "Зараз я не дивлюся фільм."
+        ]);
+    }
+
     composeActivityAnswer(profile) {
         const action = profile.state?.action;
         const id = action?.actionId || "";
@@ -1277,7 +1334,14 @@ class AkiraDialogue {
             checkSocialNetwork: "Перевіряю соцмережі.",
             writePost: "Пишу допис.",
             think: "Та думаю про всяке.",
-            organizeDesk: "Трохи прибираю на столі."
+            organizeDesk: "Трохи прибираю на столі.",
+            commuteToWork: "Їду на роботу.",
+            commuteHome: "Їду додому.",
+            washFace: "Умиваюся.",
+            shave: "Голюся.",
+            changeClothes: "Перевдягаюся.",
+            doLaundry: "Займаюся пранням.",
+            takeBath: "Приймаю ванну."
         };
 
         if (id && names[id]) {
@@ -1546,6 +1610,9 @@ class AkiraDialogue {
         // Запити, що читають живий стан, не повинні залежати від випадкового
         // dialogue action. Те саме стосується економічних подій/opinions.
         const intent = profile.analysis.intent;
+        if (intent === "name_ping") return [this.composeNamePingAnswer(profile)];
+        if (intent === "ask_sleeping") return [this.composeSleepingAnswer(profile)];
+        if (intent === "ask_current_movie") return [this.composeCurrentMovieAnswer(profile)];
         if (intent === "ask_date") return [this.composeDateAnswer(profile)];
         if (intent === "ask_holiday") return [this.composeHolidayAnswer(profile)];
         if (intent === "ask_weather") return [this.composeWeatherAnswer(profile)];
@@ -1590,6 +1657,9 @@ class AkiraDialogue {
 
         // Питання про поточний стан відповідають з живого стану мозку,
         // а не з випадкового fallback-шаблону.
+        if (profile.analysis.intent === "name_ping") return [this.composeNamePingAnswer(profile)];
+        if (profile.analysis.intent === "ask_sleeping") return [this.composeSleepingAnswer(profile)];
+        if (profile.analysis.intent === "ask_current_movie") return [this.composeCurrentMovieAnswer(profile)];
         if (profile.analysis.intent === "ask_date") {
             return [this.composeDateAnswer(profile)];
         }
