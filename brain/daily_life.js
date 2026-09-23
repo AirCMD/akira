@@ -4,10 +4,11 @@ class AkiraDailyLife {
   init() {
     this.profile = this.brain.data?.life_profile?.lifeProfile || {};
     const state = this.brain.state;
-    state.dailyLife = state.dailyLife || { routines: {}, commute: {}, homeRoom: "secondRoom" };
+    state.dailyLife = state.dailyLife || { routines: {}, commute: {}, homeRoom: "cozyRoom", roomHistory: [] };
     state.dailyLife.routines = state.dailyLife.routines || {};
     state.dailyLife.commute = state.dailyLife.commute || {};
-    state.dailyLife.homeRoom ||= "secondRoom";
+    state.dailyLife.homeRoom ||= "cozyRoom";
+    state.dailyLife.roomHistory = Array.isArray(state.dailyLife.roomHistory) ? state.dailyLife.roomHistory : [];
     return this;
   }
 
@@ -27,6 +28,43 @@ class AkiraDailyLife {
     return Math.floor((Date.now() - d.getTime()) / 86400000);
   }
   doneToday(id) { return String(this.last(id) || "").slice(0,10) === this.dayKey(); }
+
+  getHomeData() { return this.brain.data?.home?.home || {}; }
+  getRoom(id) { return this.getHomeData()?.rooms?.[id] || null; }
+  currentRoomId() { return this.brain.state?.dailyLife?.homeRoom || null; }
+  currentRoom() {
+    const id = this.currentRoomId();
+    const room = id ? this.getRoom(id) : null;
+    return room ? { id, ...room } : null;
+  }
+
+  setHomeRoom(roomId, reason="movement") {
+    if (this.location() !== "home" || !this.getRoom(roomId)) return false;
+    const state = this.brain.state.dailyLife;
+    if (state.homeRoom === roomId) return true;
+    state.roomHistory.push({ from: state.homeRoom || null, to: roomId, reason, at: new Date().toISOString() });
+    if (state.roomHistory.length > 30) state.roomHistory.shift();
+    state.homeRoom = roomId;
+    return true;
+  }
+
+  roomForAction(actionId) {
+    const map = {
+      sleep:"glassBedroom", rest:"cozyRoom", read:"cozyRoom", playGame:"cozyRoom",
+      checkPhone:"cozyRoom", checkSocialNetwork:"cozyRoom", writePost:"cozyRoom",
+      listenToMusic:"cozyRoom", eat:"kitchen", drink:"kitchen",
+      washFace:"bathroom", shave:"bathroom", takeBath:"bathroom",
+      lookOutWindow:"balcony", stargazing:"balcony", lookAtFlowers:"balcony",
+      commuteToWork:"hallway"
+    };
+    return map[actionId] || null;
+  }
+
+  prepareAction(action) {
+    if (!action || this.location() !== "home") return;
+    const target = action.homeRoom || this.roomForAction(action.actionId);
+    if (target) this.setHomeRoom(target, `action:${action.actionId}`);
+  }
 
   action(actionId, duration, reason, extra={}) {
     return { type:"action", actionId, duration, category:"daily_life", reason, score: 1000, factors:{dailyLife:1000}, ...extra };
@@ -79,12 +117,13 @@ class AkiraDailyLife {
 
     if (id === "commuteToWork") {
       this.brain.state.world.location = "techsmith";
+      this.brain.state.dailyLife.homeRoom = null;
       this.brain.state.dailyLife.commute.lastArrivalWork = now;
     }
     if (id === "commuteHome") {
       this.brain.state.world.location = "home";
       this.brain.state.dailyLife.commute.lastArrivalHome = now;
-      this.brain.state.dailyLife.homeRoom = "secondRoom";
+      this.brain.state.dailyLife.homeRoom = "cozyRoom";
     }
   }
 }

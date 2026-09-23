@@ -1,0 +1,69 @@
+{
+  "home": {
+    "id": "akiraApartment",
+    "type": "apartment",
+    "city": "Демо",
+    "district": "Теріяківський",
+    "ownership": "receivedFromParents",
+    "residents": ["Akira_Bakeneko", "Yani_Bakeneko"],
+    "roomCount": 4,
+    "favoriteRoom": "cozyRoom",
+    "rooms": {
+      "glassBedroom": {
+        "name": "скляна спальня",
+        "kind": "bedroom",
+        "description": "Дальня ліва кімната зі скляними стінами, двоспальним ліжком, великою шафою, телевізором, приставкою та фікусом.",
+        "features": ["doubleBed", "largeTV", "console", "gamepads", "ficus", "glassWalls", "balconyDoor"]
+      },
+      "cozyRoom": {
+        "name": "затишна друга кімната",
+        "kind": "livingRoom",
+        "favorite": true,
+        "description": "Велика затишна кімната з диваном, комп'ютерним столиком, вікнами та виходом на балкон.",
+        "features": ["sofa", "computerDesk", "windows", "balconyDoor"]
+      },
+      "spaceRoom": {
+        "name": "кімната в космічному стилі",
+        "kind": "room",
+        "theme": "space"
+      },
+      "seaRoom": {
+        "name": "кімната в морському стилі",
+        "kind": "room",
+        "theme": "sea"
+      },
+      "kitchen": {
+        "name": "кухня",
+        "kind": "kitchen",
+        "palette": ["фісташковий", "помаранчевий"]
+      },
+      "bathroom": {
+        "name": "ванна",
+        "kind": "bathroom",
+        "theme": "frutiger aero"
+      },
+      "toilet": {
+        "name": "туалет",
+        "kind": "toilet",
+        "theme": "frutiger aero"
+      },
+      "balcony": {
+        "name": "широкий балкон",
+        "kind": "balcony",
+        "connects": ["glassBedroom", "cozyRoom"]
+      },
+      "hallway": {
+        "name": "коридор",
+        "kind": "hallway",
+        "features": ["storageCloset"]
+      }
+    },
+    "views": [
+      "подвір'я з деревами",
+      "дорога з автомобілями й ліхтарями",
+      "багатоповерхівки",
+      "масмаркет",
+      "приватний сад між будинками"
+    ]
+  }
+}

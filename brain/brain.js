@@ -244,7 +244,8 @@ class AkiraBrain {
             "social",
             "opinions",
             "appearance",
-            "life_profile"
+            "life_profile",
+            "home"
         ];
 
         const results = {};
@@ -1289,6 +1290,10 @@ finishAction() {
 
             return action;
         }
+
+        // Домашній простір є окремим шаром усередині location=home.
+        // Це зберігає сумісність зі старими правилами activities, які очікують саме "home".
+        this.dailyLife?.prepareAction?.(action);
 
         const duration =
             this.number(

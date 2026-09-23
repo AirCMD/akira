@@ -439,6 +439,7 @@ class AkiraDialogue {
             [/(хто\s+твої\s+батьки|як\s+звати\s+(твоїх\s+)?(батьків|маму|тата|брата)|імен.*(батьк|брат))/iu, "ask_family_names"],
             [/(в\s+тебе\s+є\s+(батьки|брат|сестра)|розкажи\s+про\s+(свою\s+)?сім)/iu, "ask_family"],
             [/(де\s+ти\s+вчився|яка\s+в\s+тебе\s+освіта|на\s+кого\s+ти\s+вчився|що\s+ти\s+закінчив)/iu, "ask_education"],
+            [/(де\s+ти\s+зараз\s+вдома|в\s+якій\s+ти\s+(зараз\s+)?кімнаті|де\s+ти\s+в\s+квартирі)/iu, "ask_home_room"],
             [/(скільки\s+в\s+тебе\s+кімнат|розкажи\s+про\s+(свою\s+)?квартир|яка\s+в\s+тебе\s+квартира|де\s+вдома\s+ти\s+любиш)/iu, "ask_home"],
             [/(який\s+у\s+тебе\s+графік|коли\s+ти\s+працюєш|о\s+котрій\s+ти\s+працюєш)/iu, "ask_work_schedule"],
             [/(як\s+ти\s+добираєшся\s+на\s+роботу|скільки\s+тобі\s+їхати\s+на\s+роботу)/iu, "ask_commute"],
@@ -1414,6 +1415,11 @@ class AkiraDialogue {
                 return "У мене повна вища освіта, я ІТ-фахівець. Ще проходив курси масажу та малювання картин.";
             case "ask_home":
                 return "У нас із Яні чотирикімнатна квартира в Теріяківському районі. Є широкий балкон, кімнати в космічному й морському стилях. Найбільше люблю другу кімнату — вона затишна.";
+            case "ask_home_room": {
+                if (this.brain.state?.world?.location !== "home") return "Я зараз не вдома.";
+                const room = this.brain.dailyLife?.currentRoom?.();
+                return room?.name ? `Я зараз у ${room.name}.` : "Я вдома, але конкретну кімнату зараз не відмітив.";
+            }
             case "ask_work_schedule":
                 return "Працюю з понеділка по п’ятницю, з 10:00 до 16:00. Субота й неділя — вихідні.";
             case "ask_commute":
@@ -1546,7 +1552,7 @@ class AkiraDialogue {
         if (intent === "ask_state") return [this.composeStateAnswer(profile)];
         if (intent === "ask_activity") return [this.composeActivityAnswer(profile)];
         if (intent === "ask_future_activity") return [this.composeFutureActivityAnswer(profile)];
-        if (["ask_birthday","ask_family_names","ask_family","ask_education","ask_home","ask_work_schedule","ask_commute","ask_work_attitude","ask_health","ask_hygiene","ask_yani_relationship","ask_dreams","ask_private_countries"].includes(intent)) {
+        if (["ask_birthday","ask_family_names","ask_family","ask_education","ask_home","ask_home_room","ask_work_schedule","ask_commute","ask_work_attitude","ask_health","ask_hygiene","ask_yani_relationship","ask_dreams","ask_private_countries"].includes(intent)) {
             const lifeReply = this.composeLifeAnswer(intent);
             if (lifeReply) return [lifeReply];
         }
