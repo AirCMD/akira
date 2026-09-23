@@ -1792,6 +1792,33 @@ class AkiraDialogue {
         return { normalized, topic, opinionRequest, eventKind };
     }
 
+    composeActionReasonAnswer(profile) {
+        const action = this.brain.state?.action || null;
+        const actionId = action?.actionId || null;
+        const reason = this.brain.intentions?.getWhy?.();
+
+        // Відсутність активної дії не є секретом. Не дозволяємо generic/private
+        // fallback вигадувати таємничу причину для звичайного idle.
+        if (!action || actionId === "idle") {
+            return this.chooseTemplate([
+                "Та просто нічим зараз не зайнятий.",
+                "Нічого особливого. Просто зараз немає конкретної справи.",
+                "Так вийшло. Поки нічим конкретним не займаюся.",
+                "Нічого не планував на цей момент, тому просто байдикую."
+            ]);
+        }
+
+        if (reason) {
+            return `Бо ${String(reason).replace(/[.!?]+$/u, "")}.`;
+        }
+
+        return this.chooseTemplate([
+            "Та без якоїсь особливої причини. Просто зараз цим займаюся.",
+            "Особливої причини немає. Просто так склалося.",
+            "Не знаю, тут немає якоїсь окремої причини."
+        ]);
+    }
+
     composeStructuredResponse(profile) {
         // Запити, що читають живий стан, не повинні залежати від випадкового
         // dialogue action. Те саме стосується економічних подій/opinions.
@@ -1810,8 +1837,7 @@ class AkiraDialogue {
         if (intent === "ask_current_cooking") return [this.composeFoodStateAnswer("cooking")];
         if (intent === "ask_activity") return [this.composeActivityAnswer(profile)];
         if (intent === "ask_action_reason") {
-            const reason = this.brain.intentions?.getWhy?.();
-            return [reason ? `Бо ${String(reason).replace(/[.!?]+$/u, "")}.` : "Та зараз немає якоїсь особливої причини."];
+            return [this.composeActionReasonAnswer(profile)];
         }
         if (intent === "ask_current_plan") {
             const plan = this.brain.intentions?.getNextPlan?.();
@@ -1886,8 +1912,7 @@ class AkiraDialogue {
             return [this.composeActivityAnswer(profile)];
         }
         if (profile.analysis.intent === "ask_action_reason") {
-            const reason = this.brain.intentions?.getWhy?.();
-            return [reason ? `Бо ${String(reason).replace(/[.!?]+$/u, "")}.` : "Та зараз немає якоїсь особливої причини."];
+            return [this.composeActionReasonAnswer(profile)];
         }
         if (profile.analysis.intent === "ask_current_plan") {
             const plan = this.brain.intentions?.getNextPlan?.();
@@ -2477,6 +2502,7 @@ class AkiraDialogue {
             "ask_sleeping",
             "ask_state",
             "ask_activity",
+            "ask_action_reason",
             "ask_current_location",
             "ask_current_movie"
         ].includes(intent);
