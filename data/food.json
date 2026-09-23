@@ -1,0 +1,460 @@
+{
+  "food": {
+    "store": {
+      "id": "massmarket",
+      "name": "масмаркет біля дому",
+      "travelMinutes": 8
+    },
+    "settings": {
+      "hungerCookThreshold": 42,
+      "thirstThreshold": 38,
+      "dishWashThreshold": 3,
+      "recentMealAvoidCount": 4
+    },
+    "meals": [
+      {
+        "id": "oatmeal",
+        "name": "вівсянку",
+        "mealTypes": [
+          "breakfast"
+        ],
+        "minutes": 12,
+        "ingredients": {
+          "oats": 1,
+          "water": 1
+        }
+      },
+      {
+        "id": "bananaYogurt",
+        "name": "банан з йогуртом",
+        "mealTypes": [
+          "breakfast",
+          "snack"
+        ],
+        "minutes": 3,
+        "ingredients": {
+          "banana": 1,
+          "yogurt": 1
+        }
+      },
+      {
+        "id": "applePuree",
+        "name": "яблучне пюре",
+        "mealTypes": [
+          "breakfast",
+          "snack"
+        ],
+        "minutes": 2,
+        "ingredients": {
+          "applePuree": 1
+        }
+      },
+      {
+        "id": "eggs",
+        "name": "варені яйця",
+        "mealTypes": [
+          "breakfast",
+          "dinner"
+        ],
+        "minutes": 12,
+        "ingredients": {
+          "eggs": 2
+        }
+      },
+      {
+        "id": "omeletLettuce",
+        "name": "омлет із салатом",
+        "mealTypes": [
+          "breakfast",
+          "dinner"
+        ],
+        "minutes": 15,
+        "ingredients": {
+          "eggs": 2,
+          "lettuce": 1
+        }
+      },
+      {
+        "id": "borschtSourCream",
+        "name": "борщ зі сметаною",
+        "mealTypes": [
+          "lunch"
+        ],
+        "minutes": 35,
+        "ingredients": {
+          "borschtSet": 1,
+          "sourCream": 1
+        }
+      },
+      {
+        "id": "sorrelBorscht",
+        "name": "зелений борщ",
+        "mealTypes": [
+          "lunch"
+        ],
+        "minutes": 35,
+        "ingredients": {
+          "sorrel": 1,
+          "eggs": 1,
+          "potato": 1,
+          "sourCream": 1
+        }
+      },
+      {
+        "id": "misoSoup",
+        "name": "місо-суп",
+        "mealTypes": [
+          "lunch",
+          "dinner"
+        ],
+        "minutes": 18,
+        "ingredients": {
+          "miso": 1,
+          "noodles": 1
+        }
+      },
+      {
+        "id": "sausagesPasta",
+        "name": "сосиски з макаронами",
+        "mealTypes": [
+          "lunch",
+          "dinner"
+        ],
+        "minutes": 20,
+        "ingredients": {
+          "sausages": 1,
+          "pasta": 1
+        }
+      },
+      {
+        "id": "sausagesMash",
+        "name": "сосиски з картопляним пюре",
+        "mealTypes": [
+          "lunch",
+          "dinner"
+        ],
+        "minutes": 25,
+        "ingredients": {
+          "sausages": 1,
+          "potato": 2
+        }
+      },
+      {
+        "id": "riceFishSalad",
+        "name": "рис із рибою, салатом і морквою",
+        "mealTypes": [
+          "lunch",
+          "dinner"
+        ],
+        "minutes": 28,
+        "ingredients": {
+          "rice": 1,
+          "fish": 1,
+          "lettuce": 1,
+          "carrot": 1
+        }
+      },
+      {
+        "id": "buckwheatChicken",
+        "name": "гречку з куркою",
+        "mealTypes": [
+          "lunch",
+          "dinner"
+        ],
+        "minutes": 28,
+        "ingredients": {
+          "buckwheat": 1,
+          "chicken": 1
+        }
+      },
+      {
+        "id": "turkeyBuckwheat",
+        "name": "котлету з індички, гречку й салат",
+        "mealTypes": [
+          "lunch",
+          "dinner"
+        ],
+        "minutes": 28,
+        "ingredients": {
+          "turkeyCutlet": 1,
+          "buckwheat": 1,
+          "lettuce": 1
+        }
+      },
+      {
+        "id": "pelmeni",
+        "name": "пельмені",
+        "mealTypes": [
+          "lunch",
+          "dinner"
+        ],
+        "minutes": 15,
+        "ingredients": {
+          "pelmeni": 1
+        }
+      },
+      {
+        "id": "vareniki",
+        "name": "вареники",
+        "mealTypes": [
+          "lunch",
+          "dinner"
+        ],
+        "minutes": 15,
+        "ingredients": {
+          "vareniki": 1,
+          "sourCream": 1
+        }
+      },
+      {
+        "id": "instantNoodles",
+        "name": "локшину швидкого приготування",
+        "mealTypes": [
+          "lunch",
+          "dinner"
+        ],
+        "minutes": 7,
+        "ingredients": {
+          "instantNoodles": 1
+        }
+      },
+      {
+        "id": "roastChicken",
+        "name": "запечену курку",
+        "mealTypes": [
+          "lunch",
+          "dinner"
+        ],
+        "minutes": 45,
+        "ingredients": {
+          "chicken": 2
+        }
+      },
+      {
+        "id": "creamSoup",
+        "name": "крем-суп",
+        "mealTypes": [
+          "lunch",
+          "dinner"
+        ],
+        "minutes": 30,
+        "ingredients": {
+          "creamSoupSet": 1
+        }
+      },
+      {
+        "id": "yogurtSnack",
+        "name": "йогурт",
+        "mealTypes": [
+          "snack"
+        ],
+        "minutes": 1,
+        "ingredients": {
+          "yogurt": 1
+        }
+      },
+      {
+        "id": "fruitSnack",
+        "name": "фрукти",
+        "mealTypes": [
+          "snack"
+        ],
+        "minutes": 1,
+        "ingredients": {
+          "fruit": 1
+        }
+      },
+      {
+        "id": "chocolateSnack",
+        "name": "шоколад",
+        "mealTypes": [
+          "snack"
+        ],
+        "minutes": 1,
+        "ingredients": {
+          "chocolate": 1
+        }
+      }
+    ],
+    "drinks": [
+      {
+        "id": "water",
+        "name": "воду",
+        "times": [
+          "any"
+        ],
+        "ingredients": {
+          "water": 1
+        }
+      },
+      {
+        "id": "compote",
+        "name": "компот",
+        "times": [
+          "day",
+          "evening"
+        ],
+        "ingredients": {
+          "compote": 1
+        }
+      },
+      {
+        "id": "uzvar",
+        "name": "узвар",
+        "times": [
+          "day",
+          "evening"
+        ],
+        "ingredients": {
+          "uzvar": 1
+        }
+      },
+      {
+        "id": "juice",
+        "name": "сік",
+        "times": [
+          "day",
+          "evening"
+        ],
+        "ingredients": {
+          "juice": 1
+        }
+      },
+      {
+        "id": "mors",
+        "name": "морс",
+        "times": [
+          "day",
+          "evening"
+        ],
+        "ingredients": {
+          "mors": 1
+        }
+      },
+      {
+        "id": "milk",
+        "name": "молоко",
+        "times": [
+          "day",
+          "evening"
+        ],
+        "ingredients": {
+          "milk": 1
+        }
+      },
+      {
+        "id": "vanillaMilkshake",
+        "name": "ванільний молочний коктейль",
+        "times": [
+          "day",
+          "evening"
+        ],
+        "ingredients": {
+          "milk": 1,
+          "vanilla": 1
+        }
+      },
+      {
+        "id": "herbalTea",
+        "name": "трав'яний чай",
+        "times": [
+          "morning",
+          "evening"
+        ],
+        "ingredients": {
+          "tea": 1,
+          "water": 1
+        }
+      },
+      {
+        "id": "lemonGingerTea",
+        "name": "чай з лимоном та імбиром",
+        "times": [
+          "evening"
+        ],
+        "ingredients": {
+          "tea": 1,
+          "lemon": 1,
+          "ginger": 1,
+          "water": 1
+        }
+      }
+    ],
+    "initialInventory": {
+      "oats": 5,
+      "water": 30,
+      "banana": 4,
+      "yogurt": 5,
+      "applePuree": 3,
+      "eggs": 12,
+      "lettuce": 5,
+      "borschtSet": 2,
+      "sourCream": 5,
+      "sorrel": 2,
+      "potato": 12,
+      "miso": 3,
+      "noodles": 4,
+      "sausages": 5,
+      "pasta": 6,
+      "rice": 6,
+      "fish": 4,
+      "carrot": 8,
+      "buckwheat": 7,
+      "chicken": 6,
+      "turkeyCutlet": 4,
+      "pelmeni": 3,
+      "vareniki": 3,
+      "instantNoodles": 5,
+      "creamSoupSet": 3,
+      "fruit": 8,
+      "chocolate": 4,
+      "compote": 4,
+      "uzvar": 3,
+      "juice": 4,
+      "mors": 3,
+      "milk": 5,
+      "vanilla": 3,
+      "tea": 10,
+      "lemon": 4,
+      "ginger": 3
+    },
+    "restockTo": {
+      "oats": 6,
+      "water": 36,
+      "banana": 6,
+      "yogurt": 6,
+      "applePuree": 4,
+      "eggs": 16,
+      "lettuce": 6,
+      "borschtSet": 3,
+      "sourCream": 6,
+      "sorrel": 3,
+      "potato": 16,
+      "miso": 4,
+      "noodles": 6,
+      "sausages": 6,
+      "pasta": 8,
+      "rice": 8,
+      "fish": 5,
+      "carrot": 10,
+      "buckwheat": 8,
+      "chicken": 8,
+      "turkeyCutlet": 5,
+      "pelmeni": 4,
+      "vareniki": 4,
+      "instantNoodles": 6,
+      "creamSoupSet": 4,
+      "fruit": 10,
+      "chocolate": 5,
+      "compote": 5,
+      "uzvar": 4,
+      "juice": 5,
+      "mors": 4,
+      "milk": 6,
+      "vanilla": 4,
+      "tea": 12,
+      "lemon": 5,
+      "ginger": 4
+    }
+  }
+}

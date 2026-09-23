@@ -54,6 +54,7 @@ class AkiraDailyLife {
       sleep:"glassBedroom", rest:"cozyRoom", read:"cozyRoom", playGame:"cozyRoom",
       checkPhone:"cozyRoom", checkSocialNetwork:"cozyRoom", writePost:"cozyRoom",
       listenToMusic:"cozyRoom", watchStreamer:"cozyRoom", eat:"kitchen", drink:"kitchen",
+      cookMeal:"kitchen", eatMeal:"kitchen", prepareDrink:"kitchen", drinkSelected:"kitchen", washDishes:"kitchen",
       washFace:"bathroom", shave:"bathroom", takeBath:"bathroom",
       lookOutWindow:"balcony", stargazing:"balcony", lookAtFlowers:"balcony",
       commuteToWork:"hallway"

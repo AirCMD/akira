@@ -442,6 +442,10 @@ class AkiraDialogue {
             /^ти\s+зараз\s+що\s+робиш[\s?!.,]*$/iu
         ];
 
+        if (/^(що|чого)\s+(ти\s+)?(їси|їсиш)[\s?!.,]*$/iu.test(normalized)) return "ask_current_food";
+        if (/^(що|чого)\s+(ти\s+)?(п['’ʼ]?єш|пєш)[\s?!.,]*$/iu.test(normalized)) return "ask_current_drink";
+        if (/^(що|чого)\s+(ти\s+)?готуєш[\s?!.,]*$/iu.test(normalized)) return "ask_current_cooking";
+
         if (askActivityPatterns.some(pattern => pattern.test(normalized))) {
             return "ask_activity";
         }
@@ -1408,6 +1412,23 @@ class AkiraDialogue {
         ]);
     }
 
+    composeFoodStateAnswer(kind) {
+        const action=this.brain.state?.action||{};
+        const food=this.brain.state?.food||{};
+        if(kind==="food") {
+            if(action.actionId==="eatMeal") return action.mealName ? `Їм ${action.mealName}.` : "Їм зараз.";
+            if(action.actionId==="cookMeal") return action.mealName ? `Ще не їм, готую ${action.mealName}.` : "Ще не їм, готую собі щось.";
+            return "Зараз нічого не їм.";
+        }
+        if(kind==="drink") {
+            if(action.actionId==="drinkSelected") return action.drinkName ? `П'ю ${action.drinkName}.` : "П'ю щось.";
+            if(action.actionId==="prepareDrink") return action.drinkName ? `Зараз готую собі ${action.drinkName}.` : "Готую собі щось випити.";
+            return "Зараз нічого не п'ю.";
+        }
+        if(action.actionId==="cookMeal") return action.mealName ? `Готую ${action.mealName}.` : "Готую собі їсти.";
+        return "Зараз нічого не готую.";
+    }
+
     composeActivityAnswer(profile) {
         const action = profile.state?.action;
         const id = action?.actionId || "";
@@ -1446,6 +1467,14 @@ class AkiraDialogue {
             changeClothes: "Перевдягаюся.",
             doLaundry: "Займаюся пранням.",
             takeBath: "Приймаю ванну.",
+            cookMeal: action?.mealName ? `Готую ${action.mealName}.` : "Готую собі їсти.",
+            eatMeal: action?.mealName ? `Їм ${action.mealName}.` : "Їм зараз.",
+            prepareDrink: action?.drinkName ? `Готую собі ${action.drinkName}.` : "Готую щось випити.",
+            drinkSelected: action?.drinkName ? `П'ю ${action.drinkName}.` : "П'ю щось.",
+            washDishes: "Мию посуд.",
+            travelToMassmarket: "Йду в масмаркет по продукти.",
+            groceryShopping: "Купую продукти в масмаркеті.",
+            returnHomeGroceries: "Повертаюся додому з продуктами.",
             watchStreamer: "Дивлюся стрім або огляд.",
             travelToLeisure: action?.destinationName ? `Їду зараз у ${action.destinationName}.` : "Кудись вибрався з дому.",
             returnHomeLeisure: "Повертаюся додому.",
@@ -1764,6 +1793,9 @@ class AkiraDialogue {
         if (intent === "ask_holiday") return [this.composeHolidayAnswer(profile)];
         if (intent === "ask_weather") return [this.composeWeatherAnswer(profile)];
         if (intent === "ask_state") return [this.composeStateAnswer(profile)];
+        if (intent === "ask_current_food") return [this.composeFoodStateAnswer("food")];
+        if (intent === "ask_current_drink") return [this.composeFoodStateAnswer("drink")];
+        if (intent === "ask_current_cooking") return [this.composeFoodStateAnswer("cooking")];
         if (intent === "ask_activity") return [this.composeActivityAnswer(profile)];
         if (intent === "ask_future_activity") return [this.composeFutureActivityAnswer(profile)];
         if (["ask_birthday","ask_family_names","ask_family","ask_education","ask_home","ask_home_room","ask_current_location","ask_work_schedule","ask_commute","ask_work_attitude","ask_health","ask_hygiene","ask_yani_relationship","ask_dreams","ask_private_countries","ask_private_why"].includes(intent)) {
@@ -1825,6 +1857,9 @@ class AkiraDialogue {
             return [this.composeStateAnswer(profile)];
         }
 
+        if (profile.analysis.intent === "ask_current_food") return [this.composeFoodStateAnswer("food")];
+        if (profile.analysis.intent === "ask_current_drink") return [this.composeFoodStateAnswer("drink")];
+        if (profile.analysis.intent === "ask_current_cooking") return [this.composeFoodStateAnswer("cooking")];
         if (profile.analysis.intent === "ask_activity") {
             return [this.composeActivityAnswer(profile)];
         }
