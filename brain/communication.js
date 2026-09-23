@@ -19,6 +19,18 @@ class AkiraCommunication {
         const fatigue = Number(state.fatigue ?? 20);
         const socialEnergy = Number(state.socialEnergy ?? 60);
         const actionId = state.action?.actionId || null;
+        const attentionResult = this.brain?.attention?.onMessage?.(input) || { noticed: true, salience: 100, barrier: 0 };
+
+        // Якщо повідомлення не пробило поточний фокус уваги, Акіра його зараз
+        // не обробляє. Це не те саме, що свідомо проігнорувати повідомлення.
+        if (!attentionResult.noticed) {
+            return {
+                text, dialogueSilence: false, thinkingMs: 0, typingMs: 0, pauses: [],
+                abandon: false, unseen: true, noticed: false,
+                reason: "не помітив повідомлення через поточний фокус уваги",
+                attention: attentionResult
+            };
+        }
 
         // Базова затримка залежить від довжини майбутньої відповіді.
         // Це не симуляція кожної клавіші, а людський темп перед відправкою.
@@ -78,7 +90,10 @@ class AkiraCommunication {
             abandonAfterMs: abandon
                 ? Math.round(typingMs * (0.35 + Math.random() * 0.45))
                 : null,
-            reason: abandon ? "передумав відповідати" : null
+            reason: abandon ? "передумав відповідати" : null,
+            unseen: false,
+            noticed: true,
+            attention: attentionResult
         };
     }
 }

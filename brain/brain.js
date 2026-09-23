@@ -251,7 +251,8 @@ class AkiraBrain {
             "household",
             "intentions",
             "health",
-            "accidents"
+            "accidents",
+            "attention"
         ];
 
         const results = {};
@@ -670,7 +671,8 @@ class AkiraBrain {
             ["household", "AkiraHousehold"],
             ["intentions", "AkiraIntentions"],
             ["health", "AkiraHealth"],
-            ["accidents", "AkiraAccidents"]
+            ["accidents", "AkiraAccidents"],
+            ["attention", "AkiraAttention"]
         ];
         for (const [property, globalName] of modules) {
             const Ctor = window[globalName];
@@ -766,6 +768,7 @@ class AkiraBrain {
         this.intentions?.update?.(simulatedMinutes);
         this.health?.update?.(simulatedMinutes);
         this.accidents?.update?.(simulatedMinutes);
+        this.attention?.update?.(simulatedMinutes);
 
         this.updateMemory(
             simulatedMinutes
@@ -1268,6 +1271,9 @@ finishAction() {
             availability:
                 this.state.availability,
 
+            attention:
+                this.state.attention ? { ...this.state.attention } : null,
+
             needs:
                 this.state.needs,
 
@@ -1726,6 +1732,9 @@ finishAction() {
 
             availability:
                 this.state.availability,
+
+            attention:
+                this.state.attention ? { ...this.state.attention } : null,
 
             currentPerson:
                 this.state.currentPerson,

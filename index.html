@@ -556,7 +556,7 @@
 <script src="./brain/needs.js" defer></script>
 <script src="./brain/decision.js?v=20" defer></script>
 <script src="./brain/dialogue.js?v=31.4" defer></script>
-<script src="./brain/communication.js?v=22" defer></script>
+<script src="./brain/communication.js?v=33" defer></script>
 <script src="./brain/relationships.js" defer></script>
 <script src="./brain/perception.js" defer></script>
 <script src="./brain/activities.js" defer></script>
@@ -572,7 +572,8 @@
 <script src="./brain/intentions.js?v=30" defer></script>
 <script src="./brain/health.js?v=31" defer></script>
 <script src="./brain/accidents.js?v=32" defer></script>
-<script src="./brain/brain.js?v=32" defer></script>
+<script src="./brain/attention.js?v=33" defer></script>
+<script src="./brain/brain.js?v=33" defer></script>
 </head>
 
 <body>
@@ -846,6 +847,11 @@
       }
 
       async function playCommunicationPlan(plan) {
+        // Непомічене повідомлення не запускає ні "думання", ні індикатор набору.
+        if (plan.unseen) {
+          return { sent: false, reason: "unseen" };
+        }
+
         await sleep(plan.thinkingMs || 0);
 
         if (plan.dialogueSilence) {

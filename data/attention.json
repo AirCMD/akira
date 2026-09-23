@@ -1,0 +1,23 @@
+{
+  "attention": {
+    "capacity": 100,
+    "switchCost": 12,
+    "focusDecayPerMinute": 0.7,
+    "distractionThreshold": 58,
+    "messageBaseSalience": 62,
+    "focusByAction": {
+      "sleep": 96,
+      "cookMeal": 82,
+      "washDishes": 66,
+      "work": 78,
+      "playGame": 84,
+      "watchStreamer": 72,
+      "read": 80,
+      "cycle": 90,
+      "walk": 62,
+      "takeBath": 68,
+      "commuteToWork": 58,
+      "commuteHome": 58
+    }
+  }
+}
