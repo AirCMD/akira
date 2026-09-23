@@ -253,7 +253,8 @@ class AkiraBrain {
             "health",
             "accidents",
             "attention",
-            "phone"
+            "phone",
+            "contextual_knowledge"
         ];
 
         const results = {};
@@ -674,7 +675,8 @@ class AkiraBrain {
             ["health", "AkiraHealth"],
             ["accidents", "AkiraAccidents"],
             ["attention", "AkiraAttention"],
-            ["phone", "AkiraPhone"]
+            ["phone", "AkiraPhone"],
+            ["contextualKnowledge", "AkiraContextualKnowledge"]
         ];
         for (const [property, globalName] of modules) {
             const Ctor = window[globalName];

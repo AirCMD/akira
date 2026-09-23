@@ -491,6 +491,10 @@ class AkiraDialogue {
         if (/^(що\s+(потім|далі)|а\s+далі|а\s+потім)[\s?!.,]*$/iu.test(normalized)) return "ask_action_next";
         if (/^(що\s+ти\s+плануєш|які\s+в\s+тебе\s+плани|що\s+будеш\s+робити|що\s+збираєшся\s+робити|є\s+плани)(\s+(сьогодні|на\s+сьогодні))?[\s?!.,]*$/iu.test(normalized)) return "ask_current_plan";
 
+        // Канонічні знання та follow-up контекст: сутність + властивість + попередня тема.
+        // Це навмисно стоїть вище загального topic/fallback шару.
+        if (this.brain.contextualKnowledge?.analyze?.(normalized)) return "ask_contextual_knowledge";
+
         const identityPatterns = [
             [/^(як\s+тебе\s+звати|як\s+твоє\s+ім['’ʼ]?я|твоє\s+ім['’ʼ]?я)[\s?!.,]*$/iu, "ask_name"],
             [/^(яке\s+твоє\s+прізвище|твоє\s+прізвище)[\s?!.,]*$/iu, "ask_surname"],
@@ -1346,7 +1350,7 @@ class AkiraDialogue {
     composeRepeatQuestionAnswer(profile) {
         const intent = profile?.analysis?.intent || null;
         if (!intent || !intent.startsWith("ask_")) return null;
-        if (["ask_sleeping", "ask_state", "ask_activity", "ask_current_location"].includes(intent)) return null;
+        if (["ask_sleeping", "ask_state", "ask_activity", "ask_current_location", "ask_contextual_knowledge"].includes(intent)) return null;
         if (this.lastIntent !== intent || Date.now() - this.lastIntentAt > 90000) return null;
         return this.chooseTemplate([
             "Навіщо ти знову це питаєш?",
@@ -2061,6 +2065,11 @@ class AkiraDialogue {
         if (intent.startsWith("ask_") && ["ask_name","ask_surname","ask_full_name","ask_age","ask_hometown","ask_country","ask_residence","ask_occupation","ask_workplace"].includes(intent)) {
             const identityReply = this.composeIdentityAnswer(intent);
             if (identityReply) return [identityReply];
+        }
+
+        if (intent === "ask_contextual_knowledge") {
+            const reply = this.brain.contextualKnowledge?.answer?.(profile.input);
+            if (reply) return [reply];
         }
 
         const opinionAnalysis = this.analyzeEconomicMessage(profile.input);
