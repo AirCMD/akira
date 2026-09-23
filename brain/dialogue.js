@@ -501,6 +501,10 @@ class AkiraDialogue {
         if (/^(що\s+(потім|далі)|а\s+далі|а\s+потім)[\s?!.,]*$/iu.test(normalized)) return "ask_action_next";
         if (/^(що\s+ти\s+плануєш|які\s+в\s+тебе\s+плани|що\s+будеш\s+робити|що\s+збираєшся\s+робити|є\s+плани)(\s+(сьогодні|на\s+сьогодні))?[\s?!.,]*$/iu.test(normalized)) return "ask_current_plan";
 
+        // Яні є окремим агентом. Акіра відповідає лише з того, що може знати/бачити.
+        if (/^(де\s+(зараз\s+)?яні|яні\s+де|де\s+твоя\s+(дружина|яні))[\s?!.,]*$/iu.test(normalized)) return "ask_yani_location";
+        if (/^(що\s+(зараз\s+)?робить\s+яні|чим\s+(зараз\s+)?займається\s+яні)[\s?!.,]*$/iu.test(normalized)) return "ask_yani_activity";
+
         // Канонічні знання та follow-up контекст: сутність + властивість + попередня тема.
         // Це навмисно стоїть вище загального topic/fallback шару.
         if (this.brain.contextualKnowledge?.analyze?.(normalized)) return "ask_contextual_knowledge";
@@ -1735,6 +1739,22 @@ class AkiraDialogue {
                 return "Душ — нормально, але ванну я люблю більше, особливо з бомбочками, ароматизаторами й морською сіллю. Умиваюся щодня, голюся приблизно раз на два дні.";
             case "ask_yani_relationship":
                 return "Я знаю Яні близько семи років, а разом ми п’ять. Можемо малювати, грати, валяти дурня або годинами говорити про спогади й філософські штуки.";
+            case "ask_yani_location": {
+                const k=this.brain.yaniLife?.knownLocationForAkira?.();
+                if(!k?.known) return "Не знаю, де зараз Яні. Я її зараз не бачу.";
+                if(k.current){
+                    if(k.location==="home") return "Яні зараз тут, удома зі мною.";
+                    return "Яні зараз поруч зі мною.";
+                }
+                const names={jeannie_shop:"у магазині Джині",post_office:"на пошті",city:"десь у місті",shops:"по магазинах",home:"вдома"};
+                return `Останній раз я бачив її ${names[k.location]||"неподалік"}. Де вона прямо зараз — не знаю.`;
+            }
+            case "ask_yani_activity": {
+                const k=this.brain.yaniLife?.knownLocationForAkira?.();
+                if(!k?.known || !k.current) return "Не знаю, чим вона зараз займається. Я її не бачу.";
+                const names={idle:"зараз нічим конкретним не зайнята",playTamagotchi:"грається з тамагочі",draw:"малює",decorateNotebook:"щось оформлює в блокноті",workOnScripts:"сидить над своїми скриптами",listenOrSing:"щось слухає або співає",eatSnacks:"їсть снеки",orderFood:"займається замовленням їжі",rest:"відпочиває",sleep:"спить",sitOnBalcony:"сидить на балконі"};
+                return `Яні ${names[k.activity]||"чимось зайнята"}.`;
+            }
             case "ask_dreams":
                 return "Хочу побачити світ, подорожувати, відкривати велосипедні маршрути й фотографувати побачене. І ще хочу стати програмістом високого рівня.";
             case "ask_private_countries":

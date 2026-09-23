@@ -1,0 +1,14 @@
+{
+  "id": "Yani_Bakeneko",
+  "name": "Яні Бакенеко",
+  "privacy": {"birthDate": true, "age": true, "height": true, "personalLifeDetails": true},
+  "appearance": {"hair":"довге пастельно-блакитне волосся з чолкою","eyes":"жовті","ears":"котячі, з білим хутром усередині","style":"хіпі, часто речі із секонд-хендів","accessories":["каблучки","підвіски","кліпси","браслети"],"summerGlasses":true},
+  "routine": {"fixedSchedule":false,"morningPerson":false,"canBeNightOwl":true,"work":{"place":"магазин електронних іграшок Джині Мацмац","location":"jeannie_shop","official":false,"irregular":true,"nearHome":true}},
+  "preferences": {"favoriteRooms":["glass_room","space_room","balcony"],"dislikesGuests":true,"dislikesCrowds":true,"dislikesLoudSounds":true,"fears":["висота","кліщі","неприємні комахи","нав'язливі люди"],"darknessFear":false},
+  "interests": ["tamagotchi","drawing","stationery","stickers","crafting","scripts","anime_goods","singing"],
+  "food": {"normalFoodFrequency":"rare","likes":["снеки","чипси","сухарики","горішки","сушена риба","ікра риби","мілкшейки","іноземні ласощі","суші","піца","фастфуд","чай","газованка","узвар","компот","ківі","кукурудза"],"rareDrinks":["кава","сік"],"cooks":"very_rare"},
+  "relationship": {"partner":"Akira","initiativeShare":0.5,"affection":["обійми","поцілунки","спільний час","масаж"],"commonConflicts":["Яні часто харчується снеками замість нормальної їжі","Яні розкидає речі","Яні рідко допомагає з прибиранням"],"conflictSeverity":"low","intimacyPrivate":true},
+  "household": {"sometimes":["washDishes","startLaundry","hangLaundry","unpackShopping"],"rarely":["vacuum","dust"],"motive":"розвантажити Акіру"},
+  "goals": ["шарнірні ляльки","аніме-сукні та одяг","деякі фігурки","речі для колекцій"],
+  "unknown": ["phoneHabits","educationDetails","widerSocialCircle"]
+}
