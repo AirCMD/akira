@@ -83,6 +83,18 @@ class AkiraContextualKnowledge {
         this.context = { entityId: query.entityId, property: query.property || "opinion", at: Date.now() };
     }
 
+    hasFreshContext() {
+        return Boolean(this.context?.entityId && Date.now() - this.context.at < this.contextTtl);
+    }
+
+    answerWhy() {
+        if (!this.hasFreshContext()) return null;
+        const entity = this.entities()[this.context.entityId];
+        if (!entity) return null;
+        // Причину беремо лише з канону. Якщо її не задано, не домислюємо.
+        return entity.whyAnswer || "Не знаю. Просто так до цього ставлюся.";
+    }
+
     answer(text) {
         const q = this.analyze(text);
         if (!q) return null;

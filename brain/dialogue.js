@@ -484,6 +484,16 @@ class AkiraDialogue {
         if (/^(що\s+(ти\s+)?робив|чим\s+(ти\s+)?займався)\s+(весь\s+)?(вечір|увечері|вечором)[\s?!.,]*$/iu.test(normalized)) return "ask_history_evening";
         if (/^(що\s+(ти\s+)?робив|чим\s+(ти\s+)?займався)\s+вчора[\s?!.,]*$/iu.test(normalized)) return "ask_history_yesterday";
 
+        // Коротке «чому?» насамперед продовжує щойно обговорену тему.
+        // Лише якщо попередня репліка не була contextual knowledge, воно означає
+        // «чому ти зараз це робиш?». Явне «чому ти це робиш?» завжди про дію.
+        if (/^(чому|а\s+чому|чого)\s*[?!.,]*$/iu.test(normalized)
+            && this.lastIntent === "ask_contextual_knowledge"
+            && Date.now() - this.lastIntentAt < 5 * 60 * 1000
+            && this.brain.contextualKnowledge?.hasFreshContext?.()) {
+            return "ask_contextual_why";
+        }
+
         // Причина поточної реальної дії та найближчі плани.
         if (/^(навіщо|а\s+навіщо)\s+(ти\s+)?(це\s+)?(робиш|пішов|їдеш|йдеш|готуєш|прибираєш|гуляєш|читаєш|граєш|дивишся|миєш|переш|пилососиш)[\s?!.,]*$/iu.test(normalized) || /^навіщо\s*[?!.,]*$/iu.test(normalized)) return "ask_action_goal";
         if (/^(чому|а\s+чому|чого)\s+(ти\s+)?(це\s+)?(робиш|пішов|їдеш|йдеш|готуєш|прибираєш|гуляєш|читаєш|граєш|дивишся|миєш|переш|пилососиш)[\s?!.,]*$/iu.test(normalized) || /^чому\s*[?!.,]*$/iu.test(normalized)) return "ask_action_reason";
@@ -1350,7 +1360,7 @@ class AkiraDialogue {
     composeRepeatQuestionAnswer(profile) {
         const intent = profile?.analysis?.intent || null;
         if (!intent || !intent.startsWith("ask_")) return null;
-        if (["ask_sleeping", "ask_state", "ask_activity", "ask_current_location", "ask_contextual_knowledge"].includes(intent)) return null;
+        if (["ask_sleeping", "ask_state", "ask_activity", "ask_current_location", "ask_contextual_knowledge", "ask_contextual_why"].includes(intent)) return null;
         if (this.lastIntent !== intent || Date.now() - this.lastIntentAt > 90000) return null;
         return this.chooseTemplate([
             "Навіщо ти знову це питаєш?",
@@ -2043,6 +2053,10 @@ class AkiraDialogue {
         if (intent === "ask_history_evening") return [this.composeHistoryAnswer("evening")];
         if (intent === "ask_history_yesterday") return [this.composeHistoryAnswer("yesterday")];
         if (intent === "ask_current_health") return [this.brain.health?.describe?.() || "Нормально почуваюся."];
+        if (intent === "ask_contextual_why") {
+            const reply = this.brain.contextualKnowledge?.answerWhy?.();
+            return [reply || "Не знаю. Просто так до цього ставлюся."];
+        }
         if (intent === "ask_action_reason") return [this.composeActionReasonAnswer(profile)];
         if (intent === "ask_action_goal") return [this.composeActionGoalAnswer(profile)];
         if (intent === "ask_action_outcome") return [this.composeActionOutcomeAnswer(profile)];
@@ -2721,7 +2735,8 @@ class AkiraDialogue {
             "ask_action_outcome",
             "ask_action_next",
             "ask_current_location",
-            "ask_current_movie"
+            "ask_current_movie",
+            "ask_contextual_why"
         ].includes(intent);
     }
 
