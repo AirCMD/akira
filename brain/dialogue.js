@@ -471,6 +471,12 @@ class AkiraDialogue {
             return "ask_current_people";
         }
 
+        // Окремо пам'ятаємо минулих співрозмовників. Це не те саме, що
+        // поточне «з ким розмовляєш?»: відповідь шукається в actionHistory.
+        if (/^з\s+ким\s+(ти\s+)?(розмовляв|говорив|спілкувався)[\s?!.,]*$/iu.test(normalized)) {
+            return "ask_past_people";
+        }
+
         // Реальна історія дій. Не віддаємо ці питання topic/fallback шару.
         if (/^(що\s+(ти\s+)?робив|чим\s+(ти\s+)?займався)(\s+перед\s+цим)?[\s?!.,]*$/iu.test(normalized)) return "ask_recent_activity";
         if (/^(що\s+(ти\s+)?робив|чим\s+(ти\s+)?займався)\s+(весь\s+)?(ранок|зранку|вранці)[\s?!.,]*$/iu.test(normalized)) return "ask_history_morning";
@@ -1889,6 +1895,24 @@ class AkiraDialogue {
         return "Не можу сказати конкретніше, у цій розмові не збережено співрозмовника.";
     }
 
+    composePastPeopleAnswer() {
+        const history = Array.isArray(this.brain.actionHistory) ? this.brain.actionHistory : [];
+        const lastSocial = [...history].reverse().find(action =>
+            action && ["talkToSomeone", "talkToYani"].includes(action.actionId)
+        );
+
+        if (!lastSocial) {
+            return "Не пам'ятаю, щоб останнім часом з кимось розмовляв.";
+        }
+
+        const personId = lastSocial.targetPerson ||
+            (lastSocial.actionId === "talkToYani" ? "Yani_Bakeneko" : null);
+        const name = this.personDisplayName(personId);
+        if (name) return `З ${name}.`;
+
+        return "Не пам'ятаю, з ким саме.";
+    }
+
     actionHistoryLabel(action) {
         if (!action) return null;
         const id = action.actionId;
@@ -2001,6 +2025,7 @@ class AkiraDialogue {
         if (intent === "ask_current_cooking") return [this.composeFoodStateAnswer("cooking")];
         if (intent === "ask_activity") return [this.composeActivityAnswer(profile)];
         if (intent === "ask_current_people") return [this.composeCurrentPeopleAnswer()];
+        if (intent === "ask_past_people") return [this.composePastPeopleAnswer()];
         if (intent === "ask_recent_activity") return [this.composeRecentActivityAnswer()];
         if (intent === "ask_history_morning") return [this.composeHistoryAnswer("morning")];
         if (intent === "ask_history_today") return [this.composeHistoryAnswer("today")];
