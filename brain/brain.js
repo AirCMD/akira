@@ -261,7 +261,8 @@ class AkiraBrain {
             "inventory_money",
             "self_model",
             "dreams",
-            "internal_stream"
+            "internal_stream",
+            "emotional_expression"
         ];
 
         const results = {};
@@ -690,7 +691,8 @@ class AkiraBrain {
             ["inventoryMoney", "AkiraInventoryMoney"],
             ["selfModel", "AkiraSelfModel"],
             ["dreams", "AkiraDreams"],
-            ["internalStream", "AkiraInternalStream"]
+            ["internalStream", "AkiraInternalStream"],
+            ["emotionalExpression", "AkiraEmotionalExpression"]
         ];
         for (const [property, globalName] of modules) {
             const Ctor = window[globalName];

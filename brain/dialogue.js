@@ -136,6 +136,10 @@ class AkiraDialogue {
 
         const analysis = this.analyzeInput(input);
 
+        // v41.1: повідомлення спочатку може викликати емоційну реакцію.
+        // Після цього профіль відповіді читає вже актуальний стан.
+        this.brain.emotionalExpression?.reactToInput?.(analysis, context);
+
         const topic = analysis.topic;
 
         const knowledge = this.getKnowledge(topic);
@@ -2913,6 +2917,10 @@ class AkiraDialogue {
             text =
                 this.fallbackResponse(profile);
         }
+
+        // v41.1: фактичний зміст уже сформовано. Тепер емоційний шар
+        // може змінити форму, довжину й теплоту репліки, не вигадуючи фактів.
+        text = this.brain.emotionalExpression?.apply?.(text, profile) || text;
 
         text =
             this.limitWords(
