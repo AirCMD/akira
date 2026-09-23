@@ -342,11 +342,22 @@
       text-align: center;
     }
 
+    .typing-label {
+      margin-right: 8px;
+      font-size: 12px;
+      opacity: 0.72;
+    }
+
     .typing {
       display: inline-flex;
       gap: 4px;
       align-items: center;
-      min-width: 50px;
+      min-width: 30px;
+    }
+
+    #typingIndicator.paused .typing span {
+      animation-play-state: paused;
+      opacity: 0.42;
     }
 
     .typing span {
@@ -545,6 +556,7 @@
 <script src="./brain/needs.js" defer></script>
 <script src="./brain/decision.js?v=20" defer></script>
 <script src="./brain/dialogue.js?v=21" defer></script>
+<script src="./brain/communication.js?v=22" defer></script>
 <script src="./brain/relationships.js" defer></script>
 <script src="./brain/perception.js" defer></script>
 <script src="./brain/activities.js" defer></script>
@@ -767,6 +779,10 @@
        * ----------------------------------------------------------
        */
 
+      function sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+      }
+
       function showTyping() {
 
         const row = document.createElement("div");
@@ -779,6 +795,9 @@
 
         bubble.className = "message bot";
 
+        const label = document.createElement("span");
+        label.className = "typing-label";
+        label.textContent = "Акіра набирає повідомлення";
 
         const typing = document.createElement("span");
 
@@ -792,6 +811,7 @@
         `;
 
 
+        bubble.appendChild(label);
         bubble.appendChild(typing);
         row.appendChild(bubble);
 
@@ -812,6 +832,48 @@
         if (typing) {
           typing.remove();
         }
+      }
+
+      function setTypingPaused(paused) {
+        const row = document.getElementById("typingIndicator");
+        if (row) row.classList.toggle("paused", Boolean(paused));
+      }
+
+      async function playCommunicationPlan(plan) {
+        await sleep(plan.thinkingMs || 0);
+
+        if (plan.dialogueSilence) {
+          return { sent: false, reason: "dialogue-silence" };
+        }
+
+        showTyping();
+        const startedAt = performance.now();
+        const events = [...(plan.pauses || [])];
+        if (plan.abandon && Number.isFinite(plan.abandonAfterMs)) {
+          events.push({ afterMs: plan.abandonAfterMs, abandon: true, durationMs: 0 });
+        }
+        events.sort((a, b) => a.afterMs - b.afterMs);
+
+        let elapsedTarget = 0;
+        for (const event of events) {
+          const wait = Math.max(0, event.afterMs - elapsedTarget);
+          await sleep(wait);
+          elapsedTarget = event.afterMs;
+
+          if (event.abandon) {
+            hideTyping();
+            return { sent: false, reason: plan.reason || "abandoned" };
+          }
+
+          setTypingPaused(true);
+          await sleep(event.durationMs || 0);
+          setTypingPaused(false);
+        }
+
+        const elapsed = performance.now() - startedAt;
+        await sleep(Math.max(0, (plan.typingMs || 0) - elapsed));
+        hideTyping();
+        return { sent: true };
       }
 
 
@@ -943,86 +1005,25 @@
        */
 
       async function getAkiraReply(text) {
-
         const brain = window.akiraBrain;
-
-
-        if (
-          !brain ||
-          typeof brain.respond !== "function"
-        ) {
-
-          throw new Error(
-            "AkiraBrain.respond() недоступний."
-          );
+        if (!brain || typeof brain.respond !== "function") {
+          throw new Error("AkiraBrain.respond() недоступний.");
         }
 
+        const result = await brain.respond(text, {
+          source: "chat",
+          channel: "direct",
+          timestamp: Date.now()
+        });
 
-        /*
-         * Передаємо мозку не лише текст,
-         * а й контекст того, що це саме чат.
-         *
-         * Сам dialogue.js вирішує,
-         * що з цим контекстом робити.
-         */
-
-        const result = await brain.respond(
-          text,
-          {
-            source: "chat",
-            channel: "direct",
-            timestamp: Date.now()
-          }
-        );
-
-
-        /*
-         * dialogue.js може повернути:
-         *
-         *   рядок
-         *
-         * або об'єкт із текстом.
-         */
-
-        if (typeof result === "string") {
-          return result;
+        if (typeof result === "string") return { type: "text", text: result };
+        if (result && typeof result === "object") {
+          if (typeof result.text === "string") return result;
+          if (typeof result.response === "string") return { ...result, text: result.response };
+          if (typeof result.message === "string") return { ...result, text: result.message };
         }
-
-
-        if (
-          result &&
-          typeof result.text === "string"
-        ) {
-          return result.text;
-        }
-
-
-        if (
-          result &&
-          typeof result.response === "string"
-        ) {
-          return result.response;
-        }
-
-
-        if (
-          result &&
-          typeof result.message === "string"
-        ) {
-          return result.message;
-        }
-
-
-        /*
-         * Останній захист від порожньої відповіді.
-         *
-         * Це НЕ характер Акіри —
-         * лише технічний fallback інтерфейсу.
-         */
-
-        return "…";
+        return { type: "text", text: "…" };
       }
-
 
       /*
        * ----------------------------------------------------------
@@ -1075,28 +1076,24 @@
         );
 
 
-        const typing = showTyping();
-
-
         try {
 
-          const reply =
-            await getAkiraReply(text);
+          const reply = await getAkiraReply(text);
+          const communication = window.AkiraCommunication
+            ? new window.AkiraCommunication(window.akiraBrain)
+            : null;
+          const plan = communication
+            ? communication.plan(text, reply)
+            : { text: reply.text, thinkingMs: 300, typingMs: 700, pauses: [], abandon: false };
 
+          setStatus("loading", "Акіра думає…");
+          const delivery = await playCommunicationPlan(plan);
 
-          hideTyping();
+          if (delivery.sent && plan.text) {
+            appendMessage(plan.text, "bot");
+          }
 
-
-          appendMessage(
-            reply,
-            "bot"
-          );
-
-
-          setStatus(
-            "ready",
-            "мозок активний"
-          );
+          setStatus("ready", delivery.sent ? "мозок активний" : "Акіра мовчить");
 
         } catch (error) {
 
