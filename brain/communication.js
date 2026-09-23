@@ -19,17 +19,21 @@ class AkiraCommunication {
         const fatigue = Number(state.fatigue ?? 20);
         const socialEnergy = Number(state.socialEnergy ?? 60);
         const actionId = state.action?.actionId || null;
-        const attentionResult = this.brain?.attention?.onMessage?.(input) || { noticed: true, salience: 100, barrier: 0 };
+        // Спочатку повідомлення проходить через реальний стан телефона.
+        // phone.js уже враховує on/silent/off і лише потім attention.
+        const phoneResult = this.brain?.phone?.receiveMessage?.(input, reply);
+        const attentionResult = phoneResult?.attention || (!phoneResult ? (this.brain?.attention?.onMessage?.(input) || { noticed: true, salience: 100, barrier: 0 }) : { noticed: false });
 
-        // Якщо повідомлення не пробило поточний фокус уваги, Акіра його зараз
-        // не обробляє. Це не те саме, що свідомо проігнорувати повідомлення.
-        if (!attentionResult.noticed) {
+        if (phoneResult && !phoneResult.deliverNow) {
             return {
                 text, dialogueSilence: false, thinkingMs: 0, typingMs: 0, pauses: [],
                 abandon: false, unseen: true, noticed: false,
-                reason: "не помітив повідомлення через поточний фокус уваги",
-                attention: attentionResult
+                reason: phoneResult.reason || "повідомлення залишилося непрочитаним",
+                attention: attentionResult, phone: this.brain.phone.status?.()
             };
+        }
+        if (!phoneResult && !attentionResult.noticed) {
+            return { text, dialogueSilence:false, thinkingMs:0, typingMs:0, pauses:[], abandon:false, unseen:true, noticed:false, reason:"не помітив повідомлення через поточний фокус уваги", attention:attentionResult };
         }
 
         // Базова затримка залежить від довжини майбутньої відповіді.

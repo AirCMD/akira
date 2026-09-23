@@ -556,7 +556,7 @@
 <script src="./brain/needs.js" defer></script>
 <script src="./brain/decision.js?v=20" defer></script>
 <script src="./brain/dialogue.js?v=31.4" defer></script>
-<script src="./brain/communication.js?v=33" defer></script>
+<script src="./brain/communication.js?v=34" defer></script>
 <script src="./brain/relationships.js" defer></script>
 <script src="./brain/perception.js" defer></script>
 <script src="./brain/activities.js" defer></script>
@@ -573,7 +573,8 @@
 <script src="./brain/health.js?v=31" defer></script>
 <script src="./brain/accidents.js?v=32" defer></script>
 <script src="./brain/attention.js?v=33" defer></script>
-<script src="./brain/brain.js?v=33" defer></script>
+<script src="./brain/phone.js?v=34" defer></script>
+<script src="./brain/brain.js?v=34" defer></script>
 </head>
 
 <body>
@@ -1141,6 +1142,26 @@
         }
       }
 
+
+      // Повідомлення, яке Акіра не помітив одразу, може бути прочитане пізніше.
+      // Відповідь не телепортується в момент отримання: phone.js повертає її,
+      // коли телефон доступний і увага вже не зайнята.
+      setInterval(async () => {
+        if (!brainReady || waitingForReply) return;
+        const delayed = window.akiraBrain?.phone?.takeReadyReply?.();
+        if (!delayed?.text) return;
+        waitingForReply = true;
+        try {
+          const communication = window.AkiraCommunication ? new window.AkiraCommunication(window.akiraBrain) : null;
+          // Не реєструємо старе повідомлення вдруге у phone inbox. Для відкладеної
+          // відповіді відтворюємо людську затримку набору напряму.
+          const words = delayed.text.trim().split(/\s+/).filter(Boolean).length;
+          const plan = { text: delayed.text, thinkingMs: 450, typingMs: Math.min(6000, 750 + words * 80), pauses: [], abandon: false, unseen: false };
+          const delivery = await playCommunicationPlan(plan);
+          if (delivery.sent) appendMessage(plan.text, "bot");
+          setStatus("ready", "мозок активний");
+        } finally { waitingForReply = false; input.disabled = false; sendButton.disabled = false; }
+      }, 2000);
 
       /*
        * ----------------------------------------------------------

@@ -1,0 +1,12 @@
+{
+  "phone": {
+    "initialBattery": 78,
+    "drainPerSimMinute": 0.006,
+    "chargePerSimMinute": 0.09,
+    "lowBatteryAt": 18,
+    "autoSilentFatigue": 82,
+    "autoSilentPrivacy": 72,
+    "wakeCheckMinutes": 5,
+    "maxInbox": 40
+  }
+}
