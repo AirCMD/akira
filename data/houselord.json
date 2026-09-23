@@ -1,0 +1,36 @@
+{
+  "household": {
+    "settings": {
+      "dustPerSimMinute": 0.0022,
+      "floorDirtPerSimMinute": 0.0018,
+      "windowDirtPerSimMinute": 0.00045,
+      "laundryPerSimMinute": 0.0008,
+      "noticeDustAt": 55,
+      "noticeFloorAt": 58,
+      "noticeWindowsAt": 72,
+      "laundryStartAt": 6,
+      "cleaningCooldownMinutes": 90
+    },
+    "roomUseMultiplier": {
+      "glassBedroom": 1.0,
+      "cozyRoom": 1.35,
+      "spaceRoom": 0.55,
+      "seaRoom": 0.55,
+      "kitchen": 1.45,
+      "bathroom": 1.15,
+      "toilet": 1.0,
+      "balcony": 1.4,
+      "hallway": 1.2
+    },
+    "windowRooms": ["glassBedroom", "cozyRoom", "balcony"],
+    "vacuumRooms": ["glassBedroom", "cozyRoom", "spaceRoom", "seaRoom", "hallway"],
+    "mopRooms": ["kitchen", "bathroom", "toilet", "hallway", "balcony"],
+    "dustRooms": ["glassBedroom", "cozyRoom", "spaceRoom", "seaRoom", "kitchen", "hallway"],
+    "initial": {
+      "dust": 18,
+      "floorDirt": 16,
+      "windowDirt": 22,
+      "dirtyLaundry": 3
+    }
+  }
+}

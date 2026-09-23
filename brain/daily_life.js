@@ -55,6 +55,8 @@ class AkiraDailyLife {
       checkPhone:"cozyRoom", checkSocialNetwork:"cozyRoom", writePost:"cozyRoom",
       listenToMusic:"cozyRoom", watchStreamer:"cozyRoom", eat:"kitchen", drink:"kitchen",
       cookMeal:"kitchen", eatMeal:"kitchen", prepareDrink:"kitchen", drinkSelected:"kitchen", washDishes:"kitchen",
+      startLaundry:"bathroom", takeLaundryOut:"bathroom", hangLaundry:"balcony", foldLaundry:"cozyRoom",
+      wipeDust:"cozyRoom", vacuumRoom:"cozyRoom", mopFloor:"kitchen", washWindows:"cozyRoom",
       washFace:"bathroom", shave:"bathroom", takeBath:"bathroom",
       lookOutWindow:"balcony", stargazing:"balcony", lookAtFlowers:"balcony",
       commuteToWork:"hallway"
@@ -162,9 +164,6 @@ class AkiraDailyLife {
     if (t >= 8*60 && t < 11*60 && this.daysSince("changeClothes") >= 4) {
       return this.action("changeClothes", 5, "час змінити одяг");
     }
-    if (["saturday","sunday"].includes(this.dayName()) && t >= 11*60 && t < 17*60 && this.daysSince("laundry") >= 7) {
-      return this.action("doLaundry", 45, "накопичилося прання");
-    }
     if (t >= 19*60 && t < 22*60 && this.daysSince("takeBath") >= 3) {
       return this.action("takeBath", 35, "хочеться відпочити у ванні");
     }
@@ -175,7 +174,7 @@ class AkiraDailyLife {
     const id = action?.actionId; if (!id) return;
     const now = new Date().toISOString();
     const routines = this.brain.state.dailyLife.routines;
-    if (["washFace","shave","changeClothes","doLaundry","takeBath"].includes(id)) routines[id] = now;
+    if (["washFace","shave","changeClothes","takeBath"].includes(id)) routines[id] = now;
 
     if (id === "moveRoom" && action.targetRoom) {
       this.setHomeRoom(action.targetRoom, action.reason || "movement");
