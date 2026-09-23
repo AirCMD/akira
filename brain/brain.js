@@ -255,7 +255,8 @@ class AkiraBrain {
             "attention",
             "phone",
             "contextual_knowledge",
-            "yani"
+            "yani",
+            "yani_interactions"
         ];
 
         const results = {};
@@ -678,7 +679,8 @@ class AkiraBrain {
             ["attention", "AkiraAttention"],
             ["phone", "AkiraPhone"],
             ["contextualKnowledge", "AkiraContextualKnowledge"],
-            ["yaniLife", "AkiraYaniLife"]
+            ["yaniLife", "AkiraYaniLife"],
+            ["yaniInteractions", "AkiraYaniInteractions"]
         ];
         for (const [property, globalName] of modules) {
             const Ctor = window[globalName];
@@ -777,6 +779,7 @@ class AkiraBrain {
         this.attention?.update?.(simulatedMinutes);
         this.phone?.update?.(simulatedMinutes);
         this.yaniLife?.update?.(simulatedMinutes);
+        this.yaniInteractions?.update?.(simulatedMinutes);
 
         this.updateMemory(
             simulatedMinutes

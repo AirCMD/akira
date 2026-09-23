@@ -69,12 +69,14 @@ class AkiraYaniLife {
   observeIfTogether(){
     const y=this.brain.state.yani, a=this.brain.state;
     if(y.location!==a.world?.location)return;
-    if(y.location==="home" && y.homeRoom!==a.homeRoom)return;
+    const akiraRoom=a.dailyLife?.homeRoom || null;
+    if(y.location==="home" && y.homeRoom!==akiraRoom)return;
     y.lastSeenByAkira={at:Date.now(),date:a.world?.date,time:a.world?.time,location:y.location,homeRoom:y.homeRoom,activity:y.activity};
   }
   knownLocationForAkira(){
     const y=this.brain.state.yani, a=this.brain.state;
-    if(y.location===a.world?.location && (y.location!=="home" || y.homeRoom===a.homeRoom)) return {known:true,current:true,...y};
+    const akiraRoom=a.dailyLife?.homeRoom || null;
+    if(y.location===a.world?.location && (y.location!=="home" || y.homeRoom===akiraRoom)) return {known:true,current:true,...y};
     const seen=y.lastSeenByAkira;
     if(seen && Date.now()-seen.at<30*60*1000) return {known:true,current:false,...seen};
     return {known:false};

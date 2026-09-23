@@ -1,0 +1,14 @@
+
+  "proposalCooldownMinutes": 90,
+  "proposals": [
+    {"id":"playTogether","label":"пограти разом","minFunNeed":35},
+    {"id":"drawTogether","label":"помалювати разом","minCreativity":45},
+    {"id":"walkTogether","label":"піти прогулятися","minEnergy":45},
+    {"id":"orderFoodTogether","label":"замовити щось смачне","minHunger":45},
+    {"id":"balconyTogether","label":"вийти разом на балкон","minEnergy":30},
+    {"id":"massageAkira","label":"зробити Акірі масаж","minSocial":45},
+    {"id":"talkTogether","label":"поговорити","minSocial":35}
+  ],
+  "conflicts": ["snacks","mess","household_help"],
+  "privacy": {"intimacyDetails": true}
+}
