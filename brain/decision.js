@@ -388,7 +388,10 @@ class AkiraDecision {
             sleep: {
                 id: "sleep",
                 category: "basic",
-                duration: 60,
+                // 8 simulated hours. At simulationSpeed=1 this is ~8 real minutes.
+                // Previously this fallback used 60, so Akira could wake after one
+                // real minute and immediately decide to sleep again.
+                duration: 480,
                 tags: [
                     "sleep",
                     "rest",
