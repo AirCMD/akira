@@ -35,7 +35,7 @@ class AkiraMemory {
     this.memories = [];
     this.recentlyRecalled = [];
 
-    this.maxMemories = 500;
+    this.maxMemories = 1000;
 
     /*
      * Технічний час останнього оновлення.
@@ -279,6 +279,16 @@ class AkiraMemory {
         memory.forgettable !== false,
 
 
+      /* Епізодичний контекст: коли/де це сталося і наскільки живий спогад. */
+      worldDate: memory.worldDate || this.brain?.state?.world?.date || null,
+      worldTime: memory.worldTime || this.brain?.state?.world?.time || null,
+      homeRoom: memory.homeRoom || this.brain?.state?.dailyLife?.homeRoom || null,
+      source: memory.source || "experience",
+      vividness: this.clamp(memory.vividness ?? Math.max(memory.importance ?? 50, memory.emotionalIntensity ?? 0)),
+      valence: Number.isFinite(Number(memory.valence)) ? Math.max(-100, Math.min(100, Number(memory.valence))) : 0,
+      actionId: memory.actionId || null,
+      targetPerson: memory.targetPerson || null,
+
       /*
        * Метадані для рушія.
        */
@@ -354,6 +364,18 @@ class AkiraMemory {
   // ============================================================
 
   findSimilarMemory(memory) {
+
+    // Епізоди не зливаємо лише через однакову тему. Інакше десять вечерь
+    // перетворюються на один безсмертний «їв». Дубль можливий лише для
+    // буквально того самого запису в ту саму хвилину.
+    if (["episode", "activity", "conversation", "event"].includes(memory.type)) {
+      return this.memories.find(candidate =>
+        candidate.type === memory.type &&
+        candidate.content === memory.content &&
+        candidate.worldDate === memory.worldDate &&
+        candidate.worldTime === memory.worldTime
+      ) || null;
+    }
 
     let bestMatch = null;
     let bestScore = 0;
@@ -1135,7 +1157,122 @@ class AkiraMemory {
 
 
   // ============================================================
-  // 19. ОТРИМАТИ СПОГАД
+  // 19. ЕПІЗОДИЧНА / АВТОБІОГРАФІЧНА ПАМ'ЯТЬ (v39)
+  // ============================================================
+
+  rememberEpisode(data = {}) {
+    const state = this.brain?.state || {};
+    const emotions = state.emotions || {};
+    const dominant = Object.entries(emotions)
+      .filter(([, value]) => typeof value === "number")
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 2)
+      .map(([name]) => name);
+
+    return this.remember({
+      type: "episode",
+      importance: data.importance ?? this.estimateEpisodeImportance(data),
+      emotionalIntensity: data.emotionalIntensity ?? this.estimateEmotionalIntensity(),
+      emotions: data.emotions || dominant,
+      source: data.source || "life",
+      ...data
+    });
+  }
+
+  rememberAction(action = {}) {
+    if (!action.actionId) return null;
+    const person = action.targetPerson || (action.actionId === "talkToYani" ? "Yani_Bakeneko" : null);
+    const label = this.describeAction(action);
+    return this.rememberEpisode({
+      title: label,
+      content: label,
+      actionId: action.actionId,
+      targetPerson: person,
+      topics: [action.actionId],
+      keywords: [action.actionId, ...this.actionKeywords(action.actionId)],
+      people: person ? [person] : [],
+      location: this.brain?.state?.world?.location || null,
+      importance: this.estimateActionImportance(action),
+      metadata: { reason: action.reason || null, goal: action.goal || null }
+    });
+  }
+
+  describeAction(action = {}) {
+    const map = {
+      sleep:"Спав", rest:"Відпочивав", eat:"Їв", drink:"Пив", cook:"Готував їжу",
+      talkToYani:"Розмовляв з Яні", talkToSomeone:"Розмовляв з людьми",
+      commuteToWork:"Їхав на роботу", commuteHome:"Повертався додому", work:"Працював",
+      walk:"Гуляв містом", cycling:"Катався на велосипеді", watchMovie:"Дивився фільм",
+      playGame:"Грав", draw:"Малював", takeBath:"Приймав ванну", shower:"Приймав душ",
+      washFace:"Умивався", shave:"Голився", doLaundry:"Займався пранням",
+      vacuum:"Пилососив", mop:"Мив підлогу", wipeDust:"Витирав пил", washDishes:"Мив посуд",
+      groceryShopping:"Купував продукти", orderDelivery:"Замовляв доставку",
+      museum:"Ходив до музею", planetarium:"Ходив до планетарію", cinema:"Ходив у кіно",
+      theater:"Ходив до театру", concert:"Ходив на концерт"
+    };
+    return map[action.actionId] || `Займався справою: ${action.actionId}`;
+  }
+
+  actionKeywords(actionId) {
+    const map = {
+      talkToYani:["яні","розмова"], work:["робота","техсмітник"], commuteToWork:["робота","дорога"],
+      commuteHome:["дорога","дім"], eat:["їжа"], cook:["їжа","готування"], sleep:["сон"],
+      walk:["прогулянка","місто"], cycling:["велосипед"], groceryShopping:["покупки","продукти"]
+    };
+    return map[actionId] || [];
+  }
+
+  estimateActionImportance(action = {}) {
+    let value = 18;
+    if (action.targetPerson) value += 8;
+    if (["talkToYani","museum","planetarium","concert","cinema","cycling"].includes(action.actionId)) value += 10;
+    if (["sleep","rest","washFace","shave"].includes(action.actionId)) value -= 5;
+    return this.clamp(value, 8, 70);
+  }
+
+  estimateEpisodeImportance(data = {}) {
+    let value = 25;
+    if (data.people?.length) value += 10;
+    if (data.event) value += 15;
+    return this.clamp(value);
+  }
+
+  estimateEmotionalIntensity() {
+    const values = Object.values(this.brain?.state?.emotions || {}).filter(v => typeof v === "number");
+    return values.length ? this.clamp(Math.max(...values)) : 20;
+  }
+
+  getAutobiographical(criteria = {}, limit = 8) {
+    const rows = this.search(criteria)
+      .filter(item => ["episode","activity","event","conversation","experience"].includes(item.memory.type));
+    return rows.slice(0, limit).map(item => item.memory);
+  }
+
+  getMemoriesForDate(date, limit = 12) {
+    return this.memories
+      .filter(memory => memory.worldDate === date || String(memory.createdAt || "").startsWith(date || "__"))
+      .sort((a,b) => String(a.worldTime || "").localeCompare(String(b.worldTime || "")))
+      .slice(-limit);
+  }
+
+  getMostSalient(limit = 5) {
+    return [...this.memories]
+      .map(memory => ({ memory, score: memory.importance * .35 + memory.strength * .25 + memory.emotionalIntensity * .25 + memory.vividness * .15 }))
+      .sort((a,b) => b.score - a.score)
+      .slice(0, limit)
+      .map(x => x.memory);
+  }
+
+  formatMemory(memory) {
+    if (!memory) return null;
+    let text = memory.content || memory.title || "";
+    if (!text) return null;
+    text = text.replace(/^Акіра завершив дію:\s*/u, "");
+    return text;
+  }
+
+  // ============================================================
+  // 20. ОТРИМАТИ СПОГАД
   // ============================================================
 
   get(memoryId) {

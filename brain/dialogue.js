@@ -477,6 +477,10 @@ class AkiraDialogue {
             return "ask_past_people";
         }
 
+        // v39: автобіографічна пам'ять. Це не енциклопедичні факти, а власні епізоди Акіри.
+        if (/^(що\s+(ти\s+)?(найбільше\s+)?пам['’ʼ]?ятаєш|що\s+тобі\s+(найбільше\s+)?запам['’ʼ]?яталося|які\s+в\s+тебе\s+спогади)[\s?!.,]*$/iu.test(normalized)) return "ask_salient_memory";
+        if (/^(що\s+(ти\s+)?пам['’ʼ]?ятаєш\s+про\s+яні|що\s+тобі\s+запам['’ʼ]?яталося\s+з\s+яні)[\s?!.,]*$/iu.test(normalized)) return "ask_memory_yani";
+
         // Реальна історія дій. Не віддаємо ці питання topic/fallback шару.
         if (/^(що\s+(ти\s+)?робив|чим\s+(ти\s+)?займався)(\s+перед\s+цим)?[\s?!.,]*$/iu.test(normalized)) return "ask_recent_activity";
         if (/^(що\s+(ти\s+)?робив|чим\s+(ти\s+)?займався)\s+(весь\s+)?(ранок|зранку|вранці)[\s?!.,]*$/iu.test(normalized)) return "ask_history_morning";
@@ -2054,9 +2058,52 @@ class AkiraDialogue {
         return `Перед цим ${this.actionHistoryLabel(last)}.`;
     }
 
+    composeSalientMemoryAnswer() {
+        const memories = this.brain.memory?.getMostSalient?.(6) || [];
+        const memory = memories.find(m => this.brain.memory?.formatMemory?.(m));
+        if (!memory) return "Зараз нічого конкретного не пригадується.";
+        const text = this.brain.memory.formatMemory(memory);
+        this.brain.memory.reinforce?.(memory.id, 2, 2);
+        return `Зараз найбільше згадується: ${text.charAt(0).toLowerCase() + text.slice(1)}.`;
+    }
+
+    composePersonMemoryAnswer(personId, displayName) {
+        const memories = this.brain.memory?.getAutobiographical?.({ person: personId }, 8) || [];
+        const memory = memories.find(m => this.brain.memory?.formatMemory?.(m));
+        if (!memory) return `Зараз не можу пригадати конкретний епізод про ${displayName}. Не хочу вигадувати.`;
+        const text = this.brain.memory.formatMemory(memory);
+        this.brain.memory.reinforce?.(memory.id, 2, 2);
+        return `Згадується, як ${text.charAt(0).toLowerCase() + text.slice(1)}.`;
+    }
+
+    memoryHistoryForRange(range) {
+        const memory = this.brain.memory;
+        if (!memory) return [];
+        const date = range === "yesterday" ? this.localDateKey(-1) : this.localDateKey(0);
+        let rows = memory.getMemoriesForDate?.(date, 30) || [];
+        if (range === "morning" || range === "evening") {
+            rows = rows.filter(m => {
+                const match = /^(\d{1,2}):(\d{2})/u.exec(String(m.worldTime || ""));
+                if (!match) return false;
+                const minute = Number(match[1]) * 60 + Number(match[2]);
+                return range === "morning" ? minute >= 5*60 && minute < 12*60 : minute >= 17*60 && minute < 24*60;
+            });
+        }
+        return rows;
+    }
+
     composeHistoryAnswer(range) {
         const selected = this.selectHistory(range).filter(a => this.actionHistoryLabel(a));
         if (!selected.length) {
+            const remembered = this.memoryHistoryForRange(range)
+                .map(m => this.brain.memory?.formatMemory?.(m))
+                .filter(Boolean);
+            const compactMemory = remembered.filter((x, i, arr) => i === 0 || x !== arr[i-1]).slice(-8);
+            if (compactMemory.length) {
+                if (compactMemory.length === 1) return `Пам'ятаю, що ${compactMemory[0].charAt(0).toLowerCase() + compactMemory[0].slice(1)}.`;
+                const lower = compactMemory.map(x => x.charAt(0).toLowerCase() + x.slice(1));
+                return `Пам'ятаю кілька речей: ${lower.slice(0,-1).join(", ")}, а потім ${lower[lower.length-1]}.`;
+            }
             const forgotten = {
                 morning: "Не пам\'ятаю, що було зранку.",
                 evening: "Не пам\'ятаю, що було ввечері.",
@@ -2099,6 +2146,8 @@ class AkiraDialogue {
         if (intent === "ask_current_people") return [this.composeCurrentPeopleAnswer()];
         if (intent === "ask_past_people") return [this.composePastPeopleAnswer()];
         if (intent === "ask_recent_activity") return [this.composeRecentActivityAnswer()];
+        if (intent === "ask_salient_memory") return [this.composeSalientMemoryAnswer()];
+        if (intent === "ask_memory_yani") return [this.composePersonMemoryAnswer("Yani_Bakeneko", "Яні")];
         if (intent === "ask_history_morning") return [this.composeHistoryAnswer("morning")];
         if (intent === "ask_history_today") return [this.composeHistoryAnswer("today")];
         if (intent === "ask_history_evening") return [this.composeHistoryAnswer("evening")];

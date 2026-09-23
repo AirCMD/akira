@@ -1085,15 +1085,8 @@ finishAction() {
     const memoryPerson = action.targetPerson ||
         (action.actionId === "talkToYani" ? "Yani_Bakeneko" : null);
 
-    this.memory?.remember?.({
-        type: "activity",
-        title: `Завершена дія: ${action.actionId}`,
-        content: `Акіра завершив дію: ${action.actionId}`,
-        importance: 20,
-        topics: [action.actionId],
-        keywords: [action.actionId],
-        people: memoryPerson ? [memoryPerson] : []
-    });
+    // v39: завершена дія стає окремим епізодом з часом, місцем, людьми та емоційним контекстом.
+    this.memory?.rememberAction?.({ ...action, targetPerson: memoryPerson });
 
     this.actionHistory.push({
         ...action,
@@ -1102,7 +1095,7 @@ finishAction() {
             date: this.state.world?.date || null,
             time: this.state.world?.time || null,
             location: this.state.world?.location || null,
-            homeRoom: this.state.homeRoom || null
+            homeRoom: this.state.dailyLife?.homeRoom || null
         }
     });
 
@@ -1372,7 +1365,7 @@ finishAction() {
             date: this.state.world?.date || null,
             time: this.state.world?.time || null,
             location: this.state.world?.location || null,
-            homeRoom: this.state.homeRoom || null
+            homeRoom: this.state.dailyLife?.homeRoom || null
         };
 
         // Соціальна дія повинна знати, з ким саме Акіра говорить.
