@@ -1355,15 +1355,20 @@ class AkiraDialogue {
     }
 
     isCurrentlySleeping() {
-        const id = this.brain.state?.action?.actionId || "";
-        return id === "sleep" || this.brain.state?.activity === "sleeping";
+        const action = this.brain.state?.action;
+        if (!action || action.actionId !== "sleep") return false;
+
+        // Sleep is a real running action, not a conversational coin flip.
+        // Ignore a stale activity="sleeping" flag if the action has already ended.
+        if (action.endsAt && Date.now() >= action.endsAt) return false;
+        return true;
     }
 
     composeSleepingAnswer() {
         if (this.isCurrentlySleeping()) {
             return this.chooseTemplate([
                 "Так, сплю.",
-                "Сплю. Точніше, спав до цього повідомлення.",
+                "Сплю. Повідомлення побачив, але ще не прокинувся.",
                 "Так. Я зараз сплю, не питай як я тобі відповідаю.",
                 "Мгм... сплю.",
                 "Сплю. Що сталося?"
