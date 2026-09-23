@@ -1,0 +1,20 @@
+{
+  "workLife": {
+    "workplace": "techsmith",
+    "displayName": "Техсмітник",
+    "shift": {"start":"10:00","end":"16:00"},
+    "salesPlan": {"dailyTarget": 6},
+    "customerChance": 0.52,
+    "quietChance": 0.16,
+    "events": {
+      "consultCustomer": {"duration":[8,22],"label":"консультую покупця"},
+      "compareDevices": {"duration":[7,18],"label":"допомагаю порівняти техніку"},
+      "explainSpecs": {"duration":[6,16],"label":"пояснюю характеристики техніки"},
+      "makeSale": {"duration":[5,12],"label":"оформлюю продаж"},
+      "quietAtWork": {"duration":[8,20],"label":"зараз немає покупців"},
+      "workBreak": {"duration":[10,20],"label":"зробив невелику перерву"},
+      "talkToTaras": {"duration":[4,10],"label":"перекинувся кількома словами з Тарасом"},
+      "talkToKent": {"duration":[5,12],"label":"розмовляю з Кентом"}
+    }
+  }
+}

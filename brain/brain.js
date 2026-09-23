@@ -256,7 +256,8 @@ class AkiraBrain {
             "phone",
             "contextual_knowledge",
             "yani",
-            "yani_interactions"
+            "yani_interactions",
+            "work_life"
         ];
 
         const results = {};
@@ -680,7 +681,8 @@ class AkiraBrain {
             ["phone", "AkiraPhone"],
             ["contextualKnowledge", "AkiraContextualKnowledge"],
             ["yaniLife", "AkiraYaniLife"],
-            ["yaniInteractions", "AkiraYaniInteractions"]
+            ["yaniInteractions", "AkiraYaniInteractions"],
+            ["workLife", "AkiraWorkLife"]
         ];
         for (const [property, globalName] of modules) {
             const Ctor = window[globalName];
@@ -780,6 +782,7 @@ class AkiraBrain {
         this.phone?.update?.(simulatedMinutes);
         this.yaniLife?.update?.(simulatedMinutes);
         this.yaniInteractions?.update?.(simulatedMinutes);
+        this.workLife?.ensureDay?.();
 
         this.updateMemory(
             simulatedMinutes
@@ -1067,6 +1070,7 @@ finishAction() {
     this.intentions?.onActionFinished?.(action);
     this.health?.completeAction?.(action);
     this.accidents?.completeAction?.(action);
+    this.workLife?.completeAction?.(action);
 
     // Використовуємо тільки тригери, які прямо описані в emotions.json.
     if (action.actionId === "rest") {
@@ -1155,6 +1159,7 @@ finishAction() {
             this.health?.getPriorityAction?.(situation) ||
             this.accidents?.getPriorityAction?.(situation) ||
             this.dailyLife?.getPriorityAction?.(situation) ||
+            this.workLife?.getPriorityAction?.(situation) ||
             this.intentions?.getPriorityAction?.(situation) ||
             this.food?.getPriorityAction?.(situation) ||
             this.household?.getPriorityAction?.(situation) ||
@@ -1447,6 +1452,14 @@ finishAction() {
             playGame: "gaming",
 
             work: "working",
+            consultCustomer: "working",
+            compareDevices: "working",
+            explainSpecs: "working",
+            makeSale: "working",
+            quietAtWork: "working",
+            workBreak: "resting",
+            talkToTaras: "talking",
+            talkToKent: "talking",
 
             talkToSomeone: "talking",
 
