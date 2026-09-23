@@ -450,6 +450,10 @@ class AkiraDialogue {
             return "ask_activity";
         }
 
+        // Причина поточної реальної дії та найближчі плани.
+        if (/^(чому|навіщо|а\s+чому|а\s+навіщо|чого)\s+(ти\s+)?(це\s+)?(робиш|пішов|їдеш|йдеш|готуєш|прибираєш|гуляєш|читаєш|граєш|дивишся|миєш|переш|пилососиш)[\s?!.,]*$/iu.test(normalized) || /^(навіщо|чому)\s*[?!.,]*$/iu.test(normalized)) return "ask_action_reason";
+        if (/^(що\s+ти\s+плануєш|які\s+в\s+тебе\s+плани|що\s+будеш\s+робити|що\s+збираєшся\s+робити|є\s+плани)(\s+(сьогодні|на\s+сьогодні))?[\s?!.,]*$/iu.test(normalized)) return "ask_current_plan";
+
         const identityPatterns = [
             [/^(як\s+тебе\s+звати|як\s+твоє\s+ім['’ʼ]?я|твоє\s+ім['’ʼ]?я)[\s?!.,]*$/iu, "ask_name"],
             [/^(яке\s+твоє\s+прізвище|твоє\s+прізвище)[\s?!.,]*$/iu, "ask_surname"],
@@ -1805,6 +1809,16 @@ class AkiraDialogue {
         if (intent === "ask_current_drink") return [this.composeFoodStateAnswer("drink")];
         if (intent === "ask_current_cooking") return [this.composeFoodStateAnswer("cooking")];
         if (intent === "ask_activity") return [this.composeActivityAnswer(profile)];
+        if (intent === "ask_action_reason") {
+            const reason = this.brain.intentions?.getWhy?.();
+            return [reason ? `Бо ${String(reason).replace(/[.!?]+$/u, "")}.` : "Та зараз немає якоїсь особливої причини."];
+        }
+        if (intent === "ask_current_plan") {
+            const plan = this.brain.intentions?.getNextPlan?.();
+            if (!plan) return ["Поки нічого конкретного не запланував."];
+            const goal = this.brain.intentions?.planGoal?.(plan) || plan.actionId;
+            return [`Планую ${goal} приблизно о ${plan.time}.`];
+        }
         if (intent === "ask_future_activity") return [this.composeFutureActivityAnswer(profile)];
         if (["ask_birthday","ask_family_names","ask_family","ask_education","ask_home","ask_home_room","ask_current_location","ask_work_schedule","ask_commute","ask_work_attitude","ask_health","ask_hygiene","ask_yani_relationship","ask_dreams","ask_private_countries","ask_private_why"].includes(intent)) {
             const lifeReply = this.composeLifeAnswer(intent);
@@ -1870,6 +1884,16 @@ class AkiraDialogue {
         if (profile.analysis.intent === "ask_current_cooking") return [this.composeFoodStateAnswer("cooking")];
         if (profile.analysis.intent === "ask_activity") {
             return [this.composeActivityAnswer(profile)];
+        }
+        if (profile.analysis.intent === "ask_action_reason") {
+            const reason = this.brain.intentions?.getWhy?.();
+            return [reason ? `Бо ${String(reason).replace(/[.!?]+$/u, "")}.` : "Та зараз немає якоїсь особливої причини."];
+        }
+        if (profile.analysis.intent === "ask_current_plan") {
+            const plan = this.brain.intentions?.getNextPlan?.();
+            if (!plan) return ["Поки нічого конкретного не запланував."];
+            const goal = this.brain.intentions?.planGoal?.(plan) || plan.actionId;
+            return [`Планую ${goal} приблизно о ${plan.time}.`];
         }
 
         if (profile.analysis.intent === "ask_future_activity") {

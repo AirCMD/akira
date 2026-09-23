@@ -248,7 +248,8 @@ class AkiraBrain {
             "home",
             "leisure",
             "food",
-            "household"
+            "household",
+            "intentions"
         ];
 
         const results = {};
@@ -664,7 +665,8 @@ class AkiraBrain {
             ["dailyLife", "AkiraDailyLife"],
             ["leisure", "AkiraLeisure"],
             ["food", "AkiraFood"],
-            ["household", "AkiraHousehold"]
+            ["household", "AkiraHousehold"],
+            ["intentions", "AkiraIntentions"]
         ];
         for (const [property, globalName] of modules) {
             const Ctor = window[globalName];
@@ -757,6 +759,7 @@ class AkiraBrain {
         );
 
         this.household?.update?.(simulatedMinutes);
+        this.intentions?.update?.(simulatedMinutes);
 
         this.updateMemory(
             simulatedMinutes
@@ -1041,6 +1044,7 @@ finishAction() {
     this.leisure?.completeAction?.(action);
     this.food?.completeAction?.(action);
     this.household?.completeAction?.(action);
+    this.intentions?.onActionFinished?.(action);
 
     // Використовуємо тільки тригери, які прямо описані в emotions.json.
     if (action.actionId === "rest") {
@@ -1121,6 +1125,7 @@ finishAction() {
 
         const priorityAction =
             this.dailyLife?.getPriorityAction?.(situation) ||
+            this.intentions?.getPriorityAction?.(situation) ||
             this.food?.getPriorityAction?.(situation) ||
             this.household?.getPriorityAction?.(situation) ||
             this.leisure?.getPriorityAction?.(situation) || null;
@@ -1332,6 +1337,8 @@ finishAction() {
             this.getActivityState(
                 action
             );
+
+        this.intentions?.onActionStarted?.(this.state.action);
 
         this.state.actionStartedAt =
             now;
