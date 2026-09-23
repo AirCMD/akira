@@ -4311,65 +4311,35 @@ scoreTime(
 
     isWorkTime(situation) {
 
-        const world =
-            this.brain?.data?.world ||
-            {};
+        const root = this.brain?.data?.world || {};
+        const world = root.world || root;
+        const schedule = world.workSchedule || world.work || {};
+        if (schedule.enabled === false) return false;
 
+        const day = String(
+            situation.day || this.brain?.state?.world?.day || ""
+        ).toLowerCase();
 
-        const schedule =
-            world.workSchedule ||
-            world.work ||
-            {};
+        const weekly = schedule.weeklySchedule || null;
+        let startValue = schedule.start || "10:00";
+        let endValue = schedule.end || "18:00";
 
-
-        const day =
-            situation.day ||
-            this.brain?.state?.world?.day ||
-            "";
-
-
-        const weekdays =
-            schedule.weekdays ||
-            [
-                "Monday",
-                "Tuesday",
-                "Wednesday",
-                "Thursday",
-                "Friday"
-            ];
-
-
-        if (
-            !weekdays.includes(day)
-        ) {
-            return false;
+        if (weekly && typeof weekly === "object") {
+            const entry = weekly[day];
+            if (!entry || entry.working === false) return false;
+            startValue = entry.start || startValue;
+            endValue = entry.end || endValue;
+        } else {
+            const weekdays = (schedule.weekdays || [
+                "monday","tuesday","wednesday","thursday","friday"
+            ]).map(v => String(v).toLowerCase());
+            if (!weekdays.includes(day)) return false;
         }
 
-
-        const time =
-            this.getMinutesOfDay(
-                situation.time
-            );
-
-
-        const start =
-            this.getMinutesOfDay(
-                schedule.start ||
-                "10:00"
-            );
-
-
-        const end =
-            this.getMinutesOfDay(
-                schedule.end ||
-                "18:00"
-            );
-
-
-        return (
-            time >= start &&
-            time < end
-        );
+        const time = this.getMinutesOfDay(situation.time);
+        const start = this.getMinutesOfDay(startValue);
+        const end = this.getMinutesOfDay(endValue);
+        return time >= start && time < end;
     }
 
 

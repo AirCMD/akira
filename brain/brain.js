@@ -656,7 +656,8 @@ class AkiraBrain {
             ["calendar", "AkiraCalendar"],
             ["weather", "AkiraWeather"],
             ["opinions", "AkiraOpinions"],
-            ["appearance", "AkiraAppearance"]
+            ["appearance", "AkiraAppearance"],
+            ["dailyLife", "AkiraDailyLife"]
         ];
         for (const [property, globalName] of modules) {
             const Ctor = window[globalName];
@@ -1027,6 +1028,7 @@ finishAction() {
     }
 
     this.social?.completeAction?.(action);
+    this.dailyLife?.completeAction?.(action);
 
     // Використовуємо тільки тригери, які прямо описані в emotions.json.
     if (action.actionId === "rest") {
@@ -1105,7 +1107,10 @@ finishAction() {
         const situation =
             this.evaluateSituation();
 
-        const result =
+        const priorityAction =
+            this.dailyLife?.getPriorityAction?.(situation) || null;
+
+        const result = priorityAction ||
             this.decision.decide(
                 situation
             );

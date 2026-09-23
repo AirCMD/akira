@@ -5,30 +5,30 @@
       "name": "сон",
       "canInitiate": true,
       "canRepeat": true,
-
-      "locations": ["home"],
-
+      "locations": [
+        "home"
+      ],
       "duration": {
         "minimumMinutes": 360,
         "usualMinutes": 480,
         "maximumMinutes": 600
       },
-
       "conditions": {
-        "preferredTime": ["night", "early_morning"],
+        "preferredTime": [
+          "night",
+          "early_morning"
+        ],
         "canStartOutsidePreferredTime": true,
         "energyBelow": 35,
         "sleepNeedBelow": 40,
         "criticalEnergy": 15
       },
-
       "behavior": {
         "alone": 1.0,
         "withCompany": 0.7,
         "afterLongWork": 1.4,
         "afterPhysicalActivity": 1.2
       },
-
       "interruptions": {
         "canInterrupt": true,
         "reasons": [
@@ -39,32 +39,27 @@
         ]
       }
     },
-
     "eat": {
       "category": "basic",
       "name": "поїсти",
       "canInitiate": true,
       "canRepeat": true,
-
       "locations": [
         "home",
         "workplace",
         "cafe",
         "restaurant"
       ],
-
       "duration": {
         "minimumMinutes": 10,
         "usualMinutes": 25,
         "maximumMinutes": 60
       },
-
       "conditions": {
         "hungerAbove": 40,
         "criticalHunger": 80,
         "canEatEvenWithoutStrongHunger": true
       },
-
       "selection": {
         "useFoodPreferences": true,
         "useHunger": true,
@@ -72,20 +67,17 @@
         "useAvailableFood": true,
         "useComfort": true
       },
-
       "behavior": {
         "alone": 0.8,
         "withCompany": 1.1,
         "duringWork": 0.6
       }
     },
-
     "drink": {
       "category": "basic",
       "name": "випити щось",
       "canInitiate": true,
       "canRepeat": true,
-
       "locations": [
         "home",
         "workplace",
@@ -93,18 +85,15 @@
         "restaurant",
         "city"
       ],
-
       "duration": {
         "minimumMinutes": 2,
         "usualMinutes": 5,
         "maximumMinutes": 15
       },
-
       "conditions": {
         "thirstAbove": 35,
         "criticalThirst": 80
       },
-
       "selection": {
         "useDrinkPreferences": true,
         "useThirst": true,
@@ -112,33 +101,28 @@
         "useAvailableDrinks": true
       }
     },
-
     "rest": {
       "category": "recovery",
       "name": "відпочити",
       "canInitiate": true,
       "canRepeat": true,
-
       "locations": [
         "home",
         "workplace",
         "park",
         "cafe"
       ],
-
       "duration": {
         "minimumMinutes": 10,
         "usualMinutes": 30,
         "maximumMinutes": 120
       },
-
       "conditions": {
         "energyBelow": 50,
         "restNeedBelow": 40,
         "stressAbove": 50,
         "socialFatigueAbove": 50
       },
-
       "variants": [
         {
           "id": "sit_quietly",
@@ -168,15 +152,12 @@
         }
       ]
     },
-
     "work": {
       "category": "work",
       "name": "працювати",
       "canInitiate": true,
       "canRepeat": true,
-
       "location": "Техсмітник",
-
       "role": {
         "position": "продавець-консультант",
         "responsibilities": [
@@ -188,20 +169,17 @@
           "працювати з покупцями"
         ]
       },
-
       "duration": {
         "minimumMinutes": 30,
         "usualMinutes": 240,
         "maximumMinutes": 480
       },
-
       "conditions": {
         "workHours": true,
         "minimumEnergy": 25,
         "canWorkWhenTired": true,
         "canRefuseExtraWorkWhenExhausted": true
       },
-
       "behavior": {
         "responsibility": 95,
         "helpfulness": 85,
@@ -209,7 +187,6 @@
         "patience": 65,
         "politeness": 78
       },
-
       "subActivities": [
         "consultCustomer",
         "compareProducts",
@@ -219,25 +196,21 @@
         "takeBreak"
       ]
     },
-
     "walk": {
       "category": "movement",
       "name": "піти на прогулянку",
       "canInitiate": true,
       "canRepeat": true,
-
       "locations": [
         "city",
         "street",
         "park"
       ],
-
       "duration": {
         "minimumMinutes": 15,
         "usualMinutes": 45,
         "maximumMinutes": 180
       },
-
       "conditions": {
         "minimumEnergy": 20,
         "preferredWeather": [
@@ -247,7 +220,6 @@
         ],
         "badWeatherPenalty": 0.7
       },
-
       "purposes": [
         "relaxation",
         "freshAir",
@@ -256,7 +228,6 @@
         "boredomReduction",
         "cityObservation"
       ],
-
       "routeSelection": {
         "useCityPreference": true,
         "useWeather": true,
@@ -264,13 +235,11 @@
         "useNovelty": true,
         "avoidKnownIrritants": true
       },
-
       "avoid": [
         "mosquitoes",
         "ticks",
         "nettles"
       ],
-
       "variants": [
         {
           "id": "usual_route",
@@ -296,29 +265,24 @@
         }
       ]
     },
-
     "cycle": {
       "category": "physical",
       "name": "покататися на велосипеді",
       "canInitiate": true,
       "canRepeat": true,
-
       "locations": [
         "city",
         "cyclePath",
         "park"
       ],
-
       "requirements": [
         "bicycle"
       ],
-
       "duration": {
         "minimumMinutes": 20,
         "usualMinutes": 60,
         "maximumMinutes": 180
       },
-
       "conditions": {
         "minimumEnergy": 35,
         "preferredWeather": [
@@ -327,7 +291,6 @@
         ],
         "badWeatherPenalty": 0.25
       },
-
       "purposes": [
         "fun",
         "movement",
@@ -335,7 +298,6 @@
         "exploration",
         "achievement"
       ],
-
       "variants": [
         {
           "id": "short_ride",
@@ -363,30 +325,25 @@
         }
       ]
     },
-
     "read": {
       "category": "quiet",
       "name": "читати",
       "canInitiate": true,
       "canRepeat": true,
-
       "locations": [
         "home",
         "library",
         "cafe",
         "park"
       ],
-
       "duration": {
         "minimumMinutes": 10,
         "usualMinutes": 45,
         "maximumMinutes": 180
       },
-
       "conditions": {
         "minimumEnergy": 15
       },
-
       "purposes": [
         "learning",
         "entertainment",
@@ -394,14 +351,12 @@
         "relaxation",
         "quietTime"
       ],
-
       "selection": {
         "useCuriosity": true,
         "useInterests": true,
         "useMood": true,
         "useAvailableBooks": true
       },
-
       "variants": [
         {
           "id": "interesting_topic",
@@ -426,13 +381,11 @@
         }
       ]
     },
-
     "listenToMusic": {
       "category": "entertainment",
       "name": "слухати музику",
       "canInitiate": true,
       "canRepeat": true,
-
       "locations": [
         "home",
         "workplace",
@@ -440,27 +393,23 @@
         "city",
         "park"
       ],
-
       "duration": {
         "minimumMinutes": 5,
         "usualMinutes": 30,
         "maximumMinutes": 240
       },
-
       "purposes": [
         "relaxation",
         "moodChange",
         "entertainment",
         "background"
       ],
-
       "selection": {
         "useMood": true,
         "useMusicPreferences": true,
         "avoidImmediateRepetition": true,
         "allowRandomChoice": true
       },
-
       "moodEffects": {
         "sad": 1.3,
         "bored": 1.5,
@@ -468,36 +417,30 @@
         "energetic": 1.2
       }
     },
-
     "playGame": {
       "category": "game",
       "name": "грати в гру",
       "canInitiate": true,
       "canRepeat": false,
-
       "locations": [
         "home",
         "gameRoom"
       ],
-
       "duration": {
         "minimumMinutes": 10,
         "usualMinutes": 45,
         "maximumMinutes": 150
       },
-
       "conditions": {
         "minimumEnergy": 20,
         "funNeedBelow": 45
       },
-
       "selection": {
         "useGamePreferences": true,
         "useEnergy": true,
         "useSocialNeed": true,
         "useAvailablePlayers": true
       },
-
       "variants": [
         {
           "id": "tic_tac_toe",
@@ -530,7 +473,6 @@
           "emojiChoice": true
         }
       ],
-
       "behavior": {
         "likesWinning": 35,
         "dislikesLosing": 25,
@@ -539,32 +481,27 @@
         "avoidsAggressiveCompetition": 90
       }
     },
-
     "checkSocialNetwork": {
       "category": "social",
       "name": "перевірити соцмережу",
       "canInitiate": true,
       "canRepeat": true,
-
       "locations": [
         "home",
         "workplace",
         "city"
       ],
-
       "duration": {
         "minimumMinutes": 2,
         "usualMinutes": 15,
         "maximumMinutes": 60
       },
-
       "purposes": [
         "communication",
         "curiosity",
         "entertainment",
         "information"
       ],
-
       "subActivities": [
         "readPosts",
         "readComments",
@@ -573,7 +510,6 @@
         "reactToPost",
         "writeComment"
       ],
-
       "selection": {
         "useSocialNeed": true,
         "useCuriosity": true,
@@ -581,30 +517,25 @@
         "useRelationships": true
       }
     },
-
     "writePost": {
       "category": "social",
       "name": "написати допис",
       "canInitiate": true,
       "canRepeat": false,
-
       "locations": [
         "home",
         "workplace",
         "city"
       ],
-
       "duration": {
         "minimumMinutes": 5,
         "usualMinutes": 20,
         "maximumMinutes": 60
       },
-
       "conditions": {
         "minimumEnergy": 20,
         "inspiration": 35
       },
-
       "topicSelection": {
         "useInterests": true,
         "usePreferences": true,
@@ -613,7 +544,6 @@
         "useWeather": true,
         "useCurrentMood": true
       },
-
       "possibleTopics": [
         "technology",
         "electronics",
@@ -630,25 +560,21 @@
         "interestingEvents"
       ]
     },
-
     "talkToSomeone": {
       "category": "social",
       "name": "поговорити з кимось",
       "canInitiate": true,
       "canRepeat": false,
-
       "duration": {
         "minimumMinutes": 5,
         "usualMinutes": 30,
         "maximumMinutes": 180
       },
-
       "conditions": {
         "socialNeedBelow": 35,
         "lonelinessAbove": 25,
         "canInitiateWhenSocialNeedIsNormal": true
       },
-
       "personSelection": {
         "useCloseness": true,
         "useTrust": true,
@@ -659,7 +585,6 @@
         "avoidHighIrritation": true,
         "avoidHighFear": true
       },
-
       "priorityFactors": {
         "closePerson": 3.0,
         "trustedPerson": 2.0,
@@ -668,7 +593,6 @@
         "stranger": 0.3,
         "dislikedPerson": 0.05
       },
-
       "subActivities": [
         "casualConversation",
         "askQuestion",
@@ -678,26 +602,21 @@
         "playGame"
       ]
     },
-
     "talkToYani": {
       "category": "relationship",
       "name": "поговорити з Яні",
       "canInitiate": true,
       "canRepeat": false,
-
       "person": "Yani_Bakeneko",
-
       "duration": {
         "minimumMinutes": 5,
         "usualMinutes": 45,
         "maximumMinutes": 240
       },
-
       "conditions": {
         "relationshipRequired": true,
         "minimumTrust": 50
       },
-
       "selection": {
         "useAffection": true,
         "useAttachment": true,
@@ -705,7 +624,6 @@
         "useSocialNeed": true,
         "useYaniAvailability": true
       },
-
       "possiblePurposes": [
         "talk",
         "spendTimeTogether",
@@ -717,178 +635,158 @@
         "expressAffection"
       ]
     },
-
     "visitMuseum": {
       "category": "culture",
       "name": "відвідати музей",
       "canInitiate": true,
       "canRepeat": true,
-
-      "locations": ["city"],
-
+      "locations": [
+        "city"
+      ],
       "duration": {
         "minimumMinutes": 60,
         "usualMinutes": 120,
         "maximumMinutes": 300
       },
-
       "conditions": {
         "minimumEnergy": 25,
         "museumOpen": true
       },
-
       "selection": {
         "useCuriosity": true,
         "useInterests": true,
         "useAvailableExhibitions": true
       }
     },
-
     "visitPlanetarium": {
       "category": "culture",
       "name": "відвідати планетарій",
       "canInitiate": true,
       "canRepeat": true,
-
-      "locations": ["city"],
-
+      "locations": [
+        "city"
+      ],
       "duration": {
         "minimumMinutes": 60,
         "usualMinutes": 120,
         "maximumMinutes": 240
       },
-
       "conditions": {
         "minimumEnergy": 25,
         "planetariumOpen": true
       },
-
       "selection": {
         "curiosity": 98,
         "spaceInterest": 96,
         "novelty": 85
       }
     },
-
     "visitTheatre": {
       "category": "culture",
       "name": "відвідати театр",
       "canInitiate": true,
       "canRepeat": true,
-
-      "locations": ["city"],
-
+      "locations": [
+        "city"
+      ],
       "duration": {
         "minimumMinutes": 90,
         "usualMinutes": 150,
         "maximumMinutes": 300
       },
-
       "conditions": {
         "minimumEnergy": 25,
         "theatreOpen": true
       }
     },
-
     "visitConcert": {
       "category": "culture",
       "name": "відвідати концерт",
       "canInitiate": true,
       "canRepeat": true,
-
-      "locations": ["city"],
-
+      "locations": [
+        "city"
+      ],
       "duration": {
         "minimumMinutes": 60,
         "usualMinutes": 120,
         "maximumMinutes": 300
       },
-
       "conditions": {
         "minimumEnergy": 25,
         "concertAvailable": true
       },
-
       "selection": {
         "useMusicPreferences": true,
         "useMood": true,
         "useSocialNeed": true
       }
     },
-
     "goToCinema": {
       "category": "culture",
       "name": "піти в кіно",
       "canInitiate": true,
       "canRepeat": true,
-
-      "locations": ["city"],
-
+      "locations": [
+        "city"
+      ],
       "duration": {
         "minimumMinutes": 90,
         "usualMinutes": 120,
         "maximumMinutes": 240
       },
-
       "conditions": {
         "minimumEnergy": 20,
         "cinemaOpen": true
       },
-
       "selection": {
         "useCinemaPreferences": true,
         "useAvailableFilms": true,
         "useMood": true
       }
     },
-
     "boatRide": {
       "category": "leisure",
       "name": "покататися на човні",
       "canInitiate": true,
       "canRepeat": true,
-
-      "locations": ["water"],
-
+      "locations": [
+        "water"
+      ],
       "duration": {
         "minimumMinutes": 30,
         "usualMinutes": 60,
         "maximumMinutes": 180
       },
-
       "conditions": {
         "minimumEnergy": 25,
         "goodWeatherRequired": true,
         "boatAvailable": true
       },
-
       "selection": {
         "useNovelty": true,
         "useWeather": true,
         "useCuriosity": true
       }
     },
-
     "fishing": {
       "category": "leisure",
       "name": "рибалити",
       "canInitiate": true,
       "canRepeat": true,
-
-      "locations": ["water"],
-
+      "locations": [
+        "water"
+      ],
       "duration": {
         "minimumMinutes": 30,
         "usualMinutes": 90,
         "maximumMinutes": 300
       },
-
       "conditions": {
         "minimumEnergy": 25,
         "goodWeatherPreferred": true,
         "fishingLocationAvailable": true
       },
-
       "behavior": {
         "relaxation": 65,
         "curiosity": 55,
@@ -896,117 +794,98 @@
         "initiative": 20
       }
     },
-
     "craftWithClay": {
       "category": "creative",
       "name": "майструвати з глини",
       "canInitiate": true,
       "canRepeat": true,
-
       "locations": [
         "home",
         "workshop"
       ],
-
       "duration": {
         "minimumMinutes": 20,
         "usualMinutes": 60,
         "maximumMinutes": 180
       },
-
       "conditions": {
         "minimumEnergy": 20,
         "materialsAvailable": true
       },
-
       "behavior": {
         "creativity": 75,
         "patienceRequired": 60,
         "initiative": 20
       }
     },
-
     "lookAtFlowers": {
       "category": "quiet",
       "name": "милуватися квітами",
       "canInitiate": true,
       "canRepeat": true,
-
       "locations": [
         "home",
         "garden",
         "park",
         "city"
       ],
-
       "duration": {
         "minimumMinutes": 5,
         "usualMinutes": 15,
         "maximumMinutes": 60
       },
-
       "conditions": {
         "flowersAvailable": true
       },
-
       "purposes": [
         "relaxation",
         "aestheticPleasure",
         "moodImprovement"
       ]
     },
-
     "observeAnimals": {
       "category": "quiet",
       "name": "спостерігати за тваринами",
       "canInitiate": true,
       "canRepeat": true,
-
       "locations": [
         "home",
         "city",
         "park",
         "zoo"
       ],
-
       "duration": {
         "minimumMinutes": 5,
         "usualMinutes": 20,
         "maximumMinutes": 90
       },
-
       "purposes": [
         "curiosity",
         "relaxation",
         "entertainment"
       ]
     },
-
     "stargazing": {
       "category": "quiet",
       "name": "спостерігати за зорями",
       "canInitiate": true,
       "canRepeat": true,
-
       "locations": [
         "home",
         "rooftop",
         "park",
         "observatory"
       ],
-
       "duration": {
         "minimumMinutes": 10,
         "usualMinutes": 40,
         "maximumMinutes": 180
       },
-
       "conditions": {
         "nightRequired": true,
         "clearSkyPreferred": true,
         "cloudPenalty": 0.3
       },
-
       "behavior": {
         "curiosity": 98,
         "aesthetic": 90,
@@ -1014,38 +893,32 @@
         "initiative": 75
       }
     },
-
     "checkCalendar": {
       "category": "micro",
       "name": "перевірити календар",
       "canInitiate": true,
       "canRepeat": true,
-
       "duration": {
         "minimumMinutes": 1,
         "usualMinutes": 2,
         "maximumMinutes": 5
       },
-
       "purposes": [
         "planning",
         "orientation",
         "rememberingEvents"
       ]
     },
-
     "checkPhone": {
       "category": "micro",
       "name": "перевірити телефон",
       "canInitiate": true,
       "canRepeat": true,
-
       "duration": {
         "minimumMinutes": 1,
         "usualMinutes": 5,
         "maximumMinutes": 20
       },
-
       "possibleResults": [
         "nothingNew",
         "newMessage",
@@ -1054,19 +927,16 @@
         "socialNetworkUpdate"
       ]
     },
-
     "lookOutWindow": {
       "category": "micro",
       "name": "подивитися у вікно",
       "canInitiate": true,
       "canRepeat": true,
-
       "duration": {
         "minimumMinutes": 1,
         "usualMinutes": 5,
         "maximumMinutes": 30
       },
-
       "purposes": [
         "rest",
         "curiosity",
@@ -1075,41 +945,34 @@
         "thinking"
       ]
     },
-
     "organizeDesk": {
       "category": "household",
       "name": "привести до ладу робоче місце",
       "canInitiate": true,
       "canRepeat": true,
-
       "duration": {
         "minimumMinutes": 5,
         "usualMinutes": 15,
         "maximumMinutes": 60
       },
-
       "conditions": {
         "disorderAbove": 50
       },
-
       "behavior": {
         "orderImportance": 72,
         "initiative": 45
       }
     },
-
     "think": {
       "category": "mental",
       "name": "обміркувати щось",
       "canInitiate": true,
       "canRepeat": true,
-
       "duration": {
         "minimumMinutes": 1,
         "usualMinutes": 10,
         "maximumMinutes": 60
       },
-
       "triggers": [
         "difficultQuestion",
         "uncertainty",
@@ -1119,7 +982,6 @@
         "emotionalEvent",
         "curiosity"
       ],
-
       "behavior": {
         "analytical": 76,
         "attentionToDetail": 80,
@@ -1127,44 +989,145 @@
         "imagination": 70
       }
     },
-
     "rememberSomeone": {
       "category": "mental",
       "name": "згадати когось",
       "canInitiate": true,
       "canRepeat": true,
-
       "duration": {
         "minimumMinutes": 1,
         "usualMinutes": 5,
         "maximumMinutes": 30
       },
-
       "selection": {
         "useMemoryStrength": true,
         "useEmotionalIntensity": true,
         "useRecentInteraction": true,
         "useAssociations": true
       },
-
       "priority": {
         "Yani_Bakeneko": 3.0,
         "closeFriend": 1.5,
         "otherPerson": 1.0
       }
+    },
+    "commuteToWork": {
+      "category": "movement",
+      "name": "добиратися на роботу",
+      "canInitiate": true,
+      "locations": [
+        "home"
+      ],
+      "duration": {
+        "usualMinutes": 45
+      },
+      "tags": [
+        "commute",
+        "work",
+        "transport"
+      ]
+    },
+    "commuteHome": {
+      "category": "movement",
+      "name": "повертатися додому",
+      "canInitiate": true,
+      "locations": [
+        "techsmith"
+      ],
+      "duration": {
+        "usualMinutes": 45
+      },
+      "tags": [
+        "commute",
+        "home",
+        "transport"
+      ]
+    },
+    "washFace": {
+      "category": "hygiene",
+      "name": "вмитися",
+      "canInitiate": true,
+      "locations": [
+        "home"
+      ],
+      "duration": {
+        "usualMinutes": 5
+      },
+      "tags": [
+        "hygiene",
+        "morning"
+      ]
+    },
+    "shave": {
+      "category": "hygiene",
+      "name": "поголитися",
+      "canInitiate": true,
+      "locations": [
+        "home"
+      ],
+      "duration": {
+        "usualMinutes": 10
+      },
+      "tags": [
+        "hygiene",
+        "grooming"
+      ]
+    },
+    "changeClothes": {
+      "category": "hygiene",
+      "name": "змінити одяг",
+      "canInitiate": true,
+      "locations": [
+        "home"
+      ],
+      "duration": {
+        "usualMinutes": 5
+      },
+      "tags": [
+        "hygiene",
+        "clothing"
+      ]
+    },
+    "doLaundry": {
+      "category": "household",
+      "name": "зайнятися пранням",
+      "canInitiate": true,
+      "locations": [
+        "home"
+      ],
+      "duration": {
+        "usualMinutes": 45
+      },
+      "tags": [
+        "household",
+        "laundry"
+      ]
+    },
+    "takeBath": {
+      "category": "hygiene",
+      "name": "прийняти ванну",
+      "canInitiate": true,
+      "locations": [
+        "home"
+      ],
+      "duration": {
+        "usualMinutes": 35
+      },
+      "tags": [
+        "hygiene",
+        "bath",
+        "relaxing"
+      ]
     }
   },
-
   "autonomousBehavior": {
     "enabled": true,
-
     "decisionCycle": {
       "enabled": true,
       "minimumIntervalMinutes": 5,
       "maximumIntervalMinutes": 30,
       "randomVariation": true
     },
-
     "actionSelection": {
       "useNeeds": true,
       "useEmotions": true,
@@ -1178,7 +1141,6 @@
       "useLocation": true,
       "useRecentActions": true
     },
-
     "behaviorPrinciples": {
       "notEveryNeedRequiresImmediateAction": true,
       "notEveryInterestCausesAction": true,
@@ -1192,27 +1154,23 @@
       "allowChangingMind": true,
       "allowInterruptingActivity": true
     },
-
     "inertia": {
       "enabled": true,
       "continueCurrentActivityBonus": 15,
       "minimumContinuationMinutes": 5
     },
-
     "repetition": {
       "enabled": true,
       "sameActionPenalty": 15,
       "sameActionCooldownMinutes": 30,
       "sameVariantCooldownMinutes": 60
     },
-
     "randomness": {
       "enabled": true,
       "minimum": 0.85,
       "maximum": 1.15
     }
   },
-
   "microActions": [
     "checkPhone",
     "lookOutWindow",
@@ -1221,7 +1179,6 @@
     "rememberSomeone",
     "organizeDesk"
   ],
-
   "socialActions": [
     "talkToSomeone",
     "talkToYani",
@@ -1229,7 +1186,6 @@
     "writePost",
     "playGame"
   ],
-
   "leisureActions": [
     "read",
     "listenToMusic",
@@ -1248,7 +1204,6 @@
     "observeAnimals",
     "stargazing"
   ],
-
   "basicActions": [
     "sleep",
     "eat",
