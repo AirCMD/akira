@@ -479,7 +479,8 @@ class AkiraDialogue {
         if (/^(що\s+ти\s+(зараз\s+)?відчуваєш|які\s+в\s+тебе\s+(зараз\s+)?відчуття)[\s?!.,]*$/iu.test(normalized)) return "ask_self_feeling";
         if (/^(чого\s+ти\s+(зараз\s+)?хочеш|що\s+ти\s+(зараз\s+)?хочеш)[\s?!.,]*$/iu.test(normalized)) return "ask_self_want";
         if (/^(чому\s+ти\s+цього\s+хочеш|чому\s+тобі\s+цього\s+хочеться|а\s+чому\s+ти\s+цього\s+хочеш)[\s?!.,]*$/iu.test(normalized)) return "ask_self_want_why";
-        if (/^(що\s+ти\s+(зараз\s+)?думаєш|про\s+що\s+ти\s+(зараз\s+)?думаєш)[\s?!.,]*$/iu.test(normalized)) return "ask_self_thought";
+        if (/^(що\s+ти\s+(зараз\s+)?думаєш|про\s+що\s+ти\s+(зараз\s+)?думаєш|що\s+(зараз\s+)?крутиться\s+в\s+голові)[\s?!.,]*$/iu.test(normalized)) return "ask_self_thought";
+        if (/^(ти\s+передумав|ти\s+не\s+передумав|ти\s+сумніваєшся\s+в\s+тому\s+що\s+робиш|ти\s+переосмислюєш\s+це|ти\s+переоцінюєш\s+свій\s+план)[\s?!.,]*$/iu.test(normalized)) return "ask_metacognition";
         if (/^(що\s+ти\s+про\s+себе\s+думаєш|як\s+ти\s+сам\s+себе\s+сприймаєш)[\s?!.,]*$/iu.test(normalized)) return "ask_self_model";
         if (/^(у\s+тебе\s+є\s+внутрішній\s+конфлікт|ти\s+вагаєшся|тобі\s+важко\s+вирішити\s+чого\s+хочеш)[\s?!.,]*$/iu.test(normalized)) return "ask_self_conflict";
 
@@ -2203,7 +2204,8 @@ class AkiraDialogue {
         if (intent === "ask_self_feeling") return [this.brain.selfModel?.describeFeeling?.() || "Зараз складно це сформулювати."];
         if (intent === "ask_self_want") return [this.brain.selfModel?.describeWant?.() || "Зараз не знаю, чого саме хочу."];
         if (intent === "ask_self_want_why") return [this.brain.selfModel?.describeWhyWant?.() || "Не знаю, як це пояснити."];
-        if (intent === "ask_self_thought") return [this.brain.selfModel?.describeThought?.() || "Та думаю про всяке."];
+        if (intent === "ask_self_thought") return [this.brain.internalStream?.publicThought?.() || this.brain.selfModel?.describeThought?.() || "Та думаю про всяке."];
+        if (intent === "ask_metacognition") return [this.brain.internalStream?.describeMetacognition?.() || "Зараз наче не переосмислюю нічого конкретного."];
         if (intent === "ask_self_model") return [this.brain.selfModel?.describeSelf?.() || "Я Акіра. Решта залежить від того, що саме ти хочеш знати."];
         if (intent === "ask_self_conflict") {
             const conflict=this.brain.selfModel?.getPrimaryConflict?.();

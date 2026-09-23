@@ -260,7 +260,8 @@ class AkiraBrain {
             "work_life",
             "inventory_money",
             "self_model",
-            "dreams"
+            "dreams",
+            "internal_stream"
         ];
 
         const results = {};
@@ -688,7 +689,8 @@ class AkiraBrain {
             ["workLife", "AkiraWorkLife"],
             ["inventoryMoney", "AkiraInventoryMoney"],
             ["selfModel", "AkiraSelfModel"],
-            ["dreams", "AkiraDreams"]
+            ["dreams", "AkiraDreams"],
+            ["internalStream", "AkiraInternalStream"]
         ];
         for (const [property, globalName] of modules) {
             const Ctor = window[globalName];
@@ -791,6 +793,7 @@ class AkiraBrain {
         this.workLife?.ensureDay?.();
         this.selfModel?.update?.(simulatedMinutes);
         this.dreams?.update?.(simulatedMinutes);
+        this.internalStream?.update?.(simulatedMinutes);
 
         this.updateMemory(
             simulatedMinutes
@@ -1080,6 +1083,7 @@ finishAction() {
     this.accidents?.completeAction?.(action);
     this.workLife?.completeAction?.(action);
     this.dreams?.completeAction?.(action);
+    this.internalStream?.onActionFinished?.(action);
 
     // Використовуємо тільки тригери, які прямо описані в emotions.json.
     if (action.actionId === "rest") {

@@ -1,0 +1,11 @@
+{
+  "internalStream": {
+    "thoughtIntervalMinutes": 12,
+    "historyLimit": 120,
+    "publicSummaryLimit": 3,
+    "associationChance": 0.28,
+    "reconsiderConflictAbove": 62,
+    "reconsiderFatigueAbove": 72,
+    "emotionShiftThreshold": 18
+  }
+}
