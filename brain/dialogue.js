@@ -17,6 +17,12 @@ class AkiraDialogue {
         this.maxRecentTemplates = 12;
         this.maxRecentResponses = 8;
 
+        // Короткочасний контекст поточної розмови. Потрібен для
+        // природних follow-up запитань і реакції на повтор одного питання.
+        this.lastIntent = null;
+        this.lastIntentAt = 0;
+        this.lastNormalizedInput = null;
+
         this.settings = {
             randomness: 18,
             maxWords: 120,
@@ -42,6 +48,17 @@ class AkiraDialogue {
 
         const profile = this.buildDialogueProfile(text, context);
 
+        // Якщо людина щойно поставила те саме змістове питання ще раз,
+        // Акіра це помічає. Звертання на ім'я та короткі перевірки стану
+        // навмисно не вважаємо настирливим повтором.
+        const repeatReply = this.composeRepeatQuestionAnswer(profile);
+        if (repeatReply) {
+            const finalized = this.finalizeResponse([repeatReply], profile);
+            this.recordDialogue(text, finalized, profile);
+            this.rememberTurn(profile);
+            return finalized;
+        }
+
         // Структуровані наміри обробляємо ДО випадкового вибору діалогової дії.
         // Інакше коректно розпізнана економічна подія могла бути перехоплена
         // changeTopic/staySilent або звичайною темою food.
@@ -49,6 +66,7 @@ class AkiraDialogue {
         if (structuredResponse) {
             const finalized = this.finalizeResponse(structuredResponse, profile);
             this.recordDialogue(text, finalized, profile);
+            this.rememberTurn(profile);
             return finalized;
         }
 
@@ -73,6 +91,7 @@ class AkiraDialogue {
         const finalized = this.finalizeResponse(response, profile);
 
         this.recordDialogue(text, finalized, profile);
+        this.rememberTurn(profile);
 
         return finalized;
     }
@@ -374,10 +393,11 @@ class AkiraDialogue {
         // Коротке звертання на ім'я і питання, чи Акіра спить,
         // повинні читати живий стан, а не провалюватися в greeting/topic fallback.
         if (/^(акіра)[\s?!.,]*$/iu.test(normalized)) return "name_ping";
-        if (/^(привіт[,!\s]*)?(ти\s+)?спиш[\s?!.,]*$/iu.test(normalized)) return "ask_sleeping";
+        if (/^(акіра[,!\s]*)?(привіт[,!\s]*)?(ти\s+)?спиш[\s?!.,]*$/iu.test(normalized)) return "ask_sleeping";
 
-        // «Яке кіно ти дивишся?» = питання про поточну дію, а не про смаки в кіно.
+        // «Яке кіно ти дивишся?» = поточна дія. «Яке кіно подобається?» = смак.
         if (/^(яке|який|що\s+за)\s+(кіно|фільм)\s+ти\s+(зараз\s+)?дивишся[\s?!.,]*$/iu.test(normalized)) return "ask_current_movie";
+        if (/^(яке|які|який|що\s+за)\s+(кіно|фільми?|жанри?\s+кіно)\s+(тобі\s+)?(подобається|подобаються|любиш)[\s?!.,]*$/iu.test(normalized) || /^(які\s+фільми\s+ти\s+любиш)[\s?!.,]*$/iu.test(normalized)) return "ask_movie_preferences";
 
         const askDatePatterns = [
             /^(який|котрий)\s+сьогодні\s+(день|день\s+тижня|дата)[\s?!.,]*$/iu,
@@ -441,10 +461,16 @@ class AkiraDialogue {
             if (pattern.test(normalized)) return identityIntent;
         }
 
+        // Follow-up після «я не вдома»: «то де?», «якщо не вдома, то де?»
+        // читається з контексту попередньої репліки, а не як нова невідома тема.
+        if (/^(якщо\s+не\s+вдома[,\s]+то\s+де|то\s+де|а\s+де|де\s+саме|де\s+ти\s+зараз)[\s?!.,]*$/iu.test(normalized)) {
+            return "ask_current_location";
+        }
+
         // Біографія та повсякденне життя. Канон з life_profile.json.
         const lifePatterns = [
             [/^(коли\s+в\s+тебе\s+день\s+народження|коли\s+ти\s+народився|яка\s+твоя\s+дата\s+народження)[\s?!.,]*$/iu, "ask_birthday"],
-            [/(хто\s+твої\s+батьки|як\s+звати\s+(твоїх\s+)?(батьків|маму|тата|брата)|імен.*(батьк|брат))/iu, "ask_family_names"],
+            [/(хто\s+твої\s+батьки|як\s+звати\s+(твоїх\s+|твого\s+)?(батьків|маму|тата|брата)|імен.*(батьк|брат))/iu, "ask_family_names"],
             [/(в\s+тебе\s+є\s+(батьки|брат|сестра)|розкажи\s+про\s+(свою\s+)?сім)/iu, "ask_family"],
             [/(де\s+ти\s+вчився|яка\s+в\s+тебе\s+освіта|на\s+кого\s+ти\s+вчився|що\s+ти\s+закінчив)/iu, "ask_education"],
             [/(де\s+ти\s+зараз\s+вдома|в\s+якій\s+ти\s+(зараз\s+)?кімнаті|де\s+ти\s+в\s+квартирі)/iu, "ask_home_room"],
@@ -1265,6 +1291,51 @@ class AkiraDialogue {
         return "Поки не вирішив. Подивлюся на час, погоду й свій стан.";
     }
 
+    rememberTurn(profile) {
+        this.lastIntent = profile?.analysis?.intent || null;
+        this.lastIntentAt = Date.now();
+        this.lastNormalizedInput = String(profile?.analysis?.normalized || "").trim();
+    }
+
+    composeRepeatQuestionAnswer(profile) {
+        const intent = profile?.analysis?.intent || null;
+        if (!intent || !intent.startsWith("ask_")) return null;
+        if (["ask_sleeping", "ask_state", "ask_activity", "ask_current_location"].includes(intent)) return null;
+        if (this.lastIntent !== intent || Date.now() - this.lastIntentAt > 90000) return null;
+        return this.chooseTemplate([
+            "Навіщо ти знову це питаєш?",
+            "Я ж щойно на це відповів.",
+            "Ти вирішила перевірити, чи моя відповідь змінилася за хвилину?",
+            "Знову те саме питання? 🙂"
+        ]);
+    }
+
+    composeCurrentLocationAnswer() {
+        const loc = this.brain.state?.world?.location || "home";
+        if (loc === "home") {
+            const room = this.brain.dailyLife?.currentRoom?.();
+            return room?.name ? `Я вдома, зараз у ${room.name}.` : "Я зараз удома.";
+        }
+        const places = this.brain.data?.world?.world?.location?.places || {};
+        const place = places?.[loc];
+        if (loc === "techsmith") return "Я зараз на роботі, у «Техсмітнику».";
+        if (place?.name) return `Я зараз у місці «${place.name}».`;
+        return "Я зараз не вдома, але точніше місце в мене не зафіксоване.";
+    }
+
+    composeMoviePreferencesAnswer() {
+        const cinema = this.brain.data?.preferences?.preferences?.cinema || {};
+        const likesSlice = Number(cinema.sliceOfLife?.liking || 0) >= 60;
+        const likesUnusual = Number(cinema.unusualCinema?.liking || 0) >= 60 || Number(cinema.arthouse?.liking || 0) >= 60;
+        const parts = [];
+        if (likesSlice) parts.push("повсякденні, атмосферні історії");
+        if (likesUnusual) parts.push("незвичайне й трохи дивне кіно");
+        if (Number(cinema.drama?.liking || 0) >= 60) parts.push("драми");
+        if (Number(cinema.doramas?.liking || 0) >= 60) parts.push("дорами");
+        const list = parts.length ? parts.slice(0,4).join(", ") : "незвичайне кіно";
+        return `Мені подобаються ${list}. Особливо коли фільм не просто шумить дві години, а залишає після себе якусь думку.`;
+    }
+
     isCurrentlySleeping() {
         const id = this.brain.state?.action?.actionId || "";
         return id === "sleep" || this.brain.state?.activity === "sleeping";
@@ -1436,7 +1507,11 @@ class AkiraDialogue {
                         let years = now.getFullYear() - born.getFullYear();
                         const beforeBirthday = now.getMonth() < born.getMonth() || (now.getMonth() === born.getMonth() && now.getDate() < born.getDate());
                         if (beforeBirthday) years -= 1;
-                        return `Мені ${years} років.`;
+                        const map = character.birthDatePrivacy?.digitMap || {};
+                        const encodedYears = [...String(years)].map(ch => map[ch] || ch).join("");
+                        return character.birthDatePrivacy?.displayMode === "encoded"
+                            ? `Мені ${encodedYears} років.`
+                            : `Мені ${years} років.`;
                     }
                 }
                 return "Мій вік у профілі поки не заданий.";
@@ -1480,10 +1555,16 @@ class AkiraDialogue {
             case "ask_home":
                 return "У нас із Яні чотирикімнатна квартира в Теріяківському районі. Є широкий балкон, кімнати в космічному й морському стилях. Найбільше люблю другу кімнату — вона затишна.";
             case "ask_home_room": {
-                if (this.brain.state?.world?.location !== "home") return "Я зараз не вдома.";
+                if (this.brain.state?.world?.location !== "home") return this.chooseTemplate([
+                    "Я зараз не вдома.",
+                    "Я зараз не вдома 🙂",
+                    "У жодній. Я ж зараз не вдома 🙂"
+                ]);
                 const room = this.brain.dailyLife?.currentRoom?.();
                 return room?.name ? `Я зараз у ${room.name}.` : "Я вдома, але конкретну кімнату зараз не відмітив.";
             }
+            case "ask_current_location":
+                return this.composeCurrentLocationAnswer();
             case "ask_work_schedule":
                 return "Працюю з понеділка по п’ятницю, з 10:00 до 16:00. Субота й неділя — вихідні.";
             case "ask_commute":
@@ -1613,13 +1694,15 @@ class AkiraDialogue {
         if (intent === "name_ping") return [this.composeNamePingAnswer(profile)];
         if (intent === "ask_sleeping") return [this.composeSleepingAnswer(profile)];
         if (intent === "ask_current_movie") return [this.composeCurrentMovieAnswer(profile)];
+        if (intent === "ask_movie_preferences") return [this.composeMoviePreferencesAnswer(profile)];
+        if (intent === "ask_current_location") return [this.composeCurrentLocationAnswer(profile)];
         if (intent === "ask_date") return [this.composeDateAnswer(profile)];
         if (intent === "ask_holiday") return [this.composeHolidayAnswer(profile)];
         if (intent === "ask_weather") return [this.composeWeatherAnswer(profile)];
         if (intent === "ask_state") return [this.composeStateAnswer(profile)];
         if (intent === "ask_activity") return [this.composeActivityAnswer(profile)];
         if (intent === "ask_future_activity") return [this.composeFutureActivityAnswer(profile)];
-        if (["ask_birthday","ask_family_names","ask_family","ask_education","ask_home","ask_home_room","ask_work_schedule","ask_commute","ask_work_attitude","ask_health","ask_hygiene","ask_yani_relationship","ask_dreams","ask_private_countries"].includes(intent)) {
+        if (["ask_birthday","ask_family_names","ask_family","ask_education","ask_home","ask_home_room","ask_current_location","ask_work_schedule","ask_commute","ask_work_attitude","ask_health","ask_hygiene","ask_yani_relationship","ask_dreams","ask_private_countries"].includes(intent)) {
             const lifeReply = this.composeLifeAnswer(intent);
             if (lifeReply) return [lifeReply];
         }
@@ -1660,6 +1743,8 @@ class AkiraDialogue {
         if (profile.analysis.intent === "name_ping") return [this.composeNamePingAnswer(profile)];
         if (profile.analysis.intent === "ask_sleeping") return [this.composeSleepingAnswer(profile)];
         if (profile.analysis.intent === "ask_current_movie") return [this.composeCurrentMovieAnswer(profile)];
+        if (profile.analysis.intent === "ask_movie_preferences") return [this.composeMoviePreferencesAnswer(profile)];
+        if (profile.analysis.intent === "ask_current_location") return [this.composeCurrentLocationAnswer(profile)];
         if (profile.analysis.intent === "ask_date") {
             return [this.composeDateAnswer(profile)];
         }
