@@ -550,6 +550,8 @@ class AkiraDialogue {
         if (/^(що\s+(буде|вийде)\s+(потім|після\s+цього)|який\s+результат)[\s?!.,]*$/iu.test(normalized)) return "ask_action_outcome";
         if (/^(що\s+(потім|далі)|а\s+далі|а\s+потім)[\s?!.,]*$/iu.test(normalized)) return "ask_action_next";
         if (/^(що\s+ти\s+плануєш|які\s+в\s+тебе\s+плани|що\s+будеш\s+робити|що\s+збираєшся\s+робити|є\s+плани)(\s+(сьогодні|на\s+сьогодні))?[\s?!.,]*$/iu.test(normalized)) return "ask_current_plan";
+        if (/^(чому\s+ти\s+це\s+запланував|чому\s+такий\s+план|навіщо\s+ти\s+це\s+плануєш)[\s?!.,]*$/iu.test(normalized)) return "ask_plan_why";
+        if (/^(як\s+просувається\s+план|що\s+з\s+планом|скільки\s+вже\s+зробив\s+за\s+планом)[\s?!.,]*$/iu.test(normalized)) return "ask_plan_progress";
 
         // Яні є окремим агентом. Акіра відповідає лише з того, що може знати/бачити.
         if (/^(де\s+(зараз\s+)?яні|яні\s+де|де\s+твоя\s+(дружина|яні))[\s?!.,]*$/iu.test(normalized)) return "ask_yani_location";
@@ -1991,6 +1993,8 @@ class AkiraDialogue {
     composeActionNextAnswer() {
         const next = this.brain.intentions?.getNextAction?.();
         if (next?.label) return `Потім ${next.label}.`;
+        const richPlan = this.brain.goalsPlanning?.nextGoal?.();
+        if (richPlan) return `Потім, якщо нічого не зміниться, планую ${richPlan.title} приблизно о ${richPlan.time}.`;
         const plan = this.brain.intentions?.getNextPlan?.();
         if (plan) { const goal=this.brain.intentions?.planGoal?.(plan)||plan.actionId; return `Потім, якщо нічого не зміниться, планую ${goal} приблизно о ${plan.time}.`; }
         return "Поки не вирішив, що робитиму далі.";
@@ -2225,11 +2229,15 @@ class AkiraDialogue {
         if (intent === "ask_action_outcome") return [this.composeActionOutcomeAnswer(profile)];
         if (intent === "ask_action_next") return [this.composeActionNextAnswer(profile)];
         if (intent === "ask_current_plan") {
+            const rich = this.brain.goalsPlanning?.answerPlan?.();
+            if (rich) return [rich];
             const plan = this.brain.intentions?.getNextPlan?.();
             if (!plan) return ["Поки нічого конкретного не запланував."];
             const goal = this.brain.intentions?.planGoal?.(plan) || plan.actionId;
             return [`Планую ${goal} приблизно о ${plan.time}.`];
         }
+        if (intent === "ask_plan_why") return [this.brain.goalsPlanning?.answerPlanWhy?.() || "Зараз немає конкретного довгого плану."];
+        if (intent === "ask_plan_progress") return [this.brain.goalsPlanning?.answerPlanProgress?.() || "Зараз немає плану, який я виконую."];
         if (intent === "ask_future_activity") return [this.composeFutureActivityAnswer(profile)];
         if (["ask_birthday","ask_family_names","ask_family","ask_education","ask_home","ask_home_room","ask_current_location","ask_work_schedule","ask_commute","ask_work_attitude","ask_health","ask_hygiene","ask_yani_relationship","ask_dreams","ask_private_countries","ask_private_why"].includes(intent)) {
             const lifeReply = this.composeLifeAnswer(intent);

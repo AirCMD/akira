@@ -66,7 +66,7 @@ class AkiraTemporalContext {
     const h=Array.isArray(this.brain.actionHistory)?this.brain.actionHistory:[];
     return h.length?h[h.length-1]:null;
   }
-  futurePlan(){ return this.brain.intentions?.getNextPlan?.() || null; }
+  futurePlan(){ return this.brain.goalsPlanning?.nextGoal?.() || this.brain.intentions?.getNextPlan?.() || null; }
 
   answerActivity(tense, labelFn){
     if(tense==="present"){
@@ -79,7 +79,7 @@ class AkiraTemporalContext {
     }
     const p=this.futurePlan();
     if(!p) return "Поки не знаю, що робитиму далі.";
-    const goal=this.brain.intentions?.planGoal?.(p)||p.actionId;
+    const goal=p.title || this.brain.intentions?.planGoal?.(p)||p.actionId;
     return `Планую ${goal}${p.time?` приблизно о ${p.time}`:""}.`;
   }
 

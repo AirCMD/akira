@@ -250,6 +250,7 @@ class AkiraBrain {
             "food",
             "household",
             "intentions",
+            "goals_planning",
             "health",
             "accidents",
             "attention",
@@ -680,6 +681,7 @@ class AkiraBrain {
             ["food", "AkiraFood"],
             ["household", "AkiraHousehold"],
             ["intentions", "AkiraIntentions"],
+            ["goalsPlanning", "AkiraGoalsPlanning"],
             ["health", "AkiraHealth"],
             ["accidents", "AkiraAccidents"],
             ["attention", "AkiraAttention"],
@@ -786,6 +788,7 @@ class AkiraBrain {
 
         this.household?.update?.(simulatedMinutes);
         this.intentions?.update?.(simulatedMinutes);
+        this.goalsPlanning?.update?.(simulatedMinutes);
         this.health?.update?.(simulatedMinutes);
         this.accidents?.update?.(simulatedMinutes);
         this.attention?.update?.(simulatedMinutes);
@@ -1081,6 +1084,7 @@ finishAction() {
     this.food?.completeAction?.(action);
     this.household?.completeAction?.(action);
     this.intentions?.onActionFinished?.(action);
+    this.goalsPlanning?.onActionFinished?.(action);
     this.health?.completeAction?.(action);
     this.accidents?.completeAction?.(action);
     this.workLife?.completeAction?.(action);
@@ -1168,6 +1172,7 @@ finishAction() {
             this.accidents?.getPriorityAction?.(situation) ||
             this.dailyLife?.getPriorityAction?.(situation) ||
             this.workLife?.getPriorityAction?.(situation) ||
+            this.goalsPlanning?.getPriorityAction?.(situation) ||
             this.intentions?.getPriorityAction?.(situation) ||
             this.food?.getPriorityAction?.(situation) ||
             this.household?.getPriorityAction?.(situation) ||

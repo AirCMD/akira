@@ -5,12 +5,20 @@
     "cancelEnergyBelow": 18,
     "outdoorWeatherComfortBelow": 28,
     "dailyPlanning": {
-      "enabled": true,
+      "enabled": false,
       "workdayTime": "18:30",
       "weekendTime": "14:00",
       "chanceWorkday": 0.62,
       "chanceWeekend": 0.78,
-      "candidates": ["eveningWalk", "cycling", "planetarium", "museum", "theatre", "cinema", "streamer"]
+      "candidates": [
+        "eveningWalk",
+        "cycling",
+        "planetarium",
+        "museum",
+        "theatre",
+        "cinema",
+        "streamer"
+      ]
     }
   }
 }

@@ -1,0 +1,20 @@
+{
+  "goalsPlanning": {
+    "maxGoals": 20,
+    "maxHistory": 40,
+    "dailyPlanning": {
+      "enabled": true,
+      "workdayTime": "18:30",
+      "weekendTime": "14:00",
+      "chanceWorkday": 0.62,
+      "chanceWeekend": 0.78
+    },
+    "reconsider": {
+      "energyBelow": 20,
+      "weatherComfortBelow": 28,
+      "postponeMinutesMin": 30,
+      "postponeMinutesMax": 90,
+      "maxPostpones": 2
+    }
+  }
+}
