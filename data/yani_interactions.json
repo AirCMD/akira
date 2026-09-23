@@ -1,4 +1,4 @@
-
+{
   "proposalCooldownMinutes": 90,
   "proposals": [
     {"id":"playTogether","label":"пограти разом","minFunNeed":35},
