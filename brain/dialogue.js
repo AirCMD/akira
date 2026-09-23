@@ -467,7 +467,7 @@ class AkiraDialogue {
 
         // Деталі поточної соціальної дії. Коротке «з якими?» працює як
         // follow-up лише коли поточна дія справді є розмовою.
-        if (/^(з\s+ким|з\s+якими|з\s+якими\s+людьми|з\s+ким\s+ти\s+розмовляєш|з\s+якими\s+людьми\s+розмовляєш)[\s?!.,]*$/iu.test(normalized)) {
+        if (/^(з\s+ким|з\s+якими|з\s+якими\s+людьми|з\s+ким\s+(ти\s+)?(зараз\s+)?розмовляєш|з\s+якими\s+людьми\s+(ти\s+)?(зараз\s+)?розмовляєш)[\s?!.,]*$/iu.test(normalized)) {
             return "ask_current_people";
         }
 
@@ -1961,8 +1961,13 @@ class AkiraDialogue {
     composeHistoryAnswer(range) {
         const selected = this.selectHistory(range).filter(a => this.actionHistoryLabel(a));
         if (!selected.length) {
-            const empty = {morning:"за цей ранок", evening:"за цей вечір", yesterday:"за вчора", today:"за сьогодні"}[range] || "за цей час";
-            return `У мене немає збережених дій ${empty}. Не хочу вигадувати.`;
+            const forgotten = {
+                morning: "Не пам\'ятаю, що було зранку.",
+                evening: "Не пам\'ятаю, що було ввечері.",
+                yesterday: "Я не пам\'ятаю, що було вчора. Не хочу вигадувати.",
+                today: "Не пам\'ятаю, чим займався сьогодні."
+            };
+            return forgotten[range] || "Не пам\'ятаю, що було за цей час.";
         }
         // Прибираємо послідовні дублікати і технічні переходи, якщо є змістовні дії.
         const compact=[];
