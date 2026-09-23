@@ -1,0 +1,8 @@
+{
+  "brainCoordinator": {
+    "version": 44,
+    "pipeline": ["world","body","environment","attention","emotion","memory","self","goals","situation","decision","action","consequences","learning"],
+    "priorityOrder": ["health","accidents","dailyLife","workLife","goalsPlanning","intentions","food","household","leisure"],
+    "notes": "Координатор визначає порядок систем і розв'язує конкуренцію за наступну дію. Характер та репліки тут не зберігаються."
+  }
+}

@@ -264,7 +264,8 @@ class AkiraBrain {
             "autobiographical_self",
             "dreams",
             "internal_stream",
-            "emotional_expression"
+            "emotional_expression",
+            "brain_coordinator"
         ];
 
         const results = {};
@@ -696,7 +697,8 @@ class AkiraBrain {
             ["autobiographicalSelf", "AkiraAutobiographicalSelf"],
             ["dreams", "AkiraDreams"],
             ["internalStream", "AkiraInternalStream"],
-            ["emotionalExpression", "AkiraEmotionalExpression"]
+            ["emotionalExpression", "AkiraEmotionalExpression"],
+            ["coordinator", "AkiraBrainCoordinator"]
         ];
         for (const [property, globalName] of modules) {
             const Ctor = window[globalName];
@@ -780,32 +782,15 @@ class AkiraBrain {
             simulatedMinutes
         );
 
-        this.updateNeeds(
-            simulatedMinutes
-        );
-
-        this.updateMood(
-            simulatedMinutes
-        );
-
-        this.household?.update?.(simulatedMinutes);
-        this.intentions?.update?.(simulatedMinutes);
-        this.goalsPlanning?.update?.(simulatedMinutes);
-        this.health?.update?.(simulatedMinutes);
-        this.accidents?.update?.(simulatedMinutes);
-        this.attention?.update?.(simulatedMinutes);
-        this.phone?.update?.(simulatedMinutes);
-        this.yaniLife?.update?.(simulatedMinutes);
-        this.yaniInteractions?.update?.(simulatedMinutes);
-        this.workLife?.ensureDay?.();
-        this.selfModel?.update?.(simulatedMinutes);
-        this.autobiographicalSelf?.update?.(simulatedMinutes);
-        this.dreams?.update?.(simulatedMinutes);
-        this.internalStream?.update?.(simulatedMinutes);
-
-        this.updateMemory(
-            simulatedMinutes
-        );
+        // v44: один координатор задає порядок оновлення взаємозалежних систем.
+        if (this.coordinator?.runUpdates) {
+            this.coordinator.runUpdates(simulatedMinutes);
+        } else {
+            // Безпечний fallback для неповного підключення скриптів.
+            this.updateNeeds(simulatedMinutes);
+            this.updateMood(simulatedMinutes);
+            this.updateMemory(simulatedMinutes);
+        }
 
         this.processEvents(
             simulatedMinutes
@@ -1094,6 +1079,7 @@ finishAction() {
     this.dreams?.completeAction?.(action);
     this.internalStream?.onActionFinished?.(action);
     this.autobiographicalSelf?.onActionFinished?.(action);
+    this.coordinator?.onActionFinished?.(action);
 
     // Використовуємо тільки тригери, які прямо описані в emotions.json.
     if (action.actionId === "rest") {
@@ -1171,21 +1157,11 @@ finishAction() {
         const situation =
             this.evaluateSituation();
 
-        const priorityAction =
-            this.health?.getPriorityAction?.(situation) ||
-            this.accidents?.getPriorityAction?.(situation) ||
-            this.dailyLife?.getPriorityAction?.(situation) ||
-            this.workLife?.getPriorityAction?.(situation) ||
-            this.goalsPlanning?.getPriorityAction?.(situation) ||
-            this.intentions?.getPriorityAction?.(situation) ||
-            this.food?.getPriorityAction?.(situation) ||
-            this.household?.getPriorityAction?.(situation) ||
-            this.leisure?.getPriorityAction?.(situation) || null;
-
-        const result = priorityAction ||
-            this.decision.decide(
-                situation
-            );
+        // v44: усі конкуренти проходять через єдиний coordinator,
+        // а не перемагають випадково лише через позицію в ланцюжку ||.
+        const result = this.coordinator?.chooseAction
+            ? this.coordinator.chooseAction(situation)
+            : this.decision.decide(situation);
 
         if (
             result &&
