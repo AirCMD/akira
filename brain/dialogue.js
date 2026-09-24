@@ -603,6 +603,13 @@ class AkiraDialogue {
         // про поточну дію в названому місці, а не невідома тема.
         if (/^що\s+(ти\s+)?(зараз\s+)?робиш\s+(на|у|в)\s+.+[?!.,]*$/iu.test(normalized)) return "ask_activity_at_location";
 
+        // v46.1: коротке питання продовжує щойно названу дію, а не падає у fallback.
+        // Сам зміст думки/перегляду існує до питання користувача і не вигадується заднім числом.
+        if (/^(а\s+)?над\s+чим[\s?!.,]*$/iu.test(normalized) || /^(а\s+)?про\s+що\s+(ти\s+)?(задумався|думаєш)[\s?!.,]*$/iu.test(normalized)) return "ask_thinking_topic";
+        if (/^(і\s+)?що\s+там[\s?!.,]*$/iu.test(normalized)) return "ask_activity_followup_generic";
+        if (/^(а\s+)?що\s+(ти\s+)?дивишся[\s?!.,]*$/iu.test(normalized)) return "ask_watching_detail";
+        if (/^(а\s+)?що\s+(ти\s+)?там\s+дивишся[\s?!.,]*$/iu.test(normalized)) return "ask_phone_detail";
+
         const askActivityPatterns = [
             /^що\s+(ти\s+)?(зараз\s+)?робиш[\s?!.,]*$/iu,
             /^чим\s+(ти\s+)?(зараз\s+)?займаєшся[\s?!.,]*$/iu,
@@ -2578,6 +2585,27 @@ class AkiraDialogue {
     composePlanObstacleAnswer(){ const g=this.brain.goalsPlanning?.currentGoal?.() || this.brain.goalsPlanning?.nextGoal?.(); if(g?.status==="paused" && g.lastChangeReason) return `Зараз заважає ${g.lastChangeReason}.`; const c=this.brain.selfModel?.getPrimaryConflict?.(); if(c) return `Може завадити те, що ${String(c.text).replace(/^[А-ЯA-Z]/u,m=>m.toLowerCase())}`; const f=Number(this.brain.state?.fatigue||0); if(f>=65) return "Найбільше може завадити втома."; return "Зараз не бачу конкретної перешкоди."; }
     composeMetacognitionTodayAnswer(){ const h=this.brain.state?.internalStream?.history||[]; const today=new Date().toLocaleDateString("sv-SE"); const xs=h.filter(x=>String(x.date||"")===today && (x.trigger==="reconsider" || /переоцін|конфлікт/iu.test(String(x.summary||"")))); if(xs.length) return "Так, сьогодні вже доводилося дещо переосмислювати."; const meta=this.brain.state?.internalStream?.meta||{}; return meta.reconsidering?"Так. Просто зараз якраз дещо переосмислюю.":"Не пригадую, щоб сьогодні серйозно передумував."; }
 
+    composeActivityFollowupAnswer(intent, profile) {
+        const nl=this.brain.naturalLife;
+        const idle=this.brain.state?.naturalLife?.idle;
+        const actionId=this.brain.state?.action?.actionId || this.lastAnswerContext?.actionId || this.brain.state?.conversation?.lastAnswerContext?.actionId;
+        if(intent==='ask_thinking_topic') {
+            return nl?.activityFollowup?.('thinking') || (actionId==='idleThink' ? 'Та ні над чим конкретним. Просто думки самі крутяться.' : 'Я зараз ні над чим конкретно не задумувався.');
+        }
+        if(intent==='ask_watching_detail') {
+            if(idle?.kind==='watchTV' || actionId==='idleWatchTV') return nl?.activityFollowup?.('tv') || 'Та нічого особливого по телевізору.';
+            if(idle?.kind==='lookOutWindow' || actionId==='lookOutWindow') return nl?.activityFollowup?.('window') || 'У вікно дивлюся.';
+        }
+        if(intent==='ask_phone_detail') return nl?.activityFollowup?.('phone') || 'Та нічого конкретного.';
+        if(intent==='ask_activity_followup_generic') {
+            if(idle?.kind==='lookOutWindow' || actionId==='lookOutWindow') return nl?.activityFollowup?.('window');
+            if(idle?.kind==='watchTV' || actionId==='idleWatchTV') return nl?.activityFollowup?.('tv');
+            if(idle?.kind==='phone' || actionId==='idlePhone') return nl?.activityFollowup?.('phone');
+            if(idle?.kind==='think' || actionId==='idleThink') return nl?.activityFollowup?.('thinking');
+        }
+        return null;
+    }
+
     composeStructuredResponse(profile) {
         // Запити, що читають живий стан, не повинні залежати від випадкового
         // dialogue action. Те саме стосується економічних подій/opinions.
@@ -2596,6 +2624,10 @@ class AkiraDialogue {
         if (intent === "ask_current_drink") return [this.composeFoodStateAnswer("drink")];
         if (intent === "ask_current_cooking") return [this.composeFoodStateAnswer("cooking")];
         if (intent === "ask_activity") return [this.composeActivityAnswer(profile)];
+        if (["ask_thinking_topic","ask_watching_detail","ask_phone_detail","ask_activity_followup_generic"].includes(intent)) {
+            const a=this.composeActivityFollowupAnswer(intent, profile);
+            if(a) return [a];
+        }
         if (intent === "ask_window_view") return [this.brain.naturalLife?.describeWindow?.() || "Не дуже придивлявся, що там за вікном."];
         if (intent === "ask_room_surroundings" || intent === "ask_room_contents") return [this.brain.homeSpatial?.describeRoom?.() || "Не можу зараз нормально описати кімнату."];
         if (intent === "ask_visible_ahead") return [this.brain.homeSpatial?.describeAhead?.() || "Зараз нічого конкретного перед собою не розглядаю."];

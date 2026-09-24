@@ -1,4 +1,4 @@
-// natural_life.js — v45.9 Natural Idle + Window Perception + Sleep Irregularities
+// natural_life.js — v46.1 Natural Idle + Activity Follow-up Context
 class AkiraNaturalLife {
   constructor(brain){ this.brain=brain; this.data={}; }
   init(){
@@ -113,6 +113,47 @@ class AkiraNaturalLife {
     this.brain.state.naturalLife.windowScene={date:this.dateKey(now),at:Date.now(),phase,light,condition:w.condition||null,text};
     return text;
   }
+  chooseThinkingTopic(){
+    const s=this.brain.state||{}, now=new Date();
+    const hour=now.getHours();
+    const pool=[];
+    const action=s.action;
+    if(action?.reason) pool.push({id:'recentAction',answer:`Та про те, чим зараз займаюся. ${String(action.reason).replace(/^./,c=>c.toUpperCase())}.`});
+    if(hour>=17) pool.push({id:'evening',answer:'Та думаю, що ще робитиму сьогодні ввечері.'});
+    if(hour<10) pool.push({id:'dayAhead',answer:'Та про сьогоднішній день. Що треба буде зробити і як усе складеться.'});
+    if(s.world?.location==='home') {
+      pool.push({id:'home',answer:'Та ні про що надзвичайне. Про домашні справи трохи думаю.'});
+      pool.push({id:'yani',answer:'Та про Яні трохи задумався.'});
+    }
+    if(s.world?.location==='techsmith') pool.push({id:'work',answer:'Та про роботу. Думаю, як решта зміни пройде.'});
+    pool.push(
+      {id:'plans',answer:'Та думаю, що робитиму далі.'},
+      {id:'wandering',answer:'Та ні над чим конкретним. Просто думки самі крутяться.'},
+      {id:'city',answer:'Та про місто щось задумався. Іноді дивишся навколо і думки самі чіпляються одна за одну.'}
+    );
+    return pool[Math.floor(Math.random()*pool.length)];
+  }
+  activityFollowup(kind){
+    const idle=this.brain.state?.naturalLife?.idle;
+    if(kind==='thinking') {
+      if(idle?.kind!=='think') return null;
+      idle.topic ||= this.chooseThinkingTopic();
+      return idle.topic?.answer || 'Та ні над чим конкретним. Просто задумався.';
+    }
+    if(kind==='window') {
+      if(idle?.kind!=='lookOutWindow' && this.brain.state?.action?.actionId!=='lookOutWindow') return null;
+      return this.describeWindow();
+    }
+    if(kind==='tv') {
+      if(idle?.kind!=='watchTV' && this.brain.state?.action?.actionId!=='idleWatchTV') return null;
+      return idle?.detail || 'Та нічого особливого. Просто телевізор увімкнув.';
+    }
+    if(kind==='phone') {
+      if(idle?.kind!=='phone' && this.brain.state?.action?.actionId!=='idlePhone') return null;
+      return idle?.detail || 'Та так, переглядаю телефон без якоїсь конкретної мети.';
+    }
+    return null;
+  }
   idleAnswer(){
     const s=this.brain.state, idle=s.naturalLife?.idle;
     if(idle?.kind==='lookOutWindow') return 'У вікно дивлюся.';
@@ -134,6 +175,7 @@ class AkiraNaturalLife {
     const kind=choices[Math.floor(Math.random()*choices.length)];
     const detail=kind==='watchTV' && Math.random()<0.35?'Дивлюся телевізор, одна реклама, нічого цікавого.':null;
     s.naturalLife.idle={kind,detail,since:Date.now()};
+    if(kind==='think') s.naturalLife.idle.topic=this.chooseThinkingTopic();
     if(kind==='nothing') return null;
     const actionId={sit:'idleSit',lieDown:'idleLieDown',phone:'idlePhone',think:'idleThink',watchTV:'idleWatchTV',lookOutWindow:'lookOutWindow'}[kind];
     return {type:'action',actionId,category:'idle',duration:8+Math.round(Math.random()*22),reason:'нічим терміновим не зайнятий',score:80,homeRoom:kind==='lookOutWindow'?'cozyRoom':room};
