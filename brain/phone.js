@@ -69,6 +69,17 @@ class AkiraPhone {
             break;
         }
     }
+    supersedePendingReplies(){
+        const p=this.brain.state.phone; if(!p) return;
+        // v45.7: якщо користувач уже написав нове повідомлення, стара відкладена
+        // відповідь не повинна вискочити слідом і створити ефект «двох Акір».
+        for(const m of p.inbox){
+            if(!m.deliveredLater && (m.ready || (!m.read && m.status!=="received"))){
+                m.ready=false; m.deliveredLater=true; m.read=true; m.status="superseded_by_new_message"; m.supersededAt=Date.now();
+            }
+        }
+        p.unreadCount=p.inbox.filter(m=>!m.read).length;
+    }
     takeReadyReply(){
         const p=this.brain.state.phone; if(!p) return null;
         const m=p.inbox.find(x=>x.ready && !x.deliveredLater);

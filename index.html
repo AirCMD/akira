@@ -555,7 +555,7 @@
 <script src="./brain/emotions.js" defer></script>
 <script src="./brain/needs.js" defer></script>
 <script src="./brain/decision.js?v=20" defer></script>
-<script src="./brain/dialogue.js?v=45.6" defer></script>
+<script src="./brain/dialogue.js?v=45.7" defer></script>
 <script src="./brain/communication.js?v=34" defer></script>
 <script src="./brain/relationships.js" defer></script>
 <script src="./brain/perception.js" defer></script>
@@ -574,7 +574,7 @@
 <script src="./brain/health.js?v=31" defer></script>
 <script src="./brain/accidents.js?v=32" defer></script>
 <script src="./brain/attention.js?v=33" defer></script>
-<script src="./brain/phone.js?v=34" defer></script>
+<script src="./brain/phone.js?v=45.7" defer></script>
 <script src="./brain/contextual_knowledge.js?v=35.2" defer></script>
 <script src="./brain/yani.js?v=45.5" defer></script>
 <script src="./brain/yani_interactions.js?v=36.1" defer></script>
@@ -585,7 +585,7 @@
 <script src="./brain/dreams.js?v=45.2" defer></script>
 <script src="./brain/temporal_context.js?v=42" defer></script>
 <script src="./brain/internal_stream.js?v=41" defer></script>
-<script src="./brain/emotional_expression.js?v=45.3" defer></script>
+<script src="./brain/emotional_expression.js?v=45.7" defer></script>
 <script src="./brain/brain_coordinator.js?v=45.6" defer></script>
 <script src="./brain/brain.js?v=45.6" defer></script>
 </head>
@@ -696,6 +696,8 @@
 
       let brainReady = false;
       let waitingForReply = false;
+      let responseTurnId = 0;
+      let committedTurnId = 0;
 
 
       /*
@@ -1070,6 +1072,7 @@
 
 
         const text = input.value.trim();
+        const turnId = ++responseTurnId;
 
 
         if (!text) {
@@ -1090,6 +1093,8 @@
         input.value = "";
 
 
+        // Нове повідомлення робить старі непрочитані/відкладені заготовки неактуальними.
+        window.akiraBrain?.phone?.supersedePendingReplies?.();
         waitingForReply = true;
 
         input.disabled = true;
@@ -1115,7 +1120,8 @@
           setStatus("loading", "Акіра думає…");
           const delivery = await playCommunicationPlan(plan);
 
-          if (delivery.sent && plan.text) {
+          if (delivery.sent && plan.text && turnId === responseTurnId && committedTurnId !== turnId) {
+            committedTurnId = turnId;
             appendMessage(plan.text, "bot");
           }
 
@@ -1163,6 +1169,7 @@
         if (!brainReady || waitingForReply) return;
         const delayed = window.akiraBrain?.phone?.takeReadyReply?.();
         if (!delayed?.text) return;
+        const delayedTurnSnapshot = responseTurnId;
         waitingForReply = true;
         try {
           const communication = window.AkiraCommunication ? new window.AkiraCommunication(window.akiraBrain) : null;
@@ -1171,7 +1178,7 @@
           const words = delayed.text.trim().split(/\s+/).filter(Boolean).length;
           const plan = { text: delayed.text, thinkingMs: 450, typingMs: Math.min(6000, 750 + words * 80), pauses: [], abandon: false, unseen: false };
           const delivery = await playCommunicationPlan(plan);
-          if (delivery.sent) appendMessage(plan.text, "bot");
+          if (delivery.sent && delayedTurnSnapshot === responseTurnId) appendMessage(plan.text, "bot");
           setStatus("ready", "мозок активний");
         } finally { waitingForReply = false; input.disabled = false; sendButton.disabled = false; }
       }, 2000);

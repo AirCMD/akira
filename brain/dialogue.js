@@ -22,6 +22,12 @@ class AkiraDialogue {
         this.lastIntent = null;
         this.lastIntentAt = 0;
         this.lastNormalizedInput = null;
+        // v45.7: контекст зберігається лише після змістовної відповіді.
+        // Fallback/мовчання не дають права звинувачувати людину в повторі.
+        this.lastSuccessfulIntent = null;
+        this.lastSuccessfulAt = 0;
+        this.lastSuccessfulSemanticKey = null;
+        this.lastAnswerContext = null;
 
         this.settings = {
             randomness: 18,
@@ -55,7 +61,7 @@ class AkiraDialogue {
         if (repeatReply) {
             const finalized = this.finalizeResponse([repeatReply], profile);
             this.recordDialogue(text, finalized, profile);
-            this.rememberTurn(profile);
+            this.rememberTurn(profile, finalized);
             return finalized;
         }
 
@@ -66,7 +72,7 @@ class AkiraDialogue {
         if (structuredResponse) {
             const finalized = this.finalizeResponse(structuredResponse, profile);
             this.recordDialogue(text, finalized, profile);
-            this.rememberTurn(profile);
+            this.rememberTurn(profile, finalized);
             return finalized;
         }
 
@@ -91,7 +97,7 @@ class AkiraDialogue {
         const finalized = this.finalizeResponse(response, profile);
 
         this.recordDialogue(text, finalized, profile);
-        this.rememberTurn(profile);
+        this.rememberTurn(profile, finalized);
 
         return finalized;
     }
@@ -592,6 +598,10 @@ class AkiraDialogue {
         if (/^(ти\s+мені\s+радий|радий\s+мене\s+бачити|радий\s+зі\s+мною\s+говорити)[\s?!.,]*$/iu.test(normalized)) return "ask_glad_user";
         if (/^(ти\s+в\s+чомусь\s+сумніваєшся|у\s+тебе\s+є\s+сумніви)[\s?!.,]*$/iu.test(normalized)) return "ask_self_conflict";
         if (/^(ти\s+передумував\s+сьогодні|сьогодні\s+ти\s+передумував)[\s?!.,]*$/iu.test(normalized)) return "ask_metacognition_today";
+
+        // v45.7: «що робиш на кухні/в кімнаті/на роботі?» — це запит
+        // про поточну дію в названому місці, а не невідома тема.
+        if (/^що\s+(ти\s+)?(зараз\s+)?робиш\s+(на|у|в)\s+.+[?!.,]*$/iu.test(normalized)) return "ask_activity_at_location";
 
         const askActivityPatterns = [
             /^що\s+(ти\s+)?(зараз\s+)?робиш[\s?!.,]*$/iu,
@@ -1529,20 +1539,37 @@ class AkiraDialogue {
         return "Поки не вирішив. Подивлюся на час, погоду й свій стан.";
     }
 
-    rememberTurn(profile) {
+    rememberTurn(profile, response = null) {
         this.lastIntent = profile?.analysis?.intent || null;
         this.lastIntentAt = Date.now();
         this.lastNormalizedInput = String(profile?.analysis?.normalized || "").trim();
         this.brain.state.conversation ||= {};
         const i=this.lastIntent||"";
         if(i.includes("yani") || /яні/u.test(this.lastNormalizedInput)) this.brain.state.conversation.personId="Yani_Bakeneko";
+        const answer=String(response?.text||"").trim();
+        const fallback=/не зовсім зрозумів|втратив нитку|не можу зараз дати впевнену відповідь|мм, цікаво|можливо, я щось упускаю/iu.test(answer);
+        if(answer && !fallback && response?.type!=="silence") {
+            this.lastSuccessfulIntent=i;
+            this.lastSuccessfulAt=Date.now();
+            this.lastSuccessfulSemanticKey=this.semanticQuestionKey(profile);
+            this.lastAnswerContext={intent:i, fact:answer, actionId:this.brain.state?.action?.actionId||null, location:this.brain.state?.world?.location||null, room:this.brain.state?.dailyLife?.homeRoom||null, timestamp:Date.now()};
+            this.brain.state.conversation.lastAnswerContext={...this.lastAnswerContext};
+        }
+    }
+
+    semanticQuestionKey(profile) {
+        const intent=profile?.analysis?.intent||"";
+        const n=String(profile?.analysis?.normalized||"");
+        if(intent==="ask_activity_at_location") return `${intent}:${this.extractAskedLocation(n)||"place"}`;
+        return intent;
     }
 
     composeRepeatQuestionAnswer(profile) {
         const intent = profile?.analysis?.intent || null;
         if (!intent || !intent.startsWith("ask_")) return null;
         if (["ask_sleeping", "ask_state", "ask_activity", "ask_current_location", "ask_contextual_knowledge", "ask_contextual_why", "ask_self_feeling", "ask_self_want", "ask_self_want_why", "ask_self_thought", "ask_self_model", "ask_self_conflict", "ask_dream_topic"].includes(intent)) return null;
-        if (this.lastIntent !== intent || Date.now() - this.lastIntentAt > 90000) return null;
+        const key=this.semanticQuestionKey(profile);
+        if (this.lastSuccessfulIntent !== intent || this.lastSuccessfulSemanticKey !== key || Date.now() - this.lastSuccessfulAt > 90000) return null;
         return this.chooseTemplate([
             "Навіщо ти знову це питаєш?",
             "Я ж щойно на це відповів.",
@@ -1671,6 +1698,29 @@ class AkiraDialogue {
         }
         if(action.actionId==="cookMeal") return action.mealName ? `Готую ${action.mealName}.` : "Готую собі їсти.";
         return "Зараз нічого не готую.";
+    }
+
+    extractAskedLocation(text="") {
+        const n=String(text).toLowerCase();
+        if(/кухн/u.test(n)) return "kitchen";
+        if(/склян(ій|а).*спальн/u.test(n)) return "glassBedroom";
+        if(/спальн/u.test(n)) return "bedroom";
+        if(/ванн/u.test(n)) return "bathroom";
+        if(/вітальн/u.test(n)) return "livingRoom";
+        if(/балкон/u.test(n)) return "balcony";
+        if(/техсміт|techsmith|роботі/u.test(n)) return "techsmith";
+        if(/кафе/u.test(n)) return "cafe";
+        if(/вдома|домі/u.test(n)) return "home";
+        return null;
+    }
+
+    composeActivityAtLocationAnswer(profile) {
+        const asked=this.extractAskedLocation(profile?.analysis?.normalized||profile?.input||"");
+        const world=this.brain.state?.world?.location||"home";
+        const room=this.brain.state?.dailyLife?.homeRoom||this.brain.dailyLife?.currentRoomId?.()||null;
+        const matches = asked==="home" ? world==="home" : asked==="techsmith" ? world==="techsmith" : asked==="cafe" ? world==="cafe" : (world==="home" && asked===room);
+        if(matches) return this.composeActivityAnswer(profile);
+        return this.composeCurrentLocationAnswer(profile);
     }
 
     composeActivityAnswer(profile) {
@@ -2533,6 +2583,7 @@ class AkiraDialogue {
         if (intent === "ask_current_drink") return [this.composeFoodStateAnswer("drink")];
         if (intent === "ask_current_cooking") return [this.composeFoodStateAnswer("cooking")];
         if (intent === "ask_activity") return [this.composeActivityAnswer(profile)];
+        if (intent === "ask_activity_at_location") return [this.composeActivityAtLocationAnswer(profile)];
         if (intent === "ask_current_people") return ["З тобою."];
         if (intent === "ask_people_today") return [this.composePeopleTodayAnswer()];
         if (intent === "ask_food_today") return [this.composeFoodTodayAnswer()];
