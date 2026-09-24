@@ -1,0 +1,36 @@
+{
+  "workCustomers": {
+    "types": [
+      {"id":"woman","label":"жінка","weight":12},
+      {"id":"man","label":"чоловік","weight":12},
+      {"id":"couple","label":"пара","weight":8},
+      {"id":"marriedCouple","label":"сімейна пара","weight":7},
+      {"id":"friends","label":"компанія друзів","weight":5},
+      {"id":"workers","label":"кілька працівників якоїсь організації","weight":4},
+      {"id":"grandmother","label":"бабця","weight":5},
+      {"id":"grandfather","label":"дідусь","weight":5},
+      {"id":"teenagers","label":"підлітки","weight":6},
+      {"id":"children","label":"діти","weight":2},
+      {"id":"odd","label":"дивакуватий відвідувач","weight":3},
+      {"id":"shadyGuys","label":"якісь мутні хлопці","weight":2}
+    ],
+    "needs": [
+      "телевізор", "телефон", "навушники", "зарядний пристрій", "павербанк", "пилосос", "пульт до телевізора", "кабель", "акумулятори", "батарейки", "чохол для телефона", "домашню техніку"
+    ],
+    "behaviours": [
+      {"id":"anxious","label":"дуже переживає, що випадково зіпсує техніку, тому ставить багато запитань","fatigue":10,"weight":8},
+      {"id":"boringQuestions","label":"довго перепитує дрібниці й помітно втомлює розмовою","fatigue":12,"weight":7},
+      {"id":"randomChoice","label":"майже не цікавиться характеристиками й готовий взяти навмання","fatigue":2,"weight":8},
+      {"id":"specShowoff","label":"любить демонструвати знання характеристик, хоче найкращі параметри, але незадоволений високою ціною","fatigue":8,"weight":6},
+      {"id":"careful","label":"спокійно порівнює кілька варіантів і ставить доречні запитання","fatigue":4,"weight":12},
+      {"id":"quick","label":"добре знає, що потрібно, швидко уточнює наявність і не затягує розмову","fatigue":1,"weight":10},
+      {"id":"indecisive","label":"довго вагається між кількома моделями й постійно повертається до попередніх варіантів","fatigue":9,"weight":7}
+    ],
+    "specialVisitors": {
+      "manager": {"privacy":"work_private","reasonResponse":"Можу лише сказати, що по робочих справах, на цьому все."},
+      "parents": {"rare":true,"possibleNeeds":["телевізор","пульт до телевізора","телефон","пилосос","домашню техніку"]},
+      "brother": {"rare":true,"privacy":"family_private","reasonResponse":"Це його справи, я про це не говоритиму."},
+      "yani": {"rare":true,"possibleReasons":["message","phoneCall","private_errand","buy_tech_for_self","buy_tech_for_acquaintance","forgotten_lunch"]}
+    }
+  }
+}

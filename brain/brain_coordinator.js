@@ -30,7 +30,7 @@ class AkiraBrainCoordinator {
   }
   isWorkAction(action){
     const id=action?.actionId||"";
-    return action?.source==="work_life" || new Set(["work","consultCustomer","compareDevices","explainSpecs","makeSale","quietAtWork","workBreak","talkToKent","talkToTaras"]).has(id);
+    return action?.source==="work_life" || new Set(["work","consultCustomer","compareDevices","explainSpecs","makeSale","quietAtWork","workBreak","talkToKent","talkToTaras","talkToManager","talkToParents","talkToBrother","talkToYani"]).has(id);
   }
   clearHomeQueues(){
     const s=this.brain.state;
@@ -47,6 +47,15 @@ class AkiraBrainCoordinator {
     if(b.dailyLife?.isWorkTime?.()){
       if(this.isCriticalHealthAction(action)) return null;
       if(id==="commuteToWork") return s.world?.location==="home" ? null : "bad_commute_origin";
+      // Коротка розмова з Яні телефоном/у повідомленнях не телепортує Акіру
+      // додому і не скасовує зміну. Особиста розмова можлива лише коли Яні
+      // справді фізично перебуває в TechSmith.
+      if(id==="talkToYani"){
+        if(s.world?.location!=="techsmith") return "not_at_work";
+        if(["message","phoneCall"].includes(action.interactionChannel)) return null;
+        if(action.interactionChannel==="inPerson" && b.social?.samePlaceWithYani?.()) return null;
+        return "yani_not_present";
+      }
       if(this.isWorkAction(action)) return s.world?.location==="techsmith" ? null : "not_at_work";
       return "work_shift";
     }

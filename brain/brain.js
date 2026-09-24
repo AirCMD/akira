@@ -259,6 +259,8 @@ class AkiraBrain {
             "yani",
             "yani_interactions",
             "work_life",
+            "workplace",
+            "work_customers",
             "inventory_money",
             "self_model",
             "autobiographical_self",
@@ -1343,6 +1345,11 @@ finishAction() {
 
             return action;
         }
+
+        // v45.5: соціальна дія спочатку отримує канал контакту. Це важливо
+        // для Reality Gate: коротка переписка/дзвінок Яні на роботі допустимі,
+        // а фізична зустріч вимагає реальної присутності Яні.
+        action = this.social?.prepareAction?.(action) || action;
 
         // Останній захист від неможливих дій. Навіть якщо окремий модуль
         // запропонував домашню вечерю посеред зміни, action не стартує.

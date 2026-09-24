@@ -459,6 +459,16 @@ class AkiraDialogue {
         if (/^(були\s+(сьогодні\s+)?покупці|сьогодні\s+були\s+покупці)[\s?!.,]*$/iu.test(normalized)) return "ask_work_customers";
         if (/^(щось\s+(сьогодні\s+)?продав|продав\s+щось\s+сьогодні)[\s?!.,]*$/iu.test(normalized)) return "ask_work_sales";
         if (/^(тобі\s+подобається\s+твоя\s+робота|ти\s+любиш\s+свою\s+роботу)[\s?!.,]*$/iu.test(normalized)) return "ask_work_attitude";
+        if (/^(як\s+виглядає\s+(твоя\s+)?(робота|техсмітник|techsmith)|опиши\s+(техсмітник|techsmith))[\s?!.,]*$/iu.test(normalized)) return "ask_workplace_description";
+        if (/^(як\s+(техсмітник|techsmith)\s+виглядає\s+ззовні|опиши\s+(техсмітник|techsmith)\s+ззовні)[\s?!.,]*$/iu.test(normalized)) return "ask_workplace_outside";
+        if (/^(як\s+(техсмітник|techsmith)\s+виглядає\s+(всередині|зсередини)|що\s+(там\s+)?всередині\s+(техсмітника|techsmith))[\s?!.,]*$/iu.test(normalized)) return "ask_workplace_inside";
+        if (/^(що\s+за\s+кафе|яке\s+кафе|що\s+(є|продають)\s+в\s+кафе).*$/iu.test(normalized)) return "ask_work_cafe";
+        if (/^(що\s+(є|знаходиться)\s+(у|в)\s+службов(ій|ій\s+зоні)|де\s+(ви|ти)\s+(відпочиваєте|їси)\s+на\s+роботі)[\s?!.,]*$/iu.test(normalized)) return "ask_work_staff_area";
+        if (/^(що\s+(є|продають|лежить)\s+(за|позаду)\s+(стійки|прилавка|ресепшна))[\s?!.,]*$/iu.test(normalized)) return "ask_work_behind_counter";
+        if (/^(чому\s+(ви\s+)?(називаєте|називають)\s+(його|магазин|techsmith)\s+техсмітником|техсмітник\s+це\s+techsmith)[\s?!.,]*$/iu.test(normalized)) return "ask_techsmith_nickname";
+        if (/^(з\s+ким\s+(ти\s+)?(щойно\s+|перед\s+цим\s+)?(говорив|розмовляв|спілкувався))[\s?!.,]*$/iu.test(normalized)) return "ask_past_people";
+        if (/^(що\s+(він|вона|вони)\s+(хотів|хотіла|хотіли)|що\s+(він|вона|вони)\s+шукал(а|и)?|навіщо\s+(він|вона|вони)\s+приходил(а|и)?)[\s?!.,]*$/iu.test(normalized)) return "ask_last_social_reason";
+        if (/^(який\s+(був\s+)?(покупець|клієнт)|що\s+за\s+(покупець|клієнт)|він\s+був\s+дивний|вона\s+була\s+дивна)[\s?!.,]*$/iu.test(normalized)) return "ask_last_customer_details";
         if (/^(що\s+(ти\s+)?робив\s+годину\s+тому)[\s?!.,]*$/iu.test(normalized)) return "ask_hour_ago";
         if (/^з\s+ким\s+(ти\s+)?сьогодні\s+(розмовляв|говорив|спілкувався)[\s?!.,]*$/iu.test(normalized)) return "ask_people_today";
         if (/^що\s+(ти\s+)?їв\s+сьогодні[\s?!.,]*$/iu.test(normalized)) return "ask_food_today";
@@ -609,6 +619,12 @@ class AkiraDialogue {
         if (/^з\s+ким\s+(ти\s+)?(розмовляв|говорив|спілкувався)[\s?!.,]*$/iu.test(normalized)) {
             return "ask_past_people";
         }
+
+        // v45.5: канал і причинність розмов з Яні під час роботи.
+        if (/^(на\s+роботі\s+)?(ти\s+)?(розмовляв|говорив|спілкувався)\s+(на\s+роботі)?[\s?!.,]*$/iu.test(normalized) || /^(на\s+роботі\s+розмовляв|розмовляв\s+на\s+роботі)[\s?!.,]*$/iu.test(normalized)) return "ask_work_talk_recent";
+        if (/^((яні\s+)?(приходила|заходила|приїжджала)\s+(до\s+тебе\s+)?(на\s+роботу|в\s+техсмітник)|яні\s+була\s+(у\s+тебе\s+)?на\s+роботі)[\s?!.,]*$/iu.test(normalized)) return "ask_yani_work_visit";
+        if (/^((як|яким\s+чином)\s+(ти\s+)?(розмовляв|говорив|спілкувався)\s+(з\s+)?(яні|нею)|ви\s+з\s+яні\s+(переписувалися|дзвонили|говорили\s+телефоном))[\s?!.,]*$/iu.test(normalized)) return "ask_yani_contact_channel";
+        if (/^(чому|навіщо|для\s+чого)\s+(яні|вона)\s+(приходила|заходила|приїжджала)(\s+до\s+тебе)?(\s+на\s+роботу)?[\s?!.,]*$/iu.test(normalized)) return "ask_yani_work_visit_reason";
 
         // v40.1: майбутнє не вгадується. Відповідаємо лише з явного плану/наміру.
         if (/^з\s+ким\s+(ти\s+)?(будеш\s+розмовляти|розмовлятимеш|будеш\s+говорити|говоритимеш|будеш\s+спілкуватися|спілкуватимешся)[\s?!.,]*$/iu.test(normalized)) return "ask_future_people";
@@ -2214,13 +2230,13 @@ class AkiraDialogue {
         if (!personId) return null;
         const people = this.brain.data?.people?.people || this.brain.data?.people || {};
         if (people[personId]?.name) return people[personId].name;
-        const aliases = { Yani_Bakeneko: "Яні", Kent_White: "Кент", Taras: "Тарас" };
+        const aliases = { Yani_Bakeneko: "Яні", Kent_White: "Кент", Taras: "Тарас", Manager_Mykhailenko: "керівником", Akira_Parents: "батьками", Akira_Brother: "братом" };
         return aliases[personId] || String(personId).replaceAll("_", " ");
     }
 
     composeCurrentPeopleAnswer() {
         const action = this.brain.state?.action;
-        if (!action || !["talkToSomeone", "talkToYani"].includes(action.actionId)) {
+        if (!action || !["talkToSomeone", "talkToYani", "talkToKent", "talkToTaras", "talkToManager", "talkToParents", "talkToBrother", "consultCustomer", "compareDevices", "explainSpecs"].includes(action.actionId)) {
             return "Зараз я ні з ким не розмовляю.";
         }
         const personId = action.targetPerson || (action.actionId === "talkToYani" ? "Yani_Bakeneko" : null);
@@ -2230,21 +2246,84 @@ class AkiraDialogue {
     }
 
     composePastPeopleAnswer() {
-        const history = Array.isArray(this.brain.actionHistory) ? this.brain.actionHistory : [];
-        const lastSocial = [...history].reverse().find(action =>
-            action && ["talkToSomeone", "talkToYani"].includes(action.actionId)
-        );
-
-        if (!lastSocial) {
-            return "Не пам'ятаю, щоб останнім часом з кимось розмовляв.";
+        const socialEvent=this.brain.state?.socialContext?.last||null;
+        if(socialEvent?.personId){
+            const name=this.personDisplayName(socialEvent.personId);
+            if(name) return `З ${name}.`;
         }
-
-        const personId = lastSocial.targetPerson ||
-            (lastSocial.actionId === "talkToYani" ? "Yani_Bakeneko" : null);
+        const history = Array.isArray(this.brain.actionHistory) ? this.brain.actionHistory : [];
+        const lastSocial = [...history].reverse().find(action => action && (["talkToSomeone", "talkToYani", "talkToKent", "talkToTaras", "consultCustomer", "compareDevices", "explainSpecs"].includes(action.actionId) || action.targetPerson));
+        if (!lastSocial) return "Не пам'ятаю, щоб останнім часом з кимось розмовляв.";
+        const personId = lastSocial.targetPerson || (lastSocial.actionId === "talkToYani" ? "Yani_Bakeneko" : null);
         const name = this.personDisplayName(personId);
-        if (name) return `З ${name}.`;
-
+        if (name && !String(personId).startsWith("customer_")) return `З ${name}.`;
+        if(String(personId||"").startsWith("customer_")) return "З покупцем.";
         return "Не пам'ятаю, з ким саме.";
+    }
+
+    lastYaniSocialEvent(){ return this.brain.social?.lastWith?.("Yani_Bakeneko") || null; }
+    composeYaniContactChannelAnswer(){
+        const e=this.lastYaniSocialEvent();
+        if(!e) return "Не пригадую недавньої розмови з Яні.";
+        if(e.channel==="message") return "Ми переписувалися.";
+        if(e.channel==="phoneCall") return "Говорили телефоном.";
+        if(e.channel==="inPerson") return e.location==="techsmith"?"Особисто. Яні тоді ненадовго зайшла до мене на роботу.":"Особисто, ми були поруч.";
+        return "Не пам’ятаю, як саме ми тоді говорили.";
+    }
+    composeYaniWorkVisitAnswer(){
+        const h=this.brain.state?.socialContext?.history||[];
+        const today=this.brain.state.world?.date||null;
+        const e=[...h].reverse().find(x=>x?.personId==="Yani_Bakeneko" && x?.channel==="inPerson" && x?.location==="techsmith" && (!today || x.date===today));
+        if(e) return "Так, сьогодні Яні ненадовго заходила до мене на роботу.";
+        const yhist=this.brain.state?.yani?.history||[];
+        const visit=[...yhist].reverse().find(x=>x?.actionId==="arriveAkiraWork" && (!today || x.date===today));
+        return visit?"Так, сьогодні ненадовго заходила.":"Ні, сьогодні Яні до мене на роботу не приходила.";
+    }
+    composeYaniWorkVisitReasonAnswer(){
+        const e=this.lastYaniSocialEvent();
+        if(!e || e.channel!=="inPerson" || e.location!=="techsmith") return "Вона сьогодні до мене на роботу не приходила.";
+        if(e.privacy==="privateToYani" || e.visitReason==="private_errand") return "У неї були свої справи. Не буду за неї розповідати подробиці.";
+        if(e.visitReason==="forgotten_lunch") return "Я забув обід, і вона його занесла.";
+        return "Ненадовго зайшла у своїх справах.";
+    }
+    composeWorkTalkRecentAnswer(){
+        const e=this.brain.state?.socialContext?.last;
+        if(!e || e.location!=="techsmith") return "Не пригадую недавньої розмови на роботі.";
+        const name=this.personDisplayName(e.personId);
+        if(e.personId==="Yani_Bakeneko"){
+            const how=e.channel==="message"?"переписувалися":e.channel==="phoneCall"?"говорили телефоном":"говорили особисто";
+            return `Так. З Яні, ми ${how}.`;
+        }
+        if(String(e.personId||"").startsWith("customer_")) return "Так. З покупцем по роботі.";
+        return name?`Так. З ${name}.`:"Так, по роботі з людьми.";
+    }
+
+    composeWorkplaceDescriptionAnswer(part="general") {
+        const w=this.brain.workLife;
+        if(!w) return "Це великий магазин техніки. Нічого надприродного.";
+        if(part==="outside") return w.describeOutside();
+        if(part==="inside") return w.describeInside();
+        return `${w.describeOutside()} Всередині ${w.describeInside().replace(/^Всередині\s*/u, "")}`;
+    }
+    composeTechsmithNicknameAnswer(){
+        return "Насправді магазин називається TechSmith. «Техсмітник» — неофіційна назва, яка якось прижилася у нас: так кажу я, Тарас, Кент і частина постійних покупців.";
+    }
+    composeLastSocialReasonAnswer(){
+        const e=this.brain.state?.socialContext?.last;
+        if(!e) return "Не пригадую, про кого саме ми говорили.";
+        if(e.personId==="Manager_Mykhailenko" || e.privacy==="work_private") return "Можу лише сказати, що по робочим справам, на цьому все.";
+        if(e.personId==="Akira_Brother" || e.privacy==="family_private") return "Це його справи, я про це не говоритиму.";
+        if(e.personId==="Yani_Bakeneko" && e.privacy==="privateToYani") return "У неї були свої справи. Не буду за неї розповідати подробиці.";
+        if(e.customer){ const c=e.customer; return `${c.typeLabel ? c.typeLabel.charAt(0).toUpperCase()+c.typeLabel.slice(1) : "Покупець"} шукав${c.typeId==="woman"||c.typeId==="grandmother"?"а":""} ${c.need}.`; }
+        return e.reason ? `Через ${String(e.reason).replace(/[.!?]+$/u,"")}.` : "Не пам'ятаю подробиць.";
+    }
+    composeLastCustomerDetailsAnswer(){
+        const h=this.brain.state?.socialContext?.history||[];
+        const e=[...h].reverse().find(x=>x?.customer);
+        const c=e?.customer||this.brain.state?.workLife?.lastCustomerStory;
+        if(!c) return "Не пригадую зараз конкретного покупця.";
+        const result=c.outcome==="sale"?"У підсумку щось купив.":c.outcome==="no_sale"?"У підсумку нічого не купив.":"";
+        return `${c.typeLabel ? c.typeLabel.charAt(0).toUpperCase()+c.typeLabel.slice(1) : "Покупець"}, шукав ${c.need}. ${c.behaviourLabel||"Вибирав техніку."}. ${result}`.replace(/\s+/g," ").trim();
     }
 
     actionHistoryLabel(action) {
@@ -2509,6 +2588,20 @@ class AkiraDialogue {
             const reply = this.brain.contextualKnowledge?.answerWhy?.();
             return [reply || "Не знаю. Просто так до цього ставлюся."];
         }
+        if (intent === "ask_workplace_description") return [this.composeWorkplaceDescriptionAnswer("general")];
+        if (intent === "ask_workplace_outside") return [this.composeWorkplaceDescriptionAnswer("outside")];
+        if (intent === "ask_workplace_inside") return [this.composeWorkplaceDescriptionAnswer("inside")];
+        if (intent === "ask_work_cafe") return [this.brain.workLife?.describeCafe?.() || "Збоку від магазину є маленьке кафе."];
+        if (intent === "ask_work_staff_area") return [this.brain.workLife?.describeStaffArea?.() || "Є службова зона для працівників."];
+        if (intent === "ask_work_behind_counter") return [this.brain.workLife?.describeBehindCounter?.() || "За стійкою лежать дрібні аксесуари."];
+        if (intent === "ask_techsmith_nickname") return [this.composeTechsmithNicknameAnswer()];
+        if (intent === "ask_past_people") return [this.composePastPeopleAnswer()];
+        if (intent === "ask_last_social_reason") return [this.composeLastSocialReasonAnswer()];
+        if (intent === "ask_last_customer_details") return [this.composeLastCustomerDetailsAnswer()];
+        if (intent === "ask_work_talk_recent") return [this.composeWorkTalkRecentAnswer()];
+        if (intent === "ask_yani_work_visit") return [this.composeYaniWorkVisitAnswer()];
+        if (intent === "ask_yani_contact_channel") return [this.composeYaniContactChannelAnswer()];
+        if (intent === "ask_yani_work_visit_reason") return [this.composeYaniWorkVisitReasonAnswer()];
         if (intent === "ask_previous_action_reason") return [this.composePreviousActionReasonAnswer(profile)];
         if (intent === "ask_action_how") return [this.composeActionHowAnswer(profile)];
         if (intent === "ask_action_reason") return [this.composeActionReasonAnswer(profile)];
