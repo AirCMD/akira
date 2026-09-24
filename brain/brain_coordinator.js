@@ -40,6 +40,7 @@ class AkiraBrainCoordinator {
   blockedBy(action){
     const b=this.brain, s=b.state, id=action?.actionId||"";
     if(!action) return "empty";
+    if(b.worldGeography?.actionAllowedHere && !b.worldGeography.actionAllowedHere(action)) return "wrong_location";
     if((s.activity==="sleeping" || s.action?.actionId==="sleep") && !["sleep","wakeUp"].includes(id)) return "sleeping";
 
     // v45.4 Reality Gate: під час реальної зміни домашні справи, сон, їжа,

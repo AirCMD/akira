@@ -1,0 +1,330 @@
+{
+  "worldGeography": {
+    "version": "45.8",
+    "rules": {
+      "physicalActionsRequireLocation": true,
+      "travelUsesTransitLocation": true,
+      "noTeleportation": true
+    },
+    "locations": {
+      "home": {
+        "name": "дім",
+        "phrase": "вдома",
+        "kind": "residence",
+        "activities": [
+          "sleep",
+          "rest",
+          "cookMeal",
+          "eatMeal",
+          "prepareDrink",
+          "drinkSelected",
+          "washDishes",
+          "washFace",
+          "shave",
+          "changeClothes",
+          "takeBath",
+          "startLaundry",
+          "takeLaundryOut",
+          "hangLaundry",
+          "foldLaundry",
+          "wipeDust",
+          "vacuumRoom",
+          "mopFloor",
+          "washWindows",
+          "playGame",
+          "watchStreamer",
+          "checkPhone",
+          "checkSocialNetwork",
+          "writePost",
+          "talkToYani"
+        ]
+      },
+      "techsmith": {
+        "name": "TechSmith",
+        "nickname": "Техсмітник",
+        "phrase": "у Техсмітнику",
+        "kind": "workplace",
+        "activities": [
+          "work",
+          "consultCustomer",
+          "compareDevices",
+          "explainSpecs",
+          "makeSale",
+          "quietAtWork",
+          "workBreak",
+          "talkToKent",
+          "talkToTaras",
+          "talkToManager",
+          "talkToParents",
+          "talkToBrother",
+          "talkToYani",
+          "organizeDesk",
+          "checkPhone"
+        ]
+      },
+      "techsmithCafe": {
+        "name": "кафе біля Техсмітника",
+        "phrase": "у кафе біля Техсмітника",
+        "kind": "cafe",
+        "activities": [
+          "buySnack",
+          "eat",
+          "drink",
+          "rest",
+          "talkToSomeone"
+        ]
+      },
+      "massmarket": {
+        "name": "масмаркет",
+        "phrase": "у масмаркеті",
+        "kind": "shop",
+        "activities": [
+          "groceryShopping",
+          "browseGroceries",
+          "checkoutGroceries"
+        ]
+      },
+      "smallShop": {
+        "name": "невеликий магазин",
+        "phrase": "у невеликому магазині",
+        "kind": "shop",
+        "activities": [
+          "shopping",
+          "buySnack"
+        ]
+      },
+      "mall": {
+        "name": "торговий центр",
+        "phrase": "у торговому центрі",
+        "kind": "mall",
+        "activities": [
+          "shopping",
+          "walk",
+          "eat",
+          "drink",
+          "browseTech"
+        ]
+      },
+      "cafe": {
+        "name": "кафе",
+        "phrase": "у кафе",
+        "kind": "cafe",
+        "activities": [
+          "eat",
+          "drink",
+          "rest",
+          "read",
+          "talkToSomeone"
+        ]
+      },
+      "restaurant": {
+        "name": "ресторан",
+        "phrase": "у ресторані",
+        "kind": "restaurant",
+        "activities": [
+          "eat",
+          "drink",
+          "talkToSomeone"
+        ]
+      },
+      "pharmacy": {
+        "name": "аптека",
+        "phrase": "в аптеці",
+        "kind": "shop",
+        "activities": [
+          "buyMedicine"
+        ]
+      },
+      "postOffice": {
+        "name": "пошта",
+        "phrase": "на пошті",
+        "kind": "service",
+        "activities": [
+          "receiveParcel",
+          "sendParcel"
+        ]
+      },
+      "street": {
+        "name": "вулиця",
+        "phrase": "на вулиці",
+        "kind": "outside",
+        "activities": [
+          "walk",
+          "wait",
+          "takePhotos"
+        ]
+      },
+      "metro": {
+        "name": "метро",
+        "phrase": "у метро",
+        "kind": "transport",
+        "activities": [
+          "commute",
+          "waitTransport"
+        ]
+      },
+      "trolleybus": {
+        "name": "тролейбус",
+        "phrase": "у тролейбусі",
+        "kind": "transport",
+        "activities": [
+          "commute"
+        ]
+      },
+      "transit": {
+        "name": "дорога",
+        "phrase": "у дорозі",
+        "kind": "transit",
+        "activities": [
+          "travel",
+          "commute"
+        ]
+      },
+      "cityCenter": {
+        "name": "центр Демо",
+        "phrase": "у центрі Демо",
+        "kind": "city",
+        "activities": [
+          "walk",
+          "cycle",
+          "takePhotos",
+          "talkToSomeone"
+        ]
+      },
+      "park": {
+        "name": "міський парк",
+        "phrase": "у міському парку",
+        "kind": "park",
+        "activities": [
+          "walk",
+          "read",
+          "lookAtFlowers",
+          "observeAnimals",
+          "takePhotos",
+          "rest"
+        ]
+      },
+      "cinema": {
+        "name": "кінотеатр",
+        "phrase": "у кінотеатрі",
+        "kind": "culture",
+        "activities": [
+          "goToCinema"
+        ]
+      },
+      "planetarium": {
+        "name": "планетарій",
+        "phrase": "у планетарії",
+        "kind": "culture",
+        "activities": [
+          "visitPlanetarium"
+        ]
+      },
+      "museum": {
+        "name": "міський музей",
+        "phrase": "у музеї",
+        "kind": "culture",
+        "activities": [
+          "visitMuseum"
+        ]
+      },
+      "theatre": {
+        "name": "міський театр",
+        "phrase": "у театрі",
+        "kind": "culture",
+        "activities": [
+          "visitTheatre"
+        ]
+      },
+      "concertHall": {
+        "name": "концертна зала",
+        "phrase": "у концертній залі",
+        "kind": "culture",
+        "activities": [
+          "visitConcert"
+        ]
+      },
+      "water": {
+        "name": "міська водойма",
+        "phrase": "біля міської водойми",
+        "kind": "outside",
+        "activities": [
+          "boatRide",
+          "fishing",
+          "walk"
+        ]
+      },
+      "rooftop": {
+        "name": "дах будинку",
+        "phrase": "на даху",
+        "kind": "outside",
+        "activities": [
+          "stargazing"
+        ]
+      },
+      "workshop": {
+        "name": "майстерня",
+        "phrase": "у майстерні",
+        "kind": "workshop",
+        "activities": [
+          "craftWithClay",
+          "organizeDesk"
+        ]
+      },
+      "parentsHome": {
+        "name": "дім батьків",
+        "phrase": "у батьків удома",
+        "kind": "residence",
+        "activities": [
+          "visitParents",
+          "eat",
+          "drink",
+          "talkToParents",
+          "rest"
+        ]
+      },
+      "bikeRoute": {
+        "name": "веломаршрут",
+        "phrase": "на веломаршруті",
+        "kind": "outside",
+        "activities": [
+          "cycling",
+          "takePhotos",
+          "rest"
+        ]
+      }
+    },
+    "travelActions": {
+      "travelToMassmarket": {
+        "destination": "massmarket",
+        "mode": "walk",
+        "transitPhrase": "дорогою до масмаркету"
+      },
+      "returnHomeGroceries": {
+        "destination": "home",
+        "mode": "walk",
+        "transitPhrase": "дорогою додому"
+      },
+      "commuteToWork": {
+        "destination": "techsmith",
+        "mode": "publicTransport",
+        "transitPhrase": "дорогою на роботу"
+      },
+      "commuteHome": {
+        "destination": "home",
+        "mode": "publicTransport",
+        "transitPhrase": "дорогою додому"
+      },
+      "travelToLeisure": {
+        "destinationFromAction": true,
+        "mode": "publicTransport",
+        "transitPhrase": "у дорозі"
+      },
+      "returnHomeLeisure": {
+        "destination": "home",
+        "mode": "publicTransport",
+        "transitPhrase": "дорогою додому"
+      }
+    }
+  }
+}

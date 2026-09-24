@@ -1609,10 +1609,12 @@ class AkiraDialogue {
             const phrase = this.roomLocationPhrase(room);
             return phrase ? `Я вдома, зараз ${phrase}.` : "Я зараз удома.";
         }
+        if (loc === "techsmith") return "Я зараз на роботі, у «Техсмітнику».";
+        const geoAnswer=this.brain.worldGeography?.describeCurrent?.();
+        if(geoAnswer) return geoAnswer;
         const places = this.brain.data?.world?.world?.location?.places || {};
         const place = places?.[loc];
-        if (loc === "techsmith") return "Я зараз на роботі, у «Техсмітнику».";
-        if (place?.name) return `Я зараз у місці «${place.name}».`;
+        if (place?.name) return `Я зараз у ${place.name}.`;
         return "Я зараз не вдома, але точніше місце в мене не зафіксоване.";
     }
 
