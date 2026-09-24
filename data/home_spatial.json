@@ -1,0 +1,28 @@
+{
+  "homeSpatial": {
+    "version": "46.0",
+    "entryRoom": "hallway",
+    "connections": {
+      "hallway": ["kitchen", "bathroom", "toilet", "cozyRoom", "glassBedroom", "spaceRoom", "seaRoom"],
+      "kitchen": ["hallway"],
+      "bathroom": ["hallway"],
+      "toilet": ["hallway"],
+      "cozyRoom": ["hallway", "balcony"],
+      "glassBedroom": ["hallway", "balcony"],
+      "spaceRoom": ["hallway"],
+      "seaRoom": ["hallway"],
+      "balcony": ["cozyRoom", "glassBedroom"]
+    },
+    "rooms": {
+      "hallway": {"summary":"Коридор з'єднує кімнати, кухню, ванну й туалет. Тут є вхідні двері та шафа для речей.","objects":[{"id":"frontDoor","name":"вхідні двері","position":"біля виходу"},{"id":"storageCloset","name":"шафа","position":"уздовж стіни"},{"id":"shoes","name":"взуття","position":"біля входу"}]},
+      "kitchen": {"summary":"Звичайна домашня кухня у фісташково-помаранчевих кольорах.","objects":[{"id":"fridge","name":"холодильник","position":"біля стіни"},{"id":"stove","name":"плита","position":"біля робочої поверхні"},{"id":"sink","name":"мийка","position":"біля робочої поверхні"},{"id":"cabinets","name":"кухонні шафки","position":"уздовж стін"},{"id":"table","name":"стіл","position":"у кухні"},{"id":"chairs","name":"стільці","position":"біля столу"},{"id":"window","name":"вікно","position":"зовнішня стіна"}]},
+      "cozyRoom": {"summary":"Велика затишна друга кімната з диваном, комп'ютерним столиком, вікнами та виходом на балкон.","objects":[{"id":"sofa","name":"диван","position":"у кімнаті"},{"id":"computerDesk","name":"комп'ютерний столик","position":"біля стіни"},{"id":"windows","name":"вікна","position":"зовнішня стіна"},{"id":"balconyDoor","name":"двері на балкон","position":"біля вікон"}]},
+      "glassBedroom": {"summary":"Скляна спальня з двоспальним ліжком, великою шафою, телевізором, приставкою та фікусом.","objects":[{"id":"doubleBed","name":"двоспальне ліжко","position":"у спальні"},{"id":"wardrobe","name":"велика шафа","position":"біля стіни"},{"id":"largeTV","name":"великий телевізор","position":"навпроти зони відпочинку"},{"id":"console","name":"приставка","position":"біля телевізора"},{"id":"ficus","name":"фікус","position":"у кімнаті"},{"id":"balconyDoor","name":"двері на балкон","position":"біля зовнішньої стіни"}]},
+      "bathroom": {"summary":"Ванна кімната у стилі frutiger aero.","objects":[{"id":"bath","name":"ванна","position":"біля стіни"},{"id":"sink","name":"умивальник","position":"біля дзеркала"},{"id":"mirror","name":"дзеркало","position":"над умивальником"},{"id":"washingMachine","name":"пральна машина","position":"у ванній"}]},
+      "toilet": {"summary":"Окремий туалет у стилі frutiger aero.","objects":[{"id":"toilet","name":"унітаз","position":"біля стіни"}]},
+      "spaceRoom": {"summary":"Окрема кімната, оформлена в космічному стилі.","objects":[]},
+      "seaRoom": {"summary":"Окрема кімната, оформлена в морському стилі.","objects":[]},
+      "balcony": {"summary":"Широкий балкон, з'єднаний зі скляною спальнею та затишною другою кімнатою.","objects":[]}
+    }
+  }
+}

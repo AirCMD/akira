@@ -614,6 +614,10 @@ class AkiraDialogue {
         if (/^(що|чого)\s+(ти\s+)?(п['’ʼ]?єш|пєш)[\s?!.,]*$/iu.test(normalized)) return "ask_current_drink";
         if (/^(що|чого)\s+(ти\s+)?готуєш[\s?!.,]*$/iu.test(normalized)) return "ask_current_cooking";
         if (/^(і\s+)?(що|чого)\s+(там\s+)?за\s+вікном[\s?!.,]*$/iu.test(normalized) || /^(що\s+видно\s+за\s+вікном|який\s+вид\s+за\s+вікном)[\s?!.,]*$/iu.test(normalized)) return "ask_window_view";
+        if (/^(що\s+навколо\s+(тебе|тут)|що\s+є\s+(тут|у\s+цій\s+кімнаті|в\s+цій\s+кімнаті)|опиши\s+(цю\s+)?кімнату)[\s?!.,]*$/iu.test(normalized)) return "ask_room_surroundings";
+        if (/^що\s+є\s+(на\s+кухні|у\s+коридорі|в\s+коридорі|у\s+ванній|в\s+туалеті|у\s+спальні|в\s+кімнаті)[\s?!.,]*$/iu.test(normalized)) return "ask_room_contents";
+        if (/^(що\s+(ти\s+)?бачиш\s+перед\s+собою|що\s+перед\s+тобою)[\s?!.,]*$/iu.test(normalized)) return "ask_visible_ahead";
+        if (/^що\s+(стоїть|лежить|є)\s+(біля|поряд\s+з|коло)\s+.+[\s?!.,]*$/iu.test(normalized)) return "ask_object_near";
 
         if (askActivityPatterns.some(pattern => pattern.test(normalized))) {
             return "ask_activity";
@@ -1733,11 +1737,9 @@ class AkiraDialogue {
         if (id === "moveRoom") {
             const destination = action?.targetRoomPhrase || "іншу кімнату";
             const prefix = String(destination).startsWith("на ") ? "" : "в ";
-            return this.chooseTemplate([
-                `Йду ${prefix}${destination}.`,
-                `Переходжу зараз ${prefix}${destination}.`,
-                `Та йду ${prefix}${destination}.`
-            ]);
+            const from=action?.fromRoom;
+            if(from) return `Виходжу з ${this.brain.dailyLife?.roomNameGenitive?.(from)||"кімнати"}, йду ${prefix}${destination}.`;
+            return `Йду ${prefix}${destination}.`;
         }
 
         const names = {
@@ -1763,6 +1765,7 @@ class AkiraDialogue {
             washFace: "Умиваюся.",
             shave: "Голюся перед дзеркалом.",
             changeClothes: "Перевдягаюся.",
+            dressForWork: "Одягаюся, щоб піти на роботу.",
             doLaundry: "Займаюся пранням.",
             startLaundry: "Завантажую брудну білизну в пральну машину.",
             takeLaundryOut: "Дістаю випрану білизну з машинки.",
@@ -2220,7 +2223,7 @@ class AkiraDialogue {
 
     composePreviousActionReasonAnswer(profile) {
         const h=Array.isArray(this.brain.actionHistory)?this.brain.actionHistory:[];
-        const a=[...h].reverse().find(x=>x && x.actionId!=="moveRoom");
+        const a=[...h].reverse().find(x=>x);
         if(!a) return "Не пам’ятаю достатньо деталей попередньої дії.";
         if(a.reason) return `Бо ${String(a.reason).replace(/[.!?]+$/u,"")}.`;
         return "Причина попередньої дії в пам’яті не збереглася.";
@@ -2393,7 +2396,8 @@ class AkiraDialogue {
             eatMeal: action.mealName ? `їв ${action.mealName}` : "їв",
             prepareDrink: action.drinkName ? `готував ${action.drinkName}` : "готував напій",
             drinkSelected: action.drinkName ? `пив ${action.drinkName}` : "щось пив",
-            travelToLeisure: action.destinationName ? `їхав у ${action.destinationName}` : "їхав у місто"
+            travelToLeisure: action.destinationName ? `їхав у ${action.destinationName}` : "їхав у місто",
+            moveRoom: action.fromRoom && action.targetRoom ? `виходив з ${this.brain.dailyLife?.roomNameGenitive?.(action.fromRoom)||"кімнати"} до ${this.brain.dailyLife?.roomDestinationPhrase?.(action.targetRoom)||"іншої кімнати"}` : "переходив через квартиру"
         };
         if (dynamic[id]) return dynamic[id];
         const labels = {
@@ -2412,7 +2416,7 @@ class AkiraDialogue {
             returnHomeGroceries:"повертався з продуктами", watchStreamer:"дивився стрім або огляд",
             returnHomeLeisure:"повертався додому", visitMuseum:"був у музеї", visitPlanetarium:"був у планетарії",
             visitTheatre:"був у театрі", visitConcert:"був на концерті", goToCinema:"був у кіно",
-            moveRoom:"переходив в іншу кімнату"
+            moveRoom:"переходив через квартиру"
         };
         return labels[id] || null;
     }
@@ -2461,7 +2465,7 @@ class AkiraDialogue {
         const memory = memories.find(m => this.brain.memory?.formatMemory?.(m));
         if (!memory) return "Зараз нічого конкретного не пригадується.";
         let text = this.brain.memory.formatMemory(memory);
-        const machine={moveRoom:"переходив в іншу кімнату",checkSocialNetwork:"перевіряв соцмережі",writePost:"писав допис",talkToYani:"розмовляв з Яні",rest:"відпочивав",sleep:"спав"};
+        const machine={moveRoom:"переходив через квартиру",checkSocialNetwork:"перевіряв соцмережі",writePost:"писав допис",talkToYani:"розмовляв з Яні",rest:"відпочивав",sleep:"спав"};
         text=machine[text]||machine[memory.actionId]||text;
         if (/^[a-z][A-Za-z0-9_]*$/u.test(String(text))) return "Останнім часом не пригадую якоїсь однієї справді хорошої події.";
         this.brain.memory.reinforce?.(memory.id, 2, 2);
@@ -2593,6 +2597,9 @@ class AkiraDialogue {
         if (intent === "ask_current_cooking") return [this.composeFoodStateAnswer("cooking")];
         if (intent === "ask_activity") return [this.composeActivityAnswer(profile)];
         if (intent === "ask_window_view") return [this.brain.naturalLife?.describeWindow?.() || "Не дуже придивлявся, що там за вікном."];
+        if (intent === "ask_room_surroundings" || intent === "ask_room_contents") return [this.brain.homeSpatial?.describeRoom?.() || "Не можу зараз нормально описати кімнату."];
+        if (intent === "ask_visible_ahead") return [this.brain.homeSpatial?.describeAhead?.() || "Зараз нічого конкретного перед собою не розглядаю."];
+        if (intent === "ask_object_near") return [this.brain.homeSpatial?.describeNearObject?.(profile.analysis.normalized) || "Не бачу тут такого предмета."];
         if (intent === "ask_activity_at_location") return [this.composeActivityAtLocationAnswer(profile)];
         if (intent === "ask_current_people") return ["З тобою."];
         if (intent === "ask_people_today") return [this.composePeopleTodayAnswer()];

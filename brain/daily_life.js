@@ -10,6 +10,7 @@ class AkiraDailyLife {
     state.dailyLife.homeRoom ||= "cozyRoom";
     state.dailyLife.roomHistory = Array.isArray(state.dailyLife.roomHistory) ? state.dailyLife.roomHistory : [];
     state.dailyLife.queuedAction = state.dailyLife.queuedAction || null;
+    state.dailyLife.route = state.dailyLife.route || null;
     return this;
   }
 
@@ -75,23 +76,21 @@ class AkiraDailyLife {
     const target = action.homeRoom || this.roomForAction(action.actionId);
     if (!target || !this.getRoom(target) || target === this.currentRoomId()) return action;
 
-    // Не телепортуємо Акіру. Спочатку він реально переходить у потрібну кімнату,
-    // а початкова дія чекає в черзі до завершення переходу.
-    const room = this.getRoom(target);
-    const queued = { ...action, homeRoom: target };
-    this.brain.state.dailyLife.queuedAction = queued;
-    return {
-      type: "action",
-      actionId: "moveRoom",
-      category: "movement",
-      duration: this.roomTravelMinutes(this.currentRoomId(), target),
-      reason: `треба перейти до: ${room?.name || target}`,
-      targetRoom: target,
-      targetRoomName: room?.name || target,
-      targetRoomPhrase: this.roomDestinationPhrase(target),
-      score: 1100,
-      factors: { spatialMovement: 1100 }
-    };
+    const from=this.currentRoomId();
+    const path=this.brain.homeSpatial?.path?.(from,target) || [from,target];
+    if(path.length<2) return action;
+    this.brain.state.dailyLife.route={path,index:0,finalAction:{...action,homeRoom:target},startedAt:Date.now()};
+    this.brain.state.dailyLife.queuedAction=null;
+    return this.makeMoveAction(path[0],path[1],target);
+  }
+
+  makeMoveAction(from,to,finalTarget=to){
+    return {type:"action",actionId:"moveRoom",category:"movement",duration:this.roomTravelMinutes(from,to),reason:`йду з ${this.roomNameGenitive(from)} до ${this.roomDestinationPhrase(finalTarget)}`,fromRoom:from,targetRoom:to,finalTargetRoom:finalTarget,targetRoomName:this.getRoom(to)?.name||to,targetRoomPhrase:this.roomDestinationPhrase(to),score:1100,factors:{spatialMovement:1100}};
+  }
+
+  roomNameGenitive(roomId){
+    const forms={kitchen:"кухні",hallway:"коридору",bathroom:"ванної",toilet:"туалету",glassBedroom:"скляної спальні",cozyRoom:"затишної другої кімнати",spaceRoom:"кімнати в космічному стилі",seaRoom:"кімнати в морському стилі",balcony:"балкона"};
+    return forms[roomId]||this.getRoom(roomId)?.name||roomId;
   }
 
   roomDestinationPhrase(roomId) {
@@ -151,18 +150,30 @@ class AkiraDailyLife {
 
     // Дія, заради якої Акіра перейшов у кімнату, виконується наступною лише
     // якщо реальний розклад не створив важливіший обов'язок.
+    const route=this.brain.state.dailyLife?.route;
+    if(route){
+      const current=this.currentRoomId(), idx=route.path.indexOf(current);
+      if(idx>=0 && idx<route.path.length-1){
+        route.index=idx;
+        return this.makeMoveAction(current,route.path[idx+1],route.path[route.path.length-1]);
+      }
+      if(current===route.path[route.path.length-1]){
+        const finalAction=route.finalAction;
+        this.brain.state.dailyLife.route=null;
+        return finalAction;
+      }
+      this.brain.state.dailyLife.route=null;
+    }
     const queued = this.brain.state.dailyLife?.queuedAction;
     if (queued) {
       const target = queued.homeRoom || this.roomForAction(queued.actionId);
-      if (!target || target === this.currentRoomId()) {
-        this.brain.state.dailyLife.queuedAction = null;
-        return queued;
-      }
+      if (!target || target === this.currentRoomId()) { this.brain.state.dailyLife.queuedAction = null; return queued; }
     }
 
     // Робочий маршрут є частиною дня, а не телепортацією між home/work.
-    if (this.isWorkday() && loc === "home" && t >= start - travel - 10 && t < start) {
-      return this.action("commuteToWork", travel, "час вирушати на роботу", {targetLocation:"techsmith"});
+    if (this.isWorkday() && loc === "home" && t >= start - travel - 15 && t < start) {
+      if(!this.doneToday("dressedForWork")) return this.action("dressForWork",5,"збираюся на роботу",{homeRoom:"hallway"});
+      return this.action("commuteToWork", travel, "час вирушати на роботу", {targetLocation:"techsmith",homeRoom:"hallway"});
     }
     if (loc === "techsmith" && (!this.isWorkday() || t >= end || t < start - travel - 10)) {
       return this.action("commuteHome", travel, "робочий день закінчився, час додому", {targetLocation:"home"});
@@ -190,7 +201,7 @@ class AkiraDailyLife {
     const id = action?.actionId; if (!id) return;
     const now = new Date().toISOString();
     const routines = this.brain.state.dailyLife.routines;
-    if (["washFace","shave","changeClothes","takeBath"].includes(id)) routines[id] = now;
+    if (["washFace","shave","changeClothes","takeBath","dressForWork"].includes(id)) routines[id] = now;
 
     if (id === "moveRoom" && action.targetRoom) {
       this.setHomeRoom(action.targetRoom, action.reason || "movement");
@@ -204,7 +215,7 @@ class AkiraDailyLife {
     if (id === "commuteHome") {
       this.brain.state.world.location = "home";
       this.brain.state.dailyLife.commute.lastArrivalHome = now;
-      this.brain.state.dailyLife.homeRoom = "cozyRoom";
+      this.brain.state.dailyLife.homeRoom = "hallway";
     }
   }
 }

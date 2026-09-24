@@ -34,8 +34,9 @@ class AkiraSelfModel {
     const inWorkShift=!!this.brain.dailyLife?.isWorkTime?.();
     // На роботі звичайна денна сонливість не повинна ставати головним бажанням.
     // Сон пробивається вище робочої цілі лише при справді критичному стані.
-    if((sleep<55 || s.fatigue>45) && (!inWorkShift || sleep<20 || s.fatigue>70 || s.energy<20))
-      add("sleep","відпочити або поспати",Math.max(100-sleep,s.fatigue),sleep<30?"бо дуже хочеться спати":"бо накопичилася втома");
+    const genuinelySleepy=(sleep<35 || Number(s.fatigue)>45 || Number(s.energy)<35);
+    if(genuinelySleepy && (!inWorkShift || sleep<20 || Number(s.fatigue)>70 || Number(s.energy)<20))
+      add("sleep","поспати",Math.max(100-sleep,Number(s.fatigue)||0,100-(Number(s.energy)||100)),sleep<30?"бо дуже хочеться спати":"бо накопичилася втома");
     if(rest<45) add("rest","трохи відпочити",100-rest,"бо давно не було нормального перепочинку");
     if(social<38) add("company","побути з кимось близьким",100-social,"бо бракує спілкування");
     if(privacy<35 || s.socialEnergy<30) add("alone","побути самому",Math.max(100-privacy,100-s.socialEnergy),"бо соціальної енергії мало");

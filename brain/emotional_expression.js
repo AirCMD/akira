@@ -51,7 +51,7 @@ class AkiraEmotionalExpression {
   apply(text, dialogueProfile={}){
     let out=String(text||"").trim(); if(!out) return out;
     const p=this.profile(dialogueProfile); const intent=dialogueProfile?.analysis?.intent;
-    const factualIntents=new Set(["ask_current_time","check_day_period","ask_current_month","check_season","check_weekday","check_workday","ask_need_work_today","ask_is_home","ask_current_location","ask_home_room","ask_why_there","ask_activity","ask_activity_at_location","ask_recent_activity","ask_action_reason","ask_action_next","ask_date","ask_holiday","ask_yani_identity","ask_yani_species","greeting","greeting_mismatch","time_greeting"]);
+    const factualIntents=new Set(["ask_current_time","check_day_period","ask_current_month","check_season","check_weekday","check_workday","ask_need_work_today","ask_is_home","ask_current_location","ask_home_room","ask_why_there","ask_room_surroundings","ask_room_contents","ask_visible_ahead","ask_object_near","ask_fatigue","ask_activity","ask_activity_at_location","ask_recent_activity","ask_action_reason","ask_action_next","ask_date","ask_holiday","ask_yani_identity","ask_yani_species","greeting","greeting_mismatch","time_greeting"]);
     const isFallback=/не зовсім зрозумів|втратив нитку|можливо, я щось упускаю|треба було б розібратися детальніше|мм, цікаво/i.test(out);
     const semanticFact = /^(ask_(work|yani|akira|family|parents|has_brother|lives_with|dream|food|hungry|money|recent_purchase|inventory|hour_ago|people_today|recent_conversation|recent_good|current|past|future|history|self|angry|irritation|glad|plan|unfinished|metacognition)|claim_)/.test(String(intent||""));
     const timeCorrection=/зараз\s+\d{1,2}:\d{2}|якщо це ранок|це вже не ранок/iu.test(out);

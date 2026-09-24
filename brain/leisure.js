@@ -151,7 +151,7 @@ class AkiraLeisure {
     }
     if (id === "returnHomeLeisure") {
       s.world.location = "home";
-      if (s.dailyLife) s.dailyLife.homeRoom = "cozyRoom";
+      if (s.dailyLife) s.dailyLife.homeRoom = "hallway";
       return;
     }
 

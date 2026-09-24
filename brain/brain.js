@@ -269,7 +269,8 @@ class AkiraBrain {
             "emotional_expression",
             "brain_coordinator",
             "world_geography",
-            "natural_life"
+            "natural_life",
+            "home_spatial"
         ];
 
         const results = {};
@@ -704,7 +705,8 @@ class AkiraBrain {
             ["emotionalExpression", "AkiraEmotionalExpression"],
             ["coordinator", "AkiraBrainCoordinator"],
             ["worldGeography", "AkiraWorldGeography"],
-            ["naturalLife", "AkiraNaturalLife"]
+            ["naturalLife", "AkiraNaturalLife"],
+            ["homeSpatial", "AkiraHomeSpatial"]
         ];
         for (const [property, globalName] of modules) {
             const Ctor = window[globalName];
