@@ -6,6 +6,8 @@ class AkiraBrainCoordinator {
     this.config=this.brain.data?.brain_coordinator?.brainCoordinator || {};
     const s=this.brain.state;
     s.coordinator ||= {cycle:0,lastPhases:[],lastDecision:null,lastConflict:null,lastTickAt:null};
+    this.repairImpossibleWorkHistory();
+    this.reconcileOnBoot();
     return this;
   }
   runUpdates(minutes){
@@ -22,27 +24,93 @@ class AkiraBrainCoordinator {
     phase("goals",()=>{ b.intentions?.update?.(minutes); b.goalsPlanning?.update?.(minutes); });
     s.coordinator.cycle=(s.coordinator.cycle||0)+1; s.coordinator.lastPhases=phases; s.coordinator.lastTickAt=Date.now();
   }
+  isCriticalHealthAction(action){
+    const id=String(action?.actionId||"");
+    return action?.category==="health" && /medicine|recover|sick|health|emergency/iu.test(id+" "+String(action?.reason||""));
+  }
+  isWorkAction(action){
+    const id=action?.actionId||"";
+    return action?.source==="work_life" || new Set(["work","consultCustomer","compareDevices","explainSpecs","makeSale","quietAtWork","workBreak","talkToKent","talkToTaras"]).has(id);
+  }
+  clearHomeQueues(){
+    const s=this.brain.state;
+    if(s.dailyLife) s.dailyLife.queuedAction=null;
+    if(s.food) s.food.pendingAction=null;
+  }
   blockedBy(action){
     const b=this.brain, s=b.state, id=action?.actionId||"";
     if(!action) return "empty";
-    // Сон/непритомність-подібні стани блокують звичайні плани. Пробудження та sleep-механіка проходять.
     if((s.activity==="sleeping" || s.action?.actionId==="sleep") && !["sleep","wakeUp"].includes(id)) return "sleeping";
-    // Робочий час не дозволяє дозвіллю перехопити кермо.
-    if(b.dailyLife?.isWorkTime?.() && ["leisure","goal_plan"].includes(action.category) && !String(id).toLowerCase().includes("work")) return "work_time";
+
+    // v45.4 Reality Gate: під час реальної зміни домашні справи, сон, їжа,
+    // дозвілля та випадкові цілі не можуть існувати паралельно з роботою.
+    if(b.dailyLife?.isWorkTime?.()){
+      if(this.isCriticalHealthAction(action)) return null;
+      if(id==="commuteToWork") return s.world?.location==="home" ? null : "bad_commute_origin";
+      if(this.isWorkAction(action)) return s.world?.location==="techsmith" ? null : "not_at_work";
+      return "work_shift";
+    }
     return null;
+  }
+  timestampFallsInShift(ts){
+    const d=new Date(Number(ts)||ts); if(Number.isNaN(d.getTime())) return false;
+    const work=this.brain.data?.life_profile?.lifeProfile?.work||{};
+    const days=work.days||[]; const day=d.toLocaleDateString("en-US",{weekday:"long"}).toLowerCase();
+    const mins=d.getHours()*60+d.getMinutes();
+    const parse=v=>{const m=String(v||"00:00").match(/(\d{1,2}):(\d{2})/);return m?+m[1]*60 + +m[2]:0;};
+    return days.includes(day) && mins>=parse(work.start||"10:00") && mins<parse(work.end||"16:00");
+  }
+  repairImpossibleWorkHistory(){
+    const b=this.brain;
+    const homeOnly=new Set(["moveRoom","cookMeal","eatMeal","prepareDrink","drinkSelected","washDishes","washFace","shave","changeClothes","takeBath","startLaundry","takeLaundryOut","hangLaundry","foldLaundry","wipeDust","vacuumRoom","mopFloor","washWindows","playGame","watchStreamer"]);
+    if(Array.isArray(b.actionHistory)) b.actionHistory=b.actionHistory.filter(x=>!(homeOnly.has(x?.actionId) && this.timestampFallsInShift(x?.finishedAt||x?.startedAt)));
+    if(Array.isArray(b.state?.food?.mealHistory)) b.state.food.mealHistory=b.state.food.mealHistory.filter(x=>!this.timestampFallsInShift(x?.at));
+    if(Array.isArray(b.state?.food?.drinkHistory)) b.state.food.drinkHistory=b.state.food.drinkHistory.filter(x=>!this.timestampFallsInShift(x?.at));
+  }
+  reconcileOnBoot(){
+    const b=this.brain,s=b.state;
+    if(!b.dailyLife?.isWorkTime?.()) return;
+    // Після reload/localStorage відновлюємо стан поточного дня, а не старий
+    // домашній кадр. Це boot catch-up, не жива телепортація між тиками.
+    if(s.world?.location==="home"){
+      const old=s.action;
+      this.clearHomeQueues();
+      s.action=null; s.activity="working"; s.actionStartedAt=null; s.actionEndsAt=null;
+      s.world.location="techsmith";
+      if(s.dailyLife) s.dailyLife.homeRoom=null;
+      s.coordinator ||= {};
+      s.coordinator.lastRepair={at:Date.now(),type:"boot_work_catchup",cancelledAction:old?.actionId||null,location:"techsmith"};
+    }
   }
   reconcileState(){
     const b=this.brain,s=b.state,a=s.action;
+    const inShift=!!b.dailyLife?.isWorkTime?.();
+
+    if(inShift){
+      // Якщо суперечність виникла вже під час відкритої симуляції, не
+      // телепортуємо. Скасовуємо неможливу домашню дію, а dailyLife нижче
+      // створить нормальний commuteToWork.
+      if(a && this.blockedBy(a)){
+        s.coordinator ||= {};
+        s.coordinator.lastRepair={at:Date.now(),type:"work_shift_cancel",actionId:a.actionId,location:s.world?.location};
+        s.action=null; s.activity="idle"; s.actionStartedAt=null; s.actionEndsAt=null;
+        this.clearHomeQueues();
+        if(s.intentions?.current?.actionId===a.actionId) s.intentions.current=null;
+      }
+      if(s.world?.location==="techsmith" && s.dailyLife) s.dailyLife.homeRoom=null;
+      return;
+    }
+
     if(!a) return;
-    const workIds=new Set(["work","consultCustomer","compareDevices","explainSpecs","makeSale","quietAtWork","workBreak","talkToKent","talkToTaras","commuteToWork"]);
-    const isWork=a.source==="work_life" || workIds.has(a.actionId);
+    const isWork=this.isWorkAction(a) || a.actionId==="commuteToWork";
     if(isWork && a.actionId!=="commuteHome" && !b.workLife?.inShift?.()){
       s.coordinator ||= {};
       s.coordinator.lastRepair={at:Date.now(),type:"invalid_work_action",actionId:a.actionId,time:s.world?.time,location:s.world?.location};
-      s.action=null; s.activity="idle";
+      s.action=null; s.activity="idle"; s.actionStartedAt=null; s.actionEndsAt=null;
       if(s.intentions?.current?.actionId===a.actionId) s.intentions.current=null;
     }
   }
+  allowAction(action){ return !this.blockedBy(action); }
   collectPriorityActions(situation){
     // ВАЖЛИВО: getPriorityAction у старих модулів не є pure-функцією.
     // Тому не викликаємо всі джерела для "голосування": accidents/food/goals/leisure

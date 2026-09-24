@@ -450,6 +450,8 @@ class AkiraDialogue {
         if (/^(у\s+тебе\s+є\s+брат|маєш\s+брата)[\s?!.,]*$/iu.test(normalized)) return "ask_has_brother";
         if (/^хто\s+твої\s+батьки[\s?!.,]*$/iu.test(normalized)) return "ask_parents";
         if (/^(ти\s+зараз\s+працюєш|зараз\s+працюєш)[\s?!.,]*$/iu.test(normalized)) return "ask_working_now";
+        if (/^(чому\s+(ти\s+)?не\s+на\s+роботі|чого\s+(ти\s+)?не\s+на\s+роботі)[\s?!.,]*$/iu.test(normalized)) return "ask_why_not_at_work";
+        if (/^(у\s+тебе\s+зараз\s+робочий\s+час|зараз\s+у\s+тебе\s+робочий\s+час|в\s+тебе\s+зараз\s+робочий\s+час)[\s?!.,]*$/iu.test(normalized)) return "assert_work_time";
         if (/^(як\s+(ти\s+)?добираєшся\s+на\s+роботу|як\s+(ти\s+)?їздиш\s+на\s+роботу)[\s?!.,]*$/iu.test(normalized)) return "ask_commute";
         if (/^з\s+ким\s+(ти\s+)?працюєш[\s?!.,]*$/iu.test(normalized)) return "ask_work_coworkers";
         if (/^хто\s+такий\s+кент[\s?!.,]*$/iu.test(normalized)) return "ask_kent";
@@ -1549,12 +1551,20 @@ class AkiraDialogue {
         return forms[room.id] || forms[room.key] || room.locativeName || room.name;
     }
 
+    roomLocationPhrase(room) {
+        if (!room) return null;
+        const name=this.roomNameLocative(room);
+        if (!name) return null;
+        const id=room.id||room.key;
+        return id==="kitchen" ? `на ${name}` : `у ${name}`;
+    }
+
     composeCurrentLocationAnswer() {
         const loc = this.brain.state?.world?.location || "home";
         if (loc === "home") {
             const room = this.brain.dailyLife?.currentRoom?.();
-            const roomName = this.roomNameLocative(room);
-            return roomName ? `Я вдома, зараз у ${roomName}.` : "Я зараз удома.";
+            const phrase = this.roomLocationPhrase(room);
+            return phrase ? `Я вдома, зараз ${phrase}.` : "Я зараз удома.";
         }
         const places = this.brain.data?.world?.world?.location?.places || {};
         const place = places?.[loc];
@@ -1768,7 +1778,21 @@ class AkiraDialogue {
         if(intent==="check_workday") { const asksWeekend=/вихідний/u.test(n); return asksWeekend?(workday?`Ні. Сьогодні робочий день.`:`Так, сьогодні вихідний.`):(workday?`Так, сьогодні робочий день.`:`Ні, сьогодні вихідний.`); }
         if(intent==="ask_need_work_today") { if(!workday) return "Ні. Сьогодні в мене вихідний."; if(mins>=end) return `Сьогодні робочий день був, але моя зміна закінчилася о ${work.end||"16:00"}.`; if(mins<start) return `Так. Сьогодні працюю з ${work.start||"10:00"} до ${work.end||"16:00"}.`; return `Так. У мене зараз робочий час, до ${work.end||"16:00"}.`; }
         if(intent==="ask_is_home") return loc==="home"?"Так, я зараз удома.":`Ні. ${this.composeCurrentLocationAnswer()}`;
-        if(intent==="ask_why_there") { if(loc==="techsmith") return this.brain.workLife?.inShift?.()?"Бо зараз моя робоча зміна.":`Власне, уже не повинен тут бути. Зміна закінчилася о ${work.end||"16:00"}, час їхати додому.`; if(loc==="home") return "Бо я зараз удома і нікуди не виходив."; const a=this.brain.state?.action; return a?.reason?`Бо ${String(a.reason).replace(/[.!?]+$/u,"")}.`:"Так склалося за поточною справою."; }
+        if(intent==="ask_why_there") {
+            const a=this.brain.state?.action;
+            if(loc==="techsmith") return this.brain.workLife?.inShift?.()?"Бо зараз моя робоча зміна.":`Власне, уже не повинен тут бути. Зміна закінчилася о ${work.end||"16:00"}, час їхати додому.`;
+            if(a?.actionId==="commuteToWork") return "Бо їду на роботу.";
+            if(loc==="home") {
+                const lastMove=[...(this.brain.actionHistory||[])].reverse().find(x=>x?.actionId==="moveRoom");
+                if(lastMove?.targetRoom===this.brain.state?.dailyLife?.homeRoom && Date.now()-Number(lastMove.finishedAt||0)<15*60*1000) {
+                    const queued=this.brain.state?.dailyLife?.queuedAction;
+                    if(queued?.reason) return `Бо ${String(queued.reason).replace(/[.!?]+$/u,"")}.`;
+                    return "Просто перейшов сюди у своїх справах.";
+                }
+                return "Зараз я вдома, бо нікуди не збирався виходити.";
+            }
+            return a?.reason?`Бо ${this.humanizeInternalReason(a.reason)}.`:"Так склалося за поточною справою.";
+        }
         if(intent==="ask_fatigue") { const f=Number(this.brain.state?.fatigue??(100-Number(this.brain.state?.energy??70))); return f>=65?"Так, уже добряче втомився.":f>=35?"Трохи втомився, але ще нормально.":"Ні, особливої втоми зараз немає."; }
         if(intent==="ask_yani_identity") return "Яні моя дружина. Вона звіролюдина, ближча до котячих. Ми знаємо одне одного близько семи років і п’ять років разом.";
         if(intent==="ask_yani_species") return "Ні. Яні звіролюдина, ближча до котячих.";
@@ -1788,7 +1812,9 @@ class AkiraDialogue {
         if(intent==="ask_lives_with") return "Живу з Яні, моєю дружиною.";
         if(intent==="ask_has_brother") return "Так. У мене є старший брат.";
         if(intent==="ask_parents") return "У мене є батьки, я їх люблю. Вони живуть у сусідньому місті. Їхні імена я не називаю.";
-        if(intent==="ask_working_now") { if(!workday || mins<start || mins>=end) return `Ні. Зараз ${time}, моя зміна з ${work.start||"10:00"} до ${work.end||"16:00"}.`; return loc==="techsmith"?`Так. Я зараз на роботі, зміна до ${work.end||"16:00"}.`:`За графіком зараз робочий час, але я не на роботі.`; }
+        if(intent==="ask_working_now") { if(!workday || mins<start || mins>=end) return `Ні. Зараз ${time}, моя зміна з ${work.start||"10:00"} до ${work.end||"16:00"}.`; if(loc==="techsmith") return `Так. Я зараз на роботі, зміна до ${work.end||"16:00"}.`; if(this.brain.state?.action?.actionId==="commuteToWork") return "Ще ні. Я вже їду на роботу, бо запізнився."; return "За графіком зараз робочий час. Я мав би бути на роботі."; }
+        if(intent==="ask_why_not_at_work") { if(!workday || mins<start || mins>=end) return "Бо зараз у мене немає робочої зміни."; if(loc==="techsmith") return "Я якраз на роботі."; if(this.brain.state?.action?.actionId==="commuteToWork") return "Запізнився. Уже їду на роботу."; return "Схоже, мій стан збився з розкладу. За графіком я зараз маю бути на роботі."; }
+        if(intent==="assert_work_time") { if(workday && mins>=start && mins<end) return loc==="techsmith"?`Так. Зараз моя зміна, я на роботі до ${work.end||"16:00"}.`:(this.brain.state?.action?.actionId==="commuteToWork"?"Так. Я запізнився і зараз їду на роботу.":"Так. За графіком я зараз маю бути на роботі."); return `Ні. Моя зміна з ${work.start||"10:00"} до ${work.end||"16:00"}.`; }
                 if(intent==="ask_sleep_desire_reason") return this.brain.selfModel?.describeWhyWant?.() || "Бо втомився і хочеться відпочити.";
         if(intent==="ask_why_not_sleeping"||intent==="ask_sleep_obstacle") { if(this.isCurrentlySleeping()) return "Я якраз сплю."; if(loc==="techsmith" && this.brain.workLife?.inShift?.()) return "Бо я ще на роботі й зміна не закінчилася."; if(loc==="techsmith") return `Власне, нічого нормального. Зміна закінчилася о ${work.end||"16:00"}, мені вже треба додому.`; const a=this.brain.state?.action; return a?.reason?`Поки не лягаю, бо ${String(a.reason).replace(/[.!?]+$/u,"")}.`:"Поки просто ще не ліг. Якщо втома переможе, піду спати."; }
         if(intent==="ask_when_sleep") { const plan=this.brain.intentions?.getNextPlan?.(); if(plan?.actionId==="sleep") return `Планую лягти приблизно о ${plan.time}.`; return "Точного часу ще не вирішив. Піду, коли вже справді захочу спати й не буде незакінченої справи."; }
@@ -1943,8 +1969,8 @@ class AkiraDialogue {
                     "У жодній. Я ж зараз не вдома 🙂"
                 ]);
                 const room = this.brain.dailyLife?.currentRoom?.();
-                const roomName = this.roomNameLocative(room);
-                return roomName ? `Я зараз у ${roomName}.` : "Я вдома, але конкретну кімнату зараз не відмітив.";
+                const roomPhrase = this.roomLocationPhrase(room);
+                return roomPhrase ? `Я зараз ${roomPhrase}.` : "Я вдома, але конкретну кімнату зараз не відмітив.";
             }
             case "ask_current_location":
                 return this.composeCurrentLocationAnswer();
@@ -2152,7 +2178,7 @@ class AkiraDialogue {
         }
 
         if (reason) {
-            return `Бо ${String(reason).replace(/[.!?]+$/u, "")}.`;
+            return `Бо ${this.humanizeInternalReason(reason)}.`;
         }
 
         return this.chooseTemplate([
@@ -2416,7 +2442,7 @@ class AkiraDialogue {
         const intent = profile.analysis.intent;
         if (intent === "name_ping") return [this.composeNamePingAnswer(profile)];
         if (intent === "ask_sleeping") return [this.composeSleepingAnswer(profile)];
-        if (["greet_morning","ask_current_time","check_day_period","ask_current_month","check_season","check_weekday","check_workday","ask_need_work_today","ask_is_home","ask_why_there","ask_fatigue","ask_yani_identity","ask_yani_species","ask_akira_identity_kind","ask_akira_wife","ask_yani_husband","ask_yani_relation_to_akira","ask_love_yani","ask_love_user","ask_why_with_yani","claim_user_is_wife","claim_identity_contradiction","ask_see_yani","ask_when_met_yani","ask_yani_today_together","ask_last_talk_yani","ask_sleep_desire_reason","ask_why_not_sleeping","ask_when_sleep","ask_sleep_obstacle","ask_can_go_home","ask_why_still_work","ask_previous_time_consistency","claim_user_relationship","ask_lives_with","ask_has_brother","ask_parents","ask_working_now"].includes(intent)) return [this.composeRealityAnswer(intent, profile)];
+        if (["greet_morning","ask_current_time","check_day_period","ask_current_month","check_season","check_weekday","check_workday","ask_need_work_today","ask_is_home","ask_why_there","ask_fatigue","ask_yani_identity","ask_yani_species","ask_akira_identity_kind","ask_akira_wife","ask_yani_husband","ask_yani_relation_to_akira","ask_love_yani","ask_love_user","ask_why_with_yani","claim_user_is_wife","claim_identity_contradiction","ask_see_yani","ask_when_met_yani","ask_yani_today_together","ask_last_talk_yani","ask_sleep_desire_reason","ask_why_not_sleeping","ask_when_sleep","ask_sleep_obstacle","ask_can_go_home","ask_why_still_work","ask_previous_time_consistency","claim_user_relationship","ask_lives_with","ask_has_brother","ask_parents","ask_working_now","ask_why_not_at_work","assert_work_time"].includes(intent)) return [this.composeRealityAnswer(intent, profile)];
         if (intent === "ask_current_movie") return [this.composeCurrentMovieAnswer(profile)];
         if (intent === "ask_movie_preferences") return [this.composeMoviePreferencesAnswer(profile)];
         if (intent === "ask_current_location") return [this.composeCurrentLocationAnswer(profile)];
@@ -3172,6 +3198,32 @@ class AkiraDialogue {
         ].includes(intent);
     }
 
+    humanizeInternalReason(reason) {
+        const raw=String(reason||"").replace(/[.!?]+$/u, "").trim();
+        if(!raw) return "зараз це здавалося доречним";
+        if(/підтримано|supported|relationships|emotions|goalsPlanning|decision|source|module|factors|needs(?:\b|[,:])/iu.test(raw)) {
+            const a=this.brain.state?.action;
+            if(a?.actionId==="commuteToWork") return "зараз треба бути на роботі";
+            if(a?.actionId==="workBreak") return "між покупцями випала коротка пауза";
+            if(a?.source==="work_life") return "зараз робочий час";
+            return "зараз це здавалося найдоречнішим";
+        }
+        return raw.replace(/^бо\s+/iu, "");
+    }
+
+    sanitizeInternalSpeech(text) {
+        let out=String(text||"");
+        // Внутрішні назви модулів та action-id ніколи не є людською реплікою.
+        if(/(?:підтримано|supported)\s*:\s*[^.!?]+/iu.test(out))
+            out=out.replace(/(?:підтримано|supported)\s*:\s*[^.!?]+/giu,"зараз це здавалося найдоречнішим");
+        const leaks=["moveRoom","relationships","goalsPlanning","internalStream","work_life","daily_life","decision","factors","source:","module:"];
+        if(leaks.some(x=>out.toLowerCase().includes(x.toLowerCase()))) {
+            if(/^бо\b/iu.test(out)) out="Бо зараз це здавалося найдоречнішим.";
+            else out=out.replace(/moveRoom/giu,"перехід в іншу кімнату");
+        }
+        return out;
+    }
+
     finalizeResponse(parts, profile) {
 
         let text =
@@ -3187,9 +3239,12 @@ class AkiraDialogue {
                 this.fallbackResponse(profile);
         }
 
+        text = this.sanitizeInternalSpeech(text);
+
         // v41.1: фактичний зміст уже сформовано. Тепер емоційний шар
         // може змінити форму, довжину й теплоту репліки, не вигадуючи фактів.
         text = this.brain.emotionalExpression?.apply?.(text, profile) || text;
+        text = this.sanitizeInternalSpeech(text);
 
         text =
             this.limitWords(

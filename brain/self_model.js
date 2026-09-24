@@ -31,7 +31,11 @@ class AkiraSelfModel {
     const social=this.need("social",45), fun=this.need("fun",55), privacy=this.need("privacy",55), achievement=this.need("achievement",50);
     if(hunger>35) add("eat","поїсти",hunger,`бо голод уже відчувається (${Math.round(hunger)}/100)`);
     if(thirst>35) add("drink","щось випити",thirst,`бо хочеться пити (${Math.round(thirst)}/100)`);
-    if(sleep<55 || s.fatigue>45) add("sleep","відпочити або поспати",Math.max(100-sleep,s.fatigue),"бо накопичилася втома");
+    const inWorkShift=!!this.brain.dailyLife?.isWorkTime?.();
+    // На роботі звичайна денна сонливість не повинна ставати головним бажанням.
+    // Сон пробивається вище робочої цілі лише при справді критичному стані.
+    if((sleep<55 || s.fatigue>45) && (!inWorkShift || sleep<20 || s.fatigue>70 || s.energy<20))
+      add("sleep","відпочити або поспати",Math.max(100-sleep,s.fatigue),sleep<30?"бо дуже хочеться спати":"бо накопичилася втома");
     if(rest<45) add("rest","трохи відпочити",100-rest,"бо давно не було нормального перепочинку");
     if(social<38) add("company","побути з кимось близьким",100-social,"бо бракує спілкування");
     if(privacy<35 || s.socialEnergy<30) add("alone","побути самому",Math.max(100-privacy,100-s.socialEnergy),"бо соціальної енергії мало");
@@ -39,6 +43,7 @@ class AkiraSelfModel {
     if(achievement<38) add("achievement","зробити щось корисне",100-achievement,"бо хочеться відчуття результату");
     const cur=this.brain.intentions?.getCurrentIntention?.();
     if(cur?.goal) add("currentGoal",cur.goal,72,cur.reason || "бо я вже цим займаюся");
+    if(inWorkShift) add("work","працювати до кінця зміни",88,"бо зараз робочий час");
     return out.sort((a,b)=>b.strength-a.strength).slice(0,6);
   }
 

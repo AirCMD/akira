@@ -1344,9 +1344,20 @@ finishAction() {
             return action;
         }
 
+        // Останній захист від неможливих дій. Навіть якщо окремий модуль
+        // запропонував домашню вечерю посеред зміни, action не стартує.
+        if (this.coordinator?.allowAction && !this.coordinator.allowAction(action)) {
+            return null;
+        }
+
         // Домашній простір є окремим шаром усередині location=home.
         // Це зберігає сумісність зі старими правилами activities, які очікують саме "home".
         action = this.dailyLife?.prepareAction?.(action) || action;
+
+        // prepareAction може перетворити дію на moveRoom, тому перевіряємо ще раз.
+        if (this.coordinator?.allowAction && !this.coordinator.allowAction(action)) {
+            return null;
+        }
 
         const duration =
             this.number(

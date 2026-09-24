@@ -132,16 +132,6 @@ class AkiraDailyLife {
   getPriorityAction(situation={}) {
     if (this.brain.state.action) return null;
 
-    // Дія, заради якої Акіра перейшов у кімнату, має виконатися наступною,
-    // а не загубитися через новий цикл прийняття рішень.
-    const queued = this.brain.state.dailyLife?.queuedAction;
-    if (queued) {
-      const target = queued.homeRoom || this.roomForAction(queued.actionId);
-      if (!target || target === this.currentRoomId()) {
-        this.brain.state.dailyLife.queuedAction = null;
-        return queued;
-      }
-    }
     const now = new Date();
     const t = now.getHours()*60 + now.getMinutes();
     const loc = this.location();
@@ -150,6 +140,25 @@ class AkiraDailyLife {
     const start = this.minutes(work.start || "10:00");
     const end = this.minutes(work.end || "16:00");
     const travel = Number(commute.durationMinutes) || 45;
+
+    // Reality Gate має пріоритет над будь-якою queued домашньою дією.
+    // Якщо зміна вже почалася, Акіра не може спочатку «доготувати рис».
+    if (this.isWorkday() && loc === "home" && t >= start && t < end) {
+      this.brain.state.dailyLife.queuedAction = null;
+      if (this.brain.state.food) this.brain.state.food.pendingAction = null;
+      return this.action("commuteToWork", travel, "треба бути на роботі, зміна вже почалася", {targetLocation:"techsmith", late:true});
+    }
+
+    // Дія, заради якої Акіра перейшов у кімнату, виконується наступною лише
+    // якщо реальний розклад не створив важливіший обов'язок.
+    const queued = this.brain.state.dailyLife?.queuedAction;
+    if (queued) {
+      const target = queued.homeRoom || this.roomForAction(queued.actionId);
+      if (!target || target === this.currentRoomId()) {
+        this.brain.state.dailyLife.queuedAction = null;
+        return queued;
+      }
+    }
 
     // Робочий маршрут є частиною дня, а не телепортацією між home/work.
     if (this.isWorkday() && loc === "home" && t >= start - travel - 10 && t < start) {
