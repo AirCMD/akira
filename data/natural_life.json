@@ -1,0 +1,19 @@
+{
+  "naturalLife": {
+    "version": "45.9",
+    "idle": {
+      "principle": "Idle is a valid human state, not an error or fallback."
+    },
+    "sleepIrregularities": {
+      "insomniaChance": 0.035,
+      "earlyWakeChance": 0.045,
+      "failedReturnChance": 0.45
+    },
+    "windowPerception": {
+      "usesRealCalendar": true,
+      "usesWeatherState": true,
+      "seasons": ["spring", "summer", "autumn", "winter"],
+      "stableWithinWeatherScene": true
+    }
+  }
+}
