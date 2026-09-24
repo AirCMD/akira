@@ -33,6 +33,12 @@ class AkiraYaniLife {
       y.nextDecisionAt=Date.now()+15000; return;
     }
     if((h>=1&&h<9) && (y.fatigue>55 || y.energy<38)) return this.start("sleep",360,"home","bedroom","лягла спати");
+    // v45.5: дуже рідкісний реальний візит до Акіри на роботу. Яні має
+    // власне рішення і дорогу, тому вона не матеріалізується біля нього з повітря.
+    if(this.brain.state.world?.location==="techsmith" && this.brain.workLife?.inShift?.() && y.location==="home" && Math.random()<0.003){
+      y.pendingWorkVisit={reason:"private_errand",privacy:"privateToYani"};
+      return this.start("travelToAkiraWork",35,"city",null,"вирішила ненадовго заїхати до Акіри на роботу");
+    }
     if(y.hunger>72) return this.start(this.choose(["eatSnacks","orderFood"]),this.choose([15,25]),"home",y.homeRoom,"зголодніла");
     if(y.fatigue>78) return this.start("rest",35,"home",this.choose(["glass_room","space_room"]),"втомилася");
     const pool=["playTamagotchi","draw","decorateNotebook","workOnScripts","listenOrSing","browseCollectibles","walk","visitJeannieShop","pickUpParcel","sitOnBalcony","idle"];
@@ -55,6 +61,19 @@ class AkiraYaniLife {
   }
   finishAction(){
     const y=this.brain.state.yani, a=y.action; if(!a)return;
+    if(a.actionId==="travelToAkiraWork"){
+      y.location="techsmith"; y.homeRoom=null; y.action=null; y.activity="idle";
+      this.record("arriveAkiraWork","приїхала до Акіри на роботу");
+      return this.start("visitAkiraWork",12,"techsmith",null,"ненадовго зайшла до Акіри у своїх справах");
+    }
+    if(a.actionId==="visitAkiraWork"){
+      y.action=null; y.activity="idle";
+      this.record("leaveAkiraWork","закінчила свої справи й поїхала додому");
+      return this.start("travelHomeFromAkiraWork",35,"city",null,"повертається додому");
+    }
+    if(a.actionId==="travelHomeFromAkiraWork"){
+      y.location="home"; y.homeRoom="glass_room"; y.pendingWorkVisit=null;
+    }
     if(["eatSnacks","orderFood"].includes(a.actionId)){y.hunger=this.clamp(y.hunger-55);y.fun=this.clamp(y.fun+8);}
     if(["playTamagotchi","walk","browseCollectibles","visitJeannieShop"].includes(a.actionId)) y.fun=this.clamp(y.fun+18);
     if(["draw","decorateNotebook","workOnScripts"].includes(a.actionId)) y.creativity=this.clamp(y.creativity+12);
