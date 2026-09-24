@@ -613,6 +613,7 @@ class AkiraDialogue {
         if (/^(що|чого)\s+(ти\s+)?(їси|їсиш)[\s?!.,]*$/iu.test(normalized)) return "ask_current_food";
         if (/^(що|чого)\s+(ти\s+)?(п['’ʼ]?єш|пєш)[\s?!.,]*$/iu.test(normalized)) return "ask_current_drink";
         if (/^(що|чого)\s+(ти\s+)?готуєш[\s?!.,]*$/iu.test(normalized)) return "ask_current_cooking";
+        if (/^(і\s+)?(що|чого)\s+(там\s+)?за\s+вікном[\s?!.,]*$/iu.test(normalized) || /^(що\s+видно\s+за\s+вікном|який\s+вид\s+за\s+вікном)[\s?!.,]*$/iu.test(normalized)) return "ask_window_view";
 
         if (askActivityPatterns.some(pattern => pattern.test(normalized))) {
             return "ask_activity";
@@ -1792,7 +1793,13 @@ class AkiraDialogue {
             visitPlanetarium: "Я зараз у планетарії.",
             visitTheatre: "Я зараз у театрі.",
             visitConcert: "Я зараз на концерті.",
-            goToCinema: "Я зараз у кіно."
+            goToCinema: "Я зараз у кіно.",
+            idleSit: "Просто сиджу.",
+            idleLieDown: "Лежу.",
+            idlePhone: "У телефоні сиджу.",
+            idleThink: "Та задумався трохи.",
+            idleWatchTV: action?.detail || "Дивлюся телевізор.",
+            lookOutWindow: "У вікно дивлюся."
         };
 
         if (id && names[id]) {
@@ -1807,10 +1814,10 @@ class AkiraDialogue {
 
         // idle означає саме відсутність конкретної дії. Не вигадуємо
         // «відпочиваю», якщо мозок не виконує action=rest.
-        return this.chooseTemplate([
-            "Та нічим конкретним зараз.",
-            "Поки нічим особливим не зайнятий.",
-            "Зараз нічим конкретним не займаюся."
+        return this.brain.naturalLife?.idleAnswer?.() || this.chooseTemplate([
+            "Нічого особливо не роблю.",
+            "Та нічого особливого.",
+            "Поки просто байдикую."
         ]);
     }
 
@@ -2585,6 +2592,7 @@ class AkiraDialogue {
         if (intent === "ask_current_drink") return [this.composeFoodStateAnswer("drink")];
         if (intent === "ask_current_cooking") return [this.composeFoodStateAnswer("cooking")];
         if (intent === "ask_activity") return [this.composeActivityAnswer(profile)];
+        if (intent === "ask_window_view") return [this.brain.naturalLife?.describeWindow?.() || "Не дуже придивлявся, що там за вікном."];
         if (intent === "ask_activity_at_location") return [this.composeActivityAtLocationAnswer(profile)];
         if (intent === "ask_current_people") return ["З тобою."];
         if (intent === "ask_people_today") return [this.composePeopleTodayAnswer()];

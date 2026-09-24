@@ -16,7 +16,7 @@ class AkiraBrainCoordinator {
     // Порядок навмисний: тіло і світ раніше за інтерпретацію та плани.
     this.reconcileState();
     phase("body",()=>{ b.updateNeeds(minutes); b.health?.update?.(minutes); b.dreams?.update?.(minutes); });
-    phase("environment",()=>{ b.household?.update?.(minutes); b.accidents?.update?.(minutes); b.phone?.update?.(minutes); b.yaniLife?.update?.(minutes); b.yaniInteractions?.update?.(minutes); b.workLife?.ensureDay?.(); });
+    phase("environment",()=>{ b.naturalLife?.update?.(minutes); b.household?.update?.(minutes); b.accidents?.update?.(minutes); b.phone?.update?.(minutes); b.yaniLife?.update?.(minutes); b.yaniInteractions?.update?.(minutes); b.workLife?.ensureDay?.(); });
     phase("attention",()=>b.attention?.update?.(minutes));
     phase("emotion",()=>b.updateMood(minutes));
     phase("memory",()=>b.updateMemory(minutes));
@@ -40,6 +40,7 @@ class AkiraBrainCoordinator {
   blockedBy(action){
     const b=this.brain, s=b.state, id=action?.actionId||"";
     if(!action) return "empty";
+    if(id==="sleep" && b.naturalLife?.blockSleepAction?.()) return "temporary_insomnia";
     if(b.worldGeography?.actionAllowedHere && !b.worldGeography.actionAllowedHere(action)) return "wrong_location";
     if((s.activity==="sleeping" || s.action?.actionId==="sleep") && !["sleep","wakeUp"].includes(id)) return "sleeping";
 
@@ -126,7 +127,7 @@ class AkiraBrainCoordinator {
     // Тому не викликаємо всі джерела для "голосування": accidents/food/goals/leisure
     // можуть зняти pending або змінити plan уже самим викликом.
     const b=this.brain;
-    const sources=[["health",b.health,1000],["accidents",b.accidents,950],["dailyLife",b.dailyLife,900],["workLife",b.workLife,850],["goalsPlanning",b.goalsPlanning,800],["intentions",b.intentions,700],["food",b.food,650],["household",b.household,550],["leisure",b.leisure,450]];
+    const sources=[["health",b.health,1000],["accidents",b.accidents,950],["dailyLife",b.dailyLife,900],["workLife",b.workLife,850],["goalsPlanning",b.goalsPlanning,800],["intentions",b.intentions,700],["food",b.food,650],["household",b.household,550],["leisure",b.leisure,450],["naturalLife",b.naturalLife,80]];
     const out=[];
     for(const [source,module,base] of sources){
       let action=null; try{ action=module?.getPriorityAction?.(situation)||null; }catch(e){ console.warn(`Priority source ${source} failed`,e); }

@@ -64,7 +64,7 @@ class AkiraDailyLife {
       wipeDust:"cozyRoom", vacuumRoom:"cozyRoom", mopFloor:"kitchen", washWindows:"cozyRoom",
       cleanSpill:"kitchen", changeDirtyClothes:"glassBedroom", pickUpDroppedItem:"cozyRoom", cleanBrokenDish:"kitchen", recoverFromStumble:"cozyRoom",
       washFace:"bathroom", shave:"bathroom", takeBath:"bathroom",
-      lookOutWindow:"balcony", stargazing:"balcony", lookAtFlowers:"balcony",
+      lookOutWindow:"cozyRoom", idleSit:"cozyRoom", idleLieDown:"cozyRoom", idlePhone:"cozyRoom", idleThink:"cozyRoom", idleWatchTV:"glassBedroom", stargazing:"balcony", lookAtFlowers:"balcony",
       commuteToWork:"hallway"
     };
     return map[actionId] || null;

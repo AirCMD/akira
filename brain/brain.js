@@ -268,7 +268,8 @@ class AkiraBrain {
             "internal_stream",
             "emotional_expression",
             "brain_coordinator",
-            "world_geography"
+            "world_geography",
+            "natural_life"
         ];
 
         const results = {};
@@ -702,7 +703,8 @@ class AkiraBrain {
             ["internalStream", "AkiraInternalStream"],
             ["emotionalExpression", "AkiraEmotionalExpression"],
             ["coordinator", "AkiraBrainCoordinator"],
-            ["worldGeography", "AkiraWorldGeography"]
+            ["worldGeography", "AkiraWorldGeography"],
+            ["naturalLife", "AkiraNaturalLife"]
         ];
         for (const [property, globalName] of modules) {
             const Ctor = window[globalName];
@@ -1085,6 +1087,7 @@ finishAction() {
     this.autobiographicalSelf?.onActionFinished?.(action);
     this.coordinator?.onActionFinished?.(action);
     this.worldGeography?.completeAction?.(action);
+    this.naturalLife?.completeAction?.(action);
 
     // Використовуємо тільки тригери, які прямо описані в emotions.json.
     if (action.actionId === "rest") {
