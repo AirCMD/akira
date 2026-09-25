@@ -1870,6 +1870,20 @@ class AkiraDialogue {
         const action = profile.state?.action;
         const id = action?.actionId || "";
 
+        // v47.12: conversation-time anchor. The simulation may finish/change an
+        // action while the user asks several follow-ups. "Що робив перед цим?"
+        // must refer to the activity Akira just reported, not only to whatever
+        // happens to be active a few seconds later.
+        if (id) {
+            this.brain.state.conversation ||= {};
+            this.brain.state.conversation.lastReportedActivity = {
+                actionId: id,
+                at: Date.now(),
+                startedAt: Number(action?.startedAt || this.brain.state?.actionStartedAt || 0),
+                reason: action?.reason || null
+            };
+        }
+
         if (id === "moveRoom") {
             const finalRoom=action?.finalTargetRoom||action?.targetRoom;
             const destination=this.brain.dailyLife?.roomDestinationPhrase?.(finalRoom)||action?.targetRoomPhrase||"іншу кімнату";
@@ -2808,9 +2822,13 @@ class AkiraDialogue {
             if(["rest","idleSit","idleLieDown"].includes(id)) return "rest";
             if(["idlePhone","checkSocialNetwork"].includes(id)) return "phone";
             if(["idleThink","think"].includes(id)) return "think";
+            if(["idleWatchTV","watchTV"].includes(id)) return "tv";
             return id||null;
         };
-        const activeFamily=activityFamily(activeId);
+        const reported=this.brain.state?.conversation?.lastReportedActivity;
+        const reportedFresh=reported && (Date.now()-Number(reported.at||0) < 5*60*1000);
+        const referenceId=reportedFresh ? reported.actionId : activeId;
+        const activeFamily=activityFamily(referenceId);
         const last = [...history].reverse().find(a => {
             if(!this.actionHistoryLabel(a)) return false;
             if(activeFamily && activityFamily(a?.actionId)===activeFamily) return false;
@@ -2820,7 +2838,8 @@ class AkiraDialogue {
         // змістовна actionHistory-подія, не розповідаємо про застарілий сегмент маршруту.
         const moveAt=lastRoomMove?.at ? Date.parse(lastRoomMove.at) : 0;
         const actionAt=Number(last?.finishedAt||0);
-        if(lastRoomMove && moveAt>=actionAt){
+        const reportedStartedAt=reportedFresh ? Number(reported?.startedAt||0) : 0;
+        if(lastRoomMove && moveAt>=actionAt && (!reportedStartedAt || moveAt>=reportedStartedAt)){
             const pseudo={actionId:"moveRoom",fromRoom:lastRoomMove.from,targetRoom:lastRoomMove.to};
             const label=this.actionHistoryLabel(pseudo);
             if(label) return `Перед цим ${label}.`;
