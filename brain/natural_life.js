@@ -169,7 +169,7 @@ class AkiraNaturalLife {
     if(s.world?.location!=='home') return null;
     const room=s.dailyLife?.homeRoom||'cozyRoom';
     const sl=this.ensureSleepDay(), light=this.dayLightPhase(new Date());
-    let choices=['nothing','nothing','sit','lieDown','phone','think','watchTV'];
+    let choices=['nothing','sit','lieDown','phone','phone','think','watchTV','watchTV'];
     if(['cozyRoom','glassBedroom','balcony'].includes(room)) choices.push('lookOutWindow');
     if(light==='dawn' && sl.earlyWakeHandled) choices.push('lookOutWindow','lookOutWindow');
     const kind=choices[Math.floor(Math.random()*choices.length)];
@@ -178,7 +178,7 @@ class AkiraNaturalLife {
     if(kind==='think') s.naturalLife.idle.topic=this.chooseThinkingTopic();
     if(kind==='nothing') return null;
     const actionId={sit:'idleSit',lieDown:'idleLieDown',phone:'idlePhone',think:'idleThink',watchTV:'idleWatchTV',lookOutWindow:'lookOutWindow'}[kind];
-    return {type:'action',actionId,category:'idle',duration:8+Math.round(Math.random()*22),reason:'нічим терміновим не зайнятий',score:80,homeRoom:kind==='lookOutWindow'?'cozyRoom':room};
+    return {type:'action',actionId,category:'idle',duration:8+Math.round(Math.random()*22),reason:'нічим терміновим не зайнятий',score:180,homeRoom:kind==='lookOutWindow'?'cozyRoom':room};
   }
   getPriorityAction(){
     if(this.brain.state.action || this.brain.state.world?.location!=='home') return null;

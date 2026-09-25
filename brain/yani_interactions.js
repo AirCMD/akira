@@ -24,10 +24,10 @@ class AkiraYaniInteractions {
     if(x.pending && Date.now()>x.pending.expiresAt) x.pending=null;
     if(x.conflict && Date.now()>x.conflict.coolUntil) this.reconcile();
     if(this.busyYani() || x.pending || x.conflict) return;
-    const cooldown=this.simMs(Number(this.data.proposalCooldownMinutes)||90);
+    const cooldown=this.simMs(Number(this.data.proposalCooldownMinutes)||60);
     if(Date.now()-Number(x.lastProposalAt||0)<cooldown) return;
     // Яні не перетворюється на генератор запрошень щотік. Ініціатива приблизно 50/50, але ситуативна.
-    if(!this.chance(.018)) return;
+    if(!this.chance(.045)) return;
     const p=this.makeProposal(); if(!p) return;
     x.lastProposalAt=Date.now(); x.pending={...p,createdAt:Date.now(),expiresAt:Date.now()+this.simMs(15)};
     this.resolveProposal(x.pending);

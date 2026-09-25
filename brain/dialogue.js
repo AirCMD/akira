@@ -1632,6 +1632,7 @@ class AkiraDialogue {
 
         if (asksCycle) return "Можливо. Якщо погода й самопочуття не зіпсуються, вдень я цілком можу покататися.";
         if (asksWalk) return "Можливо. Якщо нічого не завадить, вдень можна буде прогулятися.";
+        this.brain.state.conversation ||= {}; this.brain.state.conversation.futureReferent={known:false,at:Date.now()};
         return "Поки не вирішив. Подивлюся на час, погоду й свій стан.";
     }
 
@@ -2504,6 +2505,8 @@ class AkiraDialogue {
     }
 
     composeActionReasonAnswer(profile) {
+        const futureRef=this.brain.state?.conversation?.futureReferent;
+        if(futureRef && futureRef.known===false && Date.now()-Number(futureRef.at||0)<120000) return "Що саме? Я ж сказав, що поки не знаю, що робитиму далі.";
         const liveAction = this.brain.state?.action || null;
         const n=String(profile?.analysis?.normalized||profile?.input||"").toLowerCase();
         const explicitThis=/\bце\b/u.test(n);
@@ -2595,6 +2598,7 @@ class AkiraDialogue {
         if (richPlan) return `Потім, якщо нічого не зміниться, планую ${richPlan.title} приблизно о ${richPlan.time}.`;
         const plan = this.brain.intentions?.getNextPlan?.();
         if (plan) { const goal=this.brain.intentions?.planGoal?.(plan)||plan.actionId; return `Потім, якщо нічого не зміниться, планую ${goal} приблизно о ${plan.time}.`; }
+        this.brain.state.conversation ||= {}; this.brain.state.conversation.futureReferent={known:false,at:Date.now()};
         return "Поки не вирішив, що робитиму далі.";
     }
 

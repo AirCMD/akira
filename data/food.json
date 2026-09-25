@@ -9,7 +9,10 @@
       "hungerCookThreshold": 42,
       "thirstThreshold": 38,
       "dishWashThreshold": 3,
-      "recentMealAvoidCount": 4
+      "recentMealAvoidCount": 4,
+      "mealCooldownMinutes": 150,
+      "criticalHungerThreshold": 78,
+      "shoppingCooldownMinutes": 360
     },
     "meals": [
       {

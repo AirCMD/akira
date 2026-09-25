@@ -12,6 +12,9 @@ class AkiraFood {
     s.food.currentMeal=s.food.currentMeal||null;
     s.food.currentDrink=s.food.currentDrink||null;
     s.food.lastShoppingAt=s.food.lastShoppingAt||null;
+    s.food.lastMealAt=s.food.lastMealAt||null;
+    s.food.lastDrinkAt=s.food.lastDrinkAt||null;
+    s.food.groceryTrip=s.food.groceryTrip||null;
     return this;
   }
   n(v,d=0){ const x=Number(v); return Number.isFinite(x)?x:d; }
@@ -37,7 +40,14 @@ class AkiraFood {
     if(!pool.length) return null;
     return pool[Math.floor(Math.random()*pool.length)];
   }
-  action(actionId,duration,reason,extra={}){ return {type:'action',actionId,duration,category:'food',reason,score:1200,factors:{food:1200},...extra}; }
+  simMinutesSince(value){
+    if(!value) return Infinity; const t=typeof value==='number'?value:new Date(value).getTime();
+    if(!Number.isFinite(t)) return Infinity;
+    return Math.max(0,(Date.now()-t)*Math.max(.01,this.brain.config?.simulationSpeed||1)/1000);
+  }
+  mealCooldownReady(hunger){ return hunger>=this.n(this.data.settings?.criticalHungerThreshold,78) || this.simMinutesSince(this.brain.state.food.lastMealAt)>=this.n(this.data.settings?.mealCooldownMinutes,150); }
+  shoppingCooldownReady(){ return this.simMinutesSince(this.brain.state.food.lastShoppingAt)>=this.n(this.data.settings?.shoppingCooldownMinutes,360); }
+  action(actionId,duration,reason,extra={}){ return {type:'action',actionId,duration,category:'food',reason,score:650,factors:{food:650},...extra}; }
   lowInventory(){ const inv=this.brain.state.food.inventory; const target=this.data.restockTo||{}; const important=['water','eggs','yogurt','potato','buckwheat','chicken','fruit']; return important.filter(k=>this.n(inv[k])<=Math.max(1,Math.floor(this.n(target[k])*0.2))); }
   queue(a){ this.brain.state.food.pendingAction=a; }
   getPriorityAction(){
@@ -45,20 +55,28 @@ class AkiraFood {
     const s=this.brain.state.food;
     if(s.pendingAction){ const a=s.pendingAction; s.pendingAction=null; return a; }
     const loc=this.loc(), t=this.timeMinutes();
-    if(loc==='massmarket') return this.action('groceryShopping',25,'треба купити продукти',{shoppingList:this.lowInventory()});
+    if(loc==='massmarket'){
+      if(!s.groceryTrip) s.groceryTrip={phase:'shopping',startedAt:Date.now(),shoppingList:this.lowInventory()};
+      s.groceryTrip.phase='shopping';
+      return this.action('groceryShopping',25,'треба купити продукти',{shoppingList:s.groceryTrip.shoppingList||this.lowInventory()});
+    }
     if(loc!=='home') return null;
     const hunger=this.need('hunger'), thirst=this.need('thirst');
     if(thirst>=this.n(this.data.settings?.thirstThreshold,38)){
       const d=this.chooseDrink(); if(d){ s.currentDrink={...d}; return this.action('prepareDrink',Math.max(1,d.id.includes('Tea')?7:2),`хочу випити ${d.name}`,{drinkId:d.id,drinkName:d.name,ingredients:d.ingredients,homeRoom:'kitchen'}); }
     }
-    if(hunger>=this.n(this.data.settings?.hungerCookThreshold,42)){
+    if(hunger>=this.n(this.data.settings?.hungerCookThreshold,42) && this.mealCooldownReady(hunger)){
       const m=this.chooseMeal();
       if(m){ s.currentMeal={...m}; return this.action('cookMeal',this.n(m.minutes,15),`зголоднів і захотів ${m.name}`,{mealId:m.id,mealName:m.name,ingredients:m.ingredients,homeRoom:'kitchen',goal:`приготувати ${m.name}, щоб поїсти`,expectedOutcome:`${m.name} буде готовий`,nextAction:{actionId:'eatMeal',label:`поїсти ${m.name}`}}); }
-      if(t>=8*60 && t<=21*60) return this.action('travelToMassmarket',8,'вдома немає з чого нормально приготувати',{targetLocation:'massmarket'});
+      if(t>=8*60 && t<=21*60 && this.shoppingCooldownReady() && !s.groceryTrip){
+        const shoppingList=this.lowInventory(); s.groceryTrip={phase:'outbound',startedAt:Date.now(),shoppingList};
+        return this.action('travelToMassmarket',14,'вдома немає з чого нормально приготувати',{targetLocation:'massmarket',shoppingList});
+      }
     }
     const low=this.lowInventory();
-    if(low.length>=3 && t>=10*60 && t<=20*60 && hunger<55){
-      return this.action('travelToMassmarket',8,'закінчуються продукти, треба зайти в масмаркет',{targetLocation:'massmarket',shoppingList:low});
+    if(low.length>=3 && t>=10*60 && t<=20*60 && hunger<55 && this.shoppingCooldownReady() && !s.groceryTrip){
+      s.groceryTrip={phase:'outbound',startedAt:Date.now(),shoppingList:[...low]};
+      return this.action('travelToMassmarket',14,'закінчуються продукти, треба зайти в масмаркет',{targetLocation:'massmarket',shoppingList:low});
     }
     if(s.dirtyDishes>=this.n(this.data.settings?.dishWashThreshold,3) && hunger<45){
       return this.action('washDishes',10+Math.min(15,s.dirtyDishes*2),'накопичився брудний посуд',{homeRoom:'kitchen'});
@@ -70,14 +88,15 @@ class AkiraFood {
     if(a.actionId==='cookMeal'){
       this.consume(a.ingredients); this.queue(this.action('eatMeal',20,`щойно приготував ${a.mealName}`,{mealId:a.mealId,mealName:a.mealName,homeRoom:'kitchen',originReason:a.reason||`зголоднів і захотів ${a.mealName}`,goal:'втамувати голод',expectedOutcome:'стану менш голодним'}));
     } else if(a.actionId==='eatMeal'){
-      s.mealHistory.push({id:a.mealId,name:a.mealName,at:now}); if(s.mealHistory.length>20)s.mealHistory.shift(); s.dirtyDishes+=1; s.currentMeal=null;
+      s.mealHistory.push({id:a.mealId,name:a.mealName,at:now}); if(s.mealHistory.length>20)s.mealHistory.shift(); s.dirtyDishes+=1; s.currentMeal=null; s.lastMealAt=Date.now();
       this.brain.needs?.applyActivity?.('eat');
     } else if(a.actionId==='prepareDrink'){
       this.consume(a.ingredients); this.queue(this.action('drinkSelected',5,`приготував ${a.drinkName}`,{drinkId:a.drinkId,drinkName:a.drinkName,homeRoom:'kitchen'}));
     } else if(a.actionId==='drinkSelected'){
-      s.drinkHistory.push({id:a.drinkId,name:a.drinkName,at:now}); if(s.drinkHistory.length>20)s.drinkHistory.shift(); s.currentDrink=null;
+      s.drinkHistory.push({id:a.drinkId,name:a.drinkName,at:now}); if(s.drinkHistory.length>20)s.drinkHistory.shift(); s.currentDrink=null; s.lastDrinkAt=Date.now();
       this.brain.needs?.applyActivity?.('drink');
     } else if(a.actionId==='travelToMassmarket'){
+      s.groceryTrip=s.groceryTrip||{startedAt:Date.now(),shoppingList:a.shoppingList||[]}; s.groceryTrip.phase='shopping';
       this.brain.state.world.location='massmarket'; this.brain.state.dailyLife.homeRoom=null;
     } else if(a.actionId==='groceryShopping'){
       const inv=s.inventory,target=this.data.restockTo||{};
@@ -85,9 +104,10 @@ class AkiraFood {
       const cost=this.brain.inventoryMoney?.groceryCost?.(missing)||0;
       const paid=!cost || this.brain.inventoryMoney?.spend?.('akira',cost,'продукти',missing.join(', '));
       if(paid){ for(const [k,v] of Object.entries(target)) if(this.n(inv[k])<this.n(v)) inv[k]=this.n(v); s.lastShoppingAt=now; }
-      this.queue(this.action('returnHomeGroceries',8,paid?'купив продукти, повертаюся додому':'не вистачило грошей на покупки, повертаюся додому',{targetLocation:'home'}));
+      if(s.groceryTrip) s.groceryTrip.phase='returning';
+      this.queue(this.action('returnHomeGroceries',18,paid?'купив продукти, повертаюся додому':'не вистачило грошей на покупки, повертаюся додому',{targetLocation:'home'}));
     } else if(a.actionId==='returnHomeGroceries'){
-      this.brain.state.world.location='home'; this.brain.state.dailyLife.homeRoom='hallway';
+      this.brain.state.world.location='home'; this.brain.state.dailyLife.homeRoom='hallway'; s.groceryTrip=null;
     } else if(a.actionId==='washDishes') s.dirtyDishes=0;
   }
 }

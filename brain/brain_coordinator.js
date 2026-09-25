@@ -122,18 +122,32 @@ class AkiraBrainCoordinator {
     }
   }
   allowAction(action){ return !this.blockedBy(action); }
+  recentCategoryPenalty(action){
+    const h=Array.isArray(this.brain.actionHistory)?this.brain.actionHistory.slice(-8):[]; const id=String(action?.actionId||'');
+    const food=new Set(['cookMeal','eatMeal','prepareDrink','drinkSelected','travelToMassmarket','groceryShopping','returnHomeGroceries']);
+    const recentFood=h.filter(x=>food.has(x?.actionId)).length, same=h.filter(x=>x?.actionId===id).length;
+    return food.has(id)?recentFood*75+same*100:same*20;
+  }
+  yaniPriorityAction(){
+    const b=this.brain,s=b.state; if(s.action||s.world?.location!=='home'||!b.yaniInteractions?.together?.()||s.yani?.sleeping)return null;
+    const last=Number(s.yaniInteractions?.lastInteractionAt||0), simMin=(Date.now()-last)*Math.max(.01,b.config?.simulationSpeed||1)/1000;
+    if(last&&simMin<45)return null; const recent=(b.actionHistory||[]).slice(-10).some(x=>x?.actionId==='talkToYani');
+    if(Math.random()>(recent?.06:.18))return null;
+    return {type:'action',actionId:'talkToYani',category:'social',duration:15+Math.floor(Math.random()*16),targetPerson:'Yani_Bakeneko',reason:'хочеться трохи побути й поговорити з Яні',score:620,factors:{relationship:620}};
+  }
   collectPriorityActions(situation){
     // ВАЖЛИВО: getPriorityAction у старих модулів не є pure-функцією.
     // Тому не викликаємо всі джерела для "голосування": accidents/food/goals/leisure
     // можуть зняти pending або змінити plan уже самим викликом.
     const b=this.brain;
-    const sources=[["health",b.health,1000],["accidents",b.accidents,950],["dailyLife",b.dailyLife,900],["workLife",b.workLife,850],["goalsPlanning",b.goalsPlanning,800],["intentions",b.intentions,700],["food",b.food,650],["household",b.household,550],["leisure",b.leisure,450],["naturalLife",b.naturalLife,80]];
+    const sources=[["health",b.health,1000],["accidents",b.accidents,950],["dailyLife",b.dailyLife,900],["workLife",b.workLife,850],["goalsPlanning",b.goalsPlanning,800],["intentions",b.intentions,700],["food",b.food,650],["yani",{getPriorityAction:()=>this.yaniPriorityAction()},620],["household",b.household,550],["leisure",b.leisure,520],["naturalLife",b.naturalLife,180]];
     const out=[];
     for(const [source,module,base] of sources){
       let action=null; try{ action=module?.getPriorityAction?.(situation)||null; }catch(e){ console.warn(`Priority source ${source} failed`,e); }
       if(!action) continue;
-      const blocked=this.blockedBy(action); out.push({source,base,score:Number(action.score)||base,blocked,action});
-      if(!blocked) break;
+      const penalty=this.recentCategoryPenalty(action), effective=(Number(action.score)||base)-penalty; const blocked=this.blockedBy(action);
+      if(!blocked && penalty>0 && effective<260) continue;
+      out.push({source,base,score:effective,blocked,action}); if(!blocked) break;
     }
     return out;
   }
