@@ -2510,6 +2510,18 @@ class AkiraDialogue {
         const activityCtx=this.brain.state?.conversation?.lastActivityContext||null;
         const activityFresh=activityCtx && Date.now()-Number(activityCtx.timestamp||0)<10*60*1000;
 
+        // v47.7: займенник «це» не має стрибати через репліку про майбутнє назад
+        // до старої діяльності або вперед до нової фонової дії симуляції.
+        // Якщо щойно відповіли, що наступної дії ще не вирішено, референта немає.
+        const prevCtx=this.lastAnswerContext || this.brain.state?.conversation?.lastAnswerContext || null;
+        if(explicitThis && prevCtx?.intent === "ask_action_next") {
+            const prevFact=String(prevCtx.fact||"");
+            if(/поки\s+(не\s+знаю|не\s+вирішив)|не\s+вирішив.*що\s+робитиму|не\s+знаю.*що\s+робитиму/iu.test(prevFact)) {
+                return "Що саме? Я ж сказав, що поки не знаю, що робитиму далі.";
+            }
+            return "Ти про те, що я робитиму потім? Це ще не поточна дія.";
+        }
+
         // v47.5: «чому ти ЦЕ робиш?» посилається на останню діяльність, яку Акіра
         // сам назвав співрозмовнику. Симуляція могла вже почати пити воду, але це
         // не перетворює попереднє «дивлюся телевізор» на «бо хочу випити воду».
@@ -3831,7 +3843,7 @@ class AkiraDialogue {
 
         // v41.1: фактичний зміст уже сформовано. Тепер емоційний шар
         // може змінити форму, довжину й теплоту репліки, не вигадуючи фактів.
-        const noEmotionTail = new Set(["ask_surname","ask_name","ask_full_name","ask_age","ask_birthday","ask_current_time","check_day_period","ask_current_month","check_season","check_weekday","check_workday","ask_current_location","ask_home_room","ask_past_location","ask_people_today","ask_recent_conversation","ask_recent_good","ask_dream_today","ask_dream_yani","ask_nightmare_wording","ask_dream_topic","ask_room_surroundings","ask_room_contents","ask_visible_ahead","ask_object_near","ask_window_view","ask_nearby_current","ask_window_location","ask_can_see_kitchen","ask_kitchen_location","ask_route_kitchen","ask_between_bedroom_cozy","ask_glass_bedroom_contents","ask_glass_bedroom_why","ask_glass_walls_real","ask_glass_damage","ask_balcony_location","ask_balcony_access","ask_space_room_contents","ask_tamagotchi_location","ask_space_pegboard","ask_space_lights","ask_see_space_room_now","ask_can_see_space_room","ask_work_today_presence","ask_work_arrival_today","ask_work_people_today","ask_manager","ask_work_actions_today","ask_work_departure_today","ask_commute_home_today","ask_can_go_work_now","ask_tomorrow_plan"]);
+        const noEmotionTail = new Set(["ask_surname","ask_name","ask_full_name","ask_age","ask_birthday","ask_current_time","check_day_period","ask_current_month","check_season","check_weekday","check_workday","ask_current_location","ask_home_room","ask_past_location","ask_people_today","ask_recent_conversation","ask_recent_good","ask_dream_today","ask_dream_yani","ask_nightmare_wording","ask_dream_topic","ask_thinking_topic","ask_room_surroundings","ask_room_contents","ask_visible_ahead","ask_object_near","ask_window_view","ask_nearby_current","ask_window_location","ask_can_see_kitchen","ask_kitchen_location","ask_route_kitchen","ask_between_bedroom_cozy","ask_glass_bedroom_contents","ask_glass_bedroom_why","ask_glass_walls_real","ask_glass_damage","ask_balcony_location","ask_balcony_access","ask_space_room_contents","ask_tamagotchi_location","ask_space_pegboard","ask_space_lights","ask_see_space_room_now","ask_can_see_space_room","ask_work_today_presence","ask_work_arrival_today","ask_work_people_today","ask_manager","ask_work_actions_today","ask_work_departure_today","ask_commute_home_today","ask_can_go_work_now","ask_tomorrow_plan"]);
         if(!noEmotionTail.has(profile?.analysis?.intent)) text = this.brain.emotionalExpression?.apply?.(text, profile) || text;
         text = this.sanitizeInternalSpeech(text);
 
