@@ -15,6 +15,7 @@ class AkiraFood {
     s.food.lastMealAt=s.food.lastMealAt||null;
     s.food.lastDrinkAt=s.food.lastDrinkAt||null;
     s.food.groceryTrip=s.food.groceryTrip||null;
+    s.food.dailyEating=s.food.dailyEating||{date:null,meals:{breakfast:false,lunch:false,dinner:false},snacks:0};
     return this;
   }
   n(v,d=0){ const x=Number(v); return Number.isFinite(x)?x:d; }
@@ -47,6 +48,31 @@ class AkiraFood {
   }
   mealCooldownReady(hunger){ return hunger>=this.n(this.data.settings?.criticalHungerThreshold,78) || this.simMinutesSince(this.brain.state.food.lastMealAt)>=this.n(this.data.settings?.mealCooldownMinutes,150); }
   shoppingCooldownReady(){ return this.simMinutesSince(this.brain.state.food.lastShoppingAt)>=this.n(this.data.settings?.shoppingCooldownMinutes,360); }
+  localDateKey(){ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+  eatingDay(){
+    const s=this.brain.state.food, key=this.localDateKey();
+    if(!s.dailyEating || s.dailyEating.date!==key) s.dailyEating={date:key,meals:{breakfast:false,lunch:false,dinner:false},snacks:0};
+    return s.dailyEating;
+  }
+  mealSlot(){
+    const t=this.timeMinutes(), d=this.eatingDay();
+    if(t>=6*60 && t<10*60 && !d.meals.breakfast) return 'breakfast';
+    if(t>=12*60 && t<15*60 && !d.meals.lunch) return 'lunch';
+    if(t>=18*60 && t<22*60 && !d.meals.dinner) return 'dinner';
+    return null;
+  }
+  snackAllowed(){
+    const t=this.timeMinutes(), d=this.eatingDay();
+    // Після роботи: максимум два перекуси, не замість вечері.
+    return t>=16*60 && t<22*60 && d.snacks<2 && !this.mealSlot();
+  }
+  canStartEating(hunger){
+    const slot=this.mealSlot();
+    if(slot) return {ok:true,slot,kind:'meal'};
+    if(this.snackAllowed() && hunger>=this.n(this.data.settings?.snackHungerThreshold,58))
+      return {ok:true,slot:'snack',kind:'snack'};
+    return {ok:false,slot:null,kind:null};
+  }
   action(actionId,duration,reason,extra={}){ return {type:'action',actionId,duration,category:'food',reason,score:650,factors:{food:650},...extra}; }
   lowInventory(){ const inv=this.brain.state.food.inventory; const target=this.data.restockTo||{}; const important=['water','eggs','yogurt','potato','buckwheat','chicken','fruit']; return important.filter(k=>this.n(inv[k])<=Math.max(1,Math.floor(this.n(target[k])*0.2))); }
   queue(a){ this.brain.state.food.pendingAction=a; }
@@ -65,19 +91,19 @@ class AkiraFood {
     if(thirst>=this.n(this.data.settings?.thirstThreshold,38)){
       const d=this.chooseDrink(); if(d){ s.currentDrink={...d}; return this.action('prepareDrink',Math.max(1,d.id.includes('Tea')?7:2),`хочу випити ${d.name}`,{drinkId:d.id,drinkName:d.name,ingredients:d.ingredients,homeRoom:'kitchen'}); }
     }
-    if(hunger>=this.n(this.data.settings?.hungerCookThreshold,42) && this.mealCooldownReady(hunger)){
+    const eating=this.canStartEating(hunger);
+    if(eating.ok && this.mealCooldownReady(hunger)){
       const m=this.chooseMeal();
-      if(m){ s.currentMeal={...m}; return this.action('cookMeal',this.n(m.minutes,15),`зголоднів і захотів ${m.name}`,{mealId:m.id,mealName:m.name,ingredients:m.ingredients,homeRoom:'kitchen',goal:`приготувати ${m.name}, щоб поїсти`,expectedOutcome:`${m.name} буде готовий`,nextAction:{actionId:'eatMeal',label:`поїсти ${m.name}`}}); }
+      if(m){
+        s.currentMeal={...m,mealSlot:eating.slot,mealKind:eating.kind};
+        return this.action('cookMeal',this.n(m.minutes,15),eating.kind==='snack'?`хочу трохи перекусити`:`час поїсти, хочу ${m.name}`,{mealId:m.id,mealName:m.name,mealSlot:eating.slot,mealKind:eating.kind,ingredients:m.ingredients,homeRoom:'kitchen',goal:eating.kind==='snack'?`трохи перекусити`:`поїсти ${m.name}`,expectedOutcome:`${m.name} буде готовий`,nextAction:{actionId:'eatMeal',label:`поїсти ${m.name}`}});
+      }
       if(t>=8*60 && t<=21*60 && this.shoppingCooldownReady() && !s.groceryTrip){
         const shoppingList=this.lowInventory(); s.groceryTrip={phase:'outbound',startedAt:Date.now(),shoppingList};
-        return this.action('travelToMassmarket',14,'вдома немає з чого нормально приготувати',{targetLocation:'massmarket',shoppingList});
+        return this.action('travelToMassmarket',14,'для запланованої їжі бракує продуктів',{targetLocation:'massmarket',shoppingList});
       }
     }
     const low=this.lowInventory();
-    if(low.length>=3 && t>=10*60 && t<=20*60 && hunger<55 && this.shoppingCooldownReady() && !s.groceryTrip){
-      s.groceryTrip={phase:'outbound',startedAt:Date.now(),shoppingList:[...low]};
-      return this.action('travelToMassmarket',14,'закінчуються продукти, треба зайти в масмаркет',{targetLocation:'massmarket',shoppingList:low});
-    }
     if(s.dirtyDishes>=this.n(this.data.settings?.dishWashThreshold,3) && hunger<45){
       return this.action('washDishes',10+Math.min(15,s.dirtyDishes*2),'накопичився брудний посуд',{homeRoom:'kitchen'});
     }
@@ -86,9 +112,12 @@ class AkiraFood {
   completeAction(a){
     if(!a) return; const s=this.brain.state.food, now=new Date().toISOString();
     if(a.actionId==='cookMeal'){
-      this.consume(a.ingredients); this.queue(this.action('eatMeal',20,`щойно приготував ${a.mealName}`,{mealId:a.mealId,mealName:a.mealName,homeRoom:'kitchen',originReason:a.reason||`зголоднів і захотів ${a.mealName}`,goal:'втамувати голод',expectedOutcome:'стану менш голодним'}));
+      this.consume(a.ingredients); this.queue(this.action('eatMeal',20,`щойно приготував ${a.mealName}`,{mealId:a.mealId,mealName:a.mealName,mealSlot:a.mealSlot||s.currentMeal?.mealSlot||null,mealKind:a.mealKind||s.currentMeal?.mealKind||null,homeRoom:'kitchen',originReason:a.reason||`зголоднів і захотів ${a.mealName}`,goal:'втамувати голод',expectedOutcome:'стану менш голодним'}));
     } else if(a.actionId==='eatMeal'){
-      s.mealHistory.push({id:a.mealId,name:a.mealName,at:now}); if(s.mealHistory.length>20)s.mealHistory.shift(); s.dirtyDishes+=1; s.currentMeal=null; s.lastMealAt=Date.now();
+      s.mealHistory.push({id:a.mealId,name:a.mealName,at:now,mealSlot:a.mealSlot||null,mealKind:a.mealKind||null}); if(s.mealHistory.length>20)s.mealHistory.shift(); s.dirtyDishes+=1; s.currentMeal=null; s.lastMealAt=Date.now();
+      const day=this.eatingDay();
+      if(a.mealKind==='snack' || a.mealSlot==='snack') day.snacks=Math.min(2,(day.snacks||0)+1);
+      else if(a.mealSlot && day.meals && Object.prototype.hasOwnProperty.call(day.meals,a.mealSlot)) day.meals[a.mealSlot]=true;
       this.brain.needs?.applyActivity?.('eat');
     } else if(a.actionId==='prepareDrink'){
       this.consume(a.ingredients); this.queue(this.action('drinkSelected',5,`приготував ${a.drinkName}`,{drinkId:a.drinkId,drinkName:a.drinkName,homeRoom:'kitchen'}));

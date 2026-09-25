@@ -10,9 +10,17 @@
       "thirstThreshold": 38,
       "dishWashThreshold": 3,
       "recentMealAvoidCount": 4,
-      "mealCooldownMinutes": 150,
+      "mealCooldownMinutes": 90,
       "criticalHungerThreshold": 78,
-      "shoppingCooldownMinutes": 360
+      "shoppingCooldownMinutes": 360,
+      "snackHungerThreshold": 58,
+      "dailyMealSchedule": {
+        "breakfast": "06:00-10:00",
+        "lunchAtWork": "12:00-15:00",
+        "dinner": "18:00-22:00",
+        "afterWorkSnacks": "16:00-22:00",
+        "maxAfterWorkSnacks": 2
+      }
     },
     "meals": [
       {

@@ -89,6 +89,16 @@ class AkiraWorkLife {
     }
     if(a.actionId==="makeSale") x.sales++;
     if(a.actionId==="workBreak") x.breaks++;
+    if(a.actionId==="workLunch"){
+      const eating=this.brain.food?.eatingDay?.();
+      if(eating?.meals) eating.meals.lunch=true;
+      this.brain.state.food ||= {};
+      this.brain.state.food.lastMealAt=Date.now();
+      this.brain.state.food.mealHistory ||= [];
+      this.brain.state.food.mealHistory.push({id:"workLunch",name:"обід на роботі",at:new Date().toISOString(),mealSlot:"lunch",mealKind:"meal"});
+      if(this.brain.state.food.mealHistory.length>20)this.brain.state.food.mealHistory.shift();
+      this.brain.needs?.applyActivity?.("eat");
+    }
     const end=this.mins(this.brain.data?.life_profile?.lifeProfile?.work?.end||"16:00");
     if(this.now()>=end-10) this.brain.inventoryMoney?.payAkiraForWorkday?.();
     x.lastEvent=a.actionId;
