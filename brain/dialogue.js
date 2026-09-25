@@ -402,6 +402,11 @@ class AkiraDialogue {
         // Інакше «як ти?» бачиться лише як слово «як» + знак питання.
         const normalized = String(text || "").toLowerCase().replace(/[’`ʼ]/g, "'").replace(/^[«»„“”"\s]+/u, "").trim();
 
+        // v47.1: daypart questions are a high-priority reality intent.
+        // Keep this before spatial/topic/fallback routing so «ніч» cannot be lost
+        // in sleep/general semantic handling. One rule covers all four periods.
+        if (/^(?:зараз(?:\s+(?:уже|вже|ще))?|(?:уже|вже|ще)(?:\s+зараз)?|ще\s+не(?:\s+зараз)?)\s+(ранок|день|вечір|ніч)[\s?!.,]*$/iu.test(normalized)) return "check_day_period";
+
         // v47: простір квартири, робоча хронологія та команди мають пріоритет
         // над загальними topics на кшталт «космос» або випадковим fallback.
         if (/^(що\s+зараз\s+поруч\s+із\s+тобою|що\s+поруч\s+із\s+тобою)[\s?!.,]*$/iu.test(normalized)) return "ask_nearby_current";
@@ -459,7 +464,6 @@ class AkiraDialogue {
         // v45: живі питання про календар/час/місце мають одне джерело істини.
         if (/^добр(ого|ий)\s+ран(ку|ок)[\s?!.,]*$/iu.test(normalized)) return "greet_morning";
         if (/^(який|котра|скільки)\s+(зараз\s+)?(час|година)|^котра\s+година/iu.test(normalized)) return "ask_current_time";
-        if (/^(?:(?:зараз|вже|ще)\s+|зараз\s+(?:ще|вже)\s+|ще\s+не\s+)(ранок|день|вечір|ніч)[\s?!.,]*$/iu.test(normalized)) return "check_day_period";
         if (/^(який\s+зараз\s+місяць|який\s+місяць\s+зараз)[\s?!.,]*$/iu.test(normalized)) return "ask_current_month";
         if (/^(зараз|надворі\s+зараз)\s+(весна|літо|осінь|зима)[\s?!.,]*$/iu.test(normalized)) return "check_season";
         if (/^сьогодні\s+(понеділок|вівторок|середа|четвер|п['’ʼ]?ятниця|субота|неділя)[\s?!.,]*$/iu.test(normalized)) return "check_weekday";
