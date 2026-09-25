@@ -2804,15 +2804,16 @@ class AkiraDialogue {
         const currentRoom=this.brain.state?.dailyLife?.homeRoom;
         const lastRoomMove=[...roomHistory].reverse().find(m=>m?.to===currentRoom);
         const activeId=active?.actionId||null;
-        const activeStarted=Number(active?.startedAt||this.brain.state?.actionStartedAt||0);
+        const activityFamily=id=>{
+            if(["rest","idleSit","idleLieDown"].includes(id)) return "rest";
+            if(["idlePhone","checkSocialNetwork"].includes(id)) return "phone";
+            if(["idleThink","think"].includes(id)) return "think";
+            return id||null;
+        };
+        const activeFamily=activityFamily(activeId);
         const last = [...history].reverse().find(a => {
             if(!this.actionHistoryLabel(a)) return false;
-            // Якщо та сама дія щойно завершилася і одразу продовжилася новим циклом,
-            // для людини це одна безперервна справа, а не "перед цим робив те саме".
-            if(activeId && a?.actionId===activeId){
-                const finished=Number(a?.finishedAt||0);
-                if(!activeStarted || !finished || activeStarted-finished < 2*60*1000) return false;
-            }
+            if(activeFamily && activityFamily(a?.actionId)===activeFamily) return false;
             return true;
         });
         // v47.6: якщо поточна кімната була досягнута пізніше, ніж остання

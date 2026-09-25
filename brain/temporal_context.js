@@ -65,14 +65,17 @@ class AkiraTemporalContext {
   pastAction(){
     const h=Array.isArray(this.brain.actionHistory)?this.brain.actionHistory:[];
     const active=this.brain.state?.action||null;
-    const activeStarted=Number(active?.startedAt||this.brain.state?.actionStartedAt||0);
+    const family=id=>{
+      if(["rest","idleSit","idleLieDown"].includes(id)) return "rest";
+      if(["idlePhone","checkSocialNetwork"].includes(id)) return "phone";
+      if(["idleThink","think"].includes(id)) return "think";
+      return id||null;
+    };
+    const activeFamily=family(active?.actionId);
     for(let i=h.length-1;i>=0;i--){
       const a=h[i];
       if(!a) continue;
-      if(active?.actionId && a.actionId===active.actionId){
-        const finished=Number(a.finishedAt||0);
-        if(!activeStarted || !finished || activeStarted-finished<2*60*1000) continue;
-      }
+      if(activeFamily && family(a.actionId)===activeFamily) continue;
       return a;
     }
     return null;
