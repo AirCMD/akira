@@ -3656,6 +3656,17 @@ class AkiraDialogue {
             "ask_current_location",
             "ask_current_movie",
             "ask_contextual_why",
+            // v47.3: factual reality checks may legitimately produce the same
+            // answer several times in a row. E.g. on Friday, Monday/Tuesday/
+            // Wednesday/Thursday/Saturday/Sunday all answer “No, today is Friday”.
+            // Do not turn a correct repeated fact into a confusion fallback.
+            "ask_current_time",
+            "check_day_period",
+            "ask_current_month",
+            "check_season",
+            "check_weekday",
+            "check_workday",
+            "ask_need_work_today",
             "greeting",
             "name_ping"
         ].includes(intent);
