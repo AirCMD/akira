@@ -45,7 +45,19 @@ class AkiraPhone {
     }
     receiveMessage(input, reply){
         const p=this.brain.state.phone;
-        const item={ id:`msg_${Date.now()}_${Math.floor(Math.random()*9999)}`, input:String(input||""), replyText:String(reply?.text ?? reply?.response ?? reply?.message ?? reply ?? ""), receivedAt:Date.now(), read:false, status:"received", ready:false };
+        const normalized=String(input||"").trim().toLowerCase().replace(/\s+/g," ");
+        // v46.4: нова репліка завжди скасовує старі невідправлені відповіді.
+        // Особливо важливо, коли користувач повторив те саме питання після мовчання:
+        // стара заготовка не має вилізти слідом за новою відповіддю.
+        for(const old of p.inbox){
+            if(old.deliveredLater) continue;
+            const oldNorm=String(old.input||"").trim().toLowerCase().replace(/\s+/g," ");
+            if(old.ready || (!old.read && old.status!=="received") || oldNorm===normalized){
+                old.ready=false; old.deliveredLater=true; old.read=true;
+                old.status="superseded_by_new_message"; old.supersededAt=Date.now();
+            }
+        }
+        const item={ id:`msg_${Date.now()}_${Math.floor(Math.random()*9999)}`, input:String(input||""), normalizedInput:normalized, replyText:String(reply?.text ?? reply?.response ?? reply?.message ?? reply ?? ""), receivedAt:Date.now(), read:false, status:"received", ready:false };
         p.inbox.push(item); if(p.inbox.length>Number(this.cfg.maxInbox??40)) p.inbox.splice(0,p.inbox.length-Number(this.cfg.maxInbox??40));
         if(p.mode==="off") { item.status="unseen_phone_off"; p.unreadCount++; return {deliverNow:false, unseen:true, reason:"телефон вимкнений", item}; }
         const attention=this.brain.attention?.onMessage?.(input) || {noticed:true};

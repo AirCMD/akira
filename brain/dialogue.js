@@ -667,9 +667,17 @@ class AkiraDialogue {
         if (/^(що\s+(ти\s+)?робив|чим\s+(ти\s+)?займався)\s+(весь\s+)?(вечір|увечері|вечором)[\s?!.,]*$/iu.test(normalized)) return "ask_history_evening";
         if (/^(що\s+(ти\s+)?робив|чим\s+(ти\s+)?займався)\s+вчора[\s?!.,]*$/iu.test(normalized)) return "ask_history_yesterday";
 
-        // Коротке «чому?» насамперед продовжує щойно обговорену тему.
-        // Лише якщо попередня репліка не була contextual knowledge, воно означає
-        // «чому ти зараз це робиш?». Явне «чому ти це робиш?» завжди про дію.
+        // v46.4: коротке «чому?» прив'язуємо до ОСТАННЬОЇ ФАКТИЧНОЇ ВІДПОВІДІ,
+        // а не до дії, яка встигла змінитися за час між повідомленнями.
+        // Це критично для послідовностей на кшталт «Їм локшину» -> «чому?».
+        if (/^(чому|а\s+чому|чого)\s*[?!.,]*$/iu.test(normalized)
+            && this.lastAnswerContext
+            && Date.now() - Number(this.lastAnswerContext.timestamp || 0) < 5 * 60 * 1000
+            && this.lastAnswerContext.intent !== "ask_contextual_knowledge") {
+            return "ask_followup_why";
+        }
+
+        // Коротке «чому?» після contextual knowledge продовжує саме ту тему.
         if (/^(чому|а\s+чому|чого)\s*[?!.,]*$/iu.test(normalized)
             && this.lastIntent === "ask_contextual_knowledge"
             && Date.now() - this.lastIntentAt < 5 * 60 * 1000
@@ -1573,7 +1581,19 @@ class AkiraDialogue {
             this.lastSuccessfulIntent=i;
             this.lastSuccessfulAt=Date.now();
             this.lastSuccessfulSemanticKey=this.semanticQuestionKey(profile);
-            this.lastAnswerContext={intent:i, fact:answer, actionId:this.brain.state?.action?.actionId||null, location:this.brain.state?.world?.location||null, room:this.brain.state?.dailyLife?.homeRoom||null, timestamp:Date.now()};
+            const activeAction=this.brain.state?.action||null;
+            this.lastAnswerContext={
+                intent:i, fact:answer,
+                actionId:activeAction?.actionId||null,
+                actionSnapshot:activeAction ? {
+                    actionId:activeAction.actionId||null,
+                    mealId:activeAction.mealId||null, mealName:activeAction.mealName||null,
+                    drinkId:activeAction.drinkId||null, drinkName:activeAction.drinkName||null,
+                    reason:activeAction.reason||null, originReason:activeAction.originReason||null,
+                    goal:activeAction.goal||null
+                } : null,
+                location:this.brain.state?.world?.location||null, room:this.brain.state?.dailyLife?.homeRoom||null, timestamp:Date.now()
+            };
             this.brain.state.conversation.lastAnswerContext={...this.lastAnswerContext};
         }
     }
@@ -2256,6 +2276,31 @@ class AkiraDialogue {
         return "Причина попередньої дії в пам’яті не збереглася.";
     }
 
+    composeFollowupWhyAnswer() {
+        const ctx=this.lastAnswerContext || this.brain.state?.conversation?.lastAnswerContext || null;
+        if(!ctx) return this.composeActionReasonAnswer({});
+        const a=ctx.actionSnapshot||{};
+        const clean=v=>String(v||"").replace(/[.!?]+$/u, "");
+
+        // Причина має стосуватися саме того, про що Акіра щойно сказав,
+        // навіть якщо симуляція вже перейшла до наступної дії.
+        if(ctx.intent==="ask_current_food" && a.actionId==="eatMeal") {
+            const meal=a.mealName ? ` ${a.mealName}` : "";
+            if(a.originReason) return `Бо ${clean(this.humanizeInternalReason(a.originReason))}.`;
+            return meal ? `Бо зголоднів, тому й їм${meal}.` : "Бо зголоднів.";
+        }
+        if(ctx.intent==="ask_current_cooking" && a.actionId==="cookMeal") {
+            if(a.reason) return `Бо ${clean(this.humanizeInternalReason(a.reason))}.`;
+            return a.mealName ? `Бо зголоднів і вирішив приготувати ${a.mealName}.` : "Бо зголоднів і вирішив щось приготувати.";
+        }
+        if(ctx.intent==="ask_current_drink" && a.actionId==="drinkSelected") {
+            if(a.originReason) return `Бо ${clean(this.humanizeInternalReason(a.originReason))}.`;
+            return "Бо захотілося пити.";
+        }
+        if(a.reason) return `Бо ${clean(this.humanizeInternalReason(a.reason))}.`;
+        return "Та просто так склалося в той момент.";
+    }
+
     composeActionHowAnswer(profile) {
         const a=this.brain.state?.action;
         if(!a) return "Зараз немає конкретної дії, спосіб якої можна пояснити.";
@@ -2723,6 +2768,7 @@ class AkiraDialogue {
         if (intent === "ask_yani_work_visit") return [this.composeYaniWorkVisitAnswer()];
         if (intent === "ask_yani_contact_channel") return [this.composeYaniContactChannelAnswer()];
         if (intent === "ask_yani_work_visit_reason") return [this.composeYaniWorkVisitReasonAnswer()];
+        if (intent === "ask_followup_why") return [this.composeFollowupWhyAnswer()];
         if (intent === "ask_previous_action_reason") return [this.composePreviousActionReasonAnswer(profile)];
         if (intent === "ask_action_how") return [this.composeActionHowAnswer(profile)];
         if (intent === "ask_action_reason") return [this.composeActionReasonAnswer(profile)];

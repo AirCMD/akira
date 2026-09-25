@@ -68,7 +68,7 @@ class AkiraFood {
   completeAction(a){
     if(!a) return; const s=this.brain.state.food, now=new Date().toISOString();
     if(a.actionId==='cookMeal'){
-      this.consume(a.ingredients); this.queue(this.action('eatMeal',20,`щойно приготував ${a.mealName}`,{mealId:a.mealId,mealName:a.mealName,homeRoom:'kitchen',goal:'втамувати голод',expectedOutcome:'стану менш голодним'}));
+      this.consume(a.ingredients); this.queue(this.action('eatMeal',20,`щойно приготував ${a.mealName}`,{mealId:a.mealId,mealName:a.mealName,homeRoom:'kitchen',originReason:a.reason||`зголоднів і захотів ${a.mealName}`,goal:'втамувати голод',expectedOutcome:'стану менш голодним'}));
     } else if(a.actionId==='eatMeal'){
       s.mealHistory.push({id:a.mealId,name:a.mealName,at:now}); if(s.mealHistory.length>20)s.mealHistory.shift(); s.dirtyDishes+=1; s.currentMeal=null;
       this.brain.needs?.applyActivity?.('eat');
