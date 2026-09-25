@@ -692,6 +692,15 @@ class AkiraDialogue {
         if (/^(де\s+(зараз\s+)?яні|яні\s+де|де\s+твоя\s+(дружина|яні))[\s?!.,]*$/iu.test(normalized)) return "ask_yani_location";
         if (/^(що\s+(зараз\s+)?робить\s+яні|чим\s+(зараз\s+)?займається\s+яні)[\s?!.,]*$/iu.test(normalized)) return "ask_yani_activity";
 
+        // v46.3: жорсткий канон роботи та міста.
+        // Ці перевірки стоять ДО contextualKnowledge, щоб загальний yes/no шар
+        // не погоджувався з випадковою професією або чужим місцем роботи.
+        if (/^(яке\s+місто|в\s+якому\s+місті|у\s+якому\s+місті)[\s?!.,]*$/iu.test(normalized)) return "ask_residence";
+        if (/^(ти\s+)?(менеджер|керівник|директор|адміністратор|касир|охоронець|кур['’ʼ]?єр|поштар|бухгалтер|програміст|розробник|системний\s+адміністратор|сисадмін)[\s?!.,]*$/iu.test(normalized)) return "check_wrong_occupation";
+        if (/^ти\s+(є\s+)?(менеджером|керівником|директором|адміністратором|касиром|охоронцем|кур['’ʼ]?єром|поштарем|бухгалтером|програмістом|розробником|системним\s+адміністратором|сисадміном)[\s?!.,]*$/iu.test(normalized)) return "check_wrong_occupation";
+        if (/^ти\s+(працівник|робітник|співробітник)\s+.+[\s?!.,]*$/iu.test(normalized)) return "check_workplace_claim";
+        if (/^ти\s+працюєш\s+(в|у|на)\s+.+[\s?!.,]*$/iu.test(normalized)) return "check_workplace_claim";
+
         // Канонічні знання та follow-up контекст: сутність + властивість + попередня тема.
         // Це навмисно стоїть вище загального topic/fallback шару.
         if (this.brain.contextualKnowledge?.analyze?.(normalized)) return "ask_contextual_knowledge";
@@ -1956,6 +1965,17 @@ class AkiraDialogue {
     // СКЛАДАННЯ
     // =========================================================
 
+    composeWorkIdentityGuardAnswer(intent, profile) {
+        const n = profile?.analysis?.normalized || "";
+        const canonical = "Я працюю в TechSmith, або «Техсмітнику», продавцем-консультантом.";
+        if (intent === "check_wrong_occupation") return `Ні. Я продавець-консультант. ${canonical}`;
+        if (intent === "check_workplace_claim") {
+            if (/техсміт|techsmith/iu.test(n)) return `Так. ${canonical}`;
+            return `Ні. ${canonical}`;
+        }
+        return null;
+    }
+
     composeIdentityAnswer(intent) {
         const character = this.brain.data?.character?.identity || {};
         const residence = character.residence || {};
@@ -1995,15 +2015,15 @@ class AkiraDialogue {
             case "ask_country":
                 return residence.country ? `Я живу в країні ${residence.country}.` : "Країна в моєму профілі поки не задана.";
             case "ask_residence":
-                return residence.city ? `Я живу в місті ${residence.city}.` : "Місце проживання в моєму профілі поки не задане.";
+                return residence.city ? `Я проживаю в місті ${residence.city}.` : "Місце проживання в моєму профілі поки не задане.";
             case "ask_hometown":
                 if (character.hometown?.city) return `Я родом з міста ${character.hometown.city}.`;
                 if (character.hometown) return `Я родом з ${character.hometown}.`;
                 return "Місто, звідки я родом, у моєму профілі поки не задане.";
             case "ask_occupation":
-                return occupation ? `За професією я ${occupation}.` : "Моя професія в профілі поки не задана.";
+                return `Я продавець-консультант. Працюю в TechSmith, або «Техсмітнику».`;
             case "ask_workplace":
-                return workplaceName ? `Я працюю в «${workplaceName}».` : "Місце роботи в профілі поки не задане.";
+                return `Я працюю в TechSmith, або «Техсмітнику», продавцем-консультантом.`;
             default:
                 return null;
         }
@@ -2612,6 +2632,7 @@ class AkiraDialogue {
         const intent = profile.analysis.intent;
         if (intent === "name_ping") return [this.composeNamePingAnswer(profile)];
         if (intent === "ask_sleeping") return [this.composeSleepingAnswer(profile)];
+        if (["check_wrong_occupation","check_workplace_claim"].includes(intent)) return [this.composeWorkIdentityGuardAnswer(intent, profile)];
         if (["greet_morning","ask_current_time","check_day_period","ask_current_month","check_season","check_weekday","check_workday","ask_need_work_today","ask_is_home","ask_why_there","ask_fatigue","ask_yani_identity","ask_yani_species","ask_akira_identity_kind","ask_akira_wife","ask_yani_husband","ask_yani_relation_to_akira","ask_love_yani","ask_love_user","ask_why_with_yani","claim_user_is_wife","claim_identity_contradiction","ask_see_yani","ask_when_met_yani","ask_yani_today_together","ask_last_talk_yani","ask_sleep_desire_reason","ask_why_not_sleeping","ask_when_sleep","ask_sleep_obstacle","ask_can_go_home","ask_why_still_work","ask_previous_time_consistency","claim_user_relationship","ask_lives_with","ask_has_brother","ask_parents","ask_working_now","ask_why_not_at_work","assert_work_time"].includes(intent)) return [this.composeRealityAnswer(intent, profile)];
         if (intent === "ask_current_movie") return [this.composeCurrentMovieAnswer(profile)];
         if (intent === "ask_movie_preferences") return [this.composeMoviePreferencesAnswer(profile)];
