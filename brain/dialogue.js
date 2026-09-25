@@ -1662,6 +1662,22 @@ class AkiraDialogue {
                 location:this.brain.state?.world?.location||null, room:this.brain.state?.dailyLife?.homeRoom||null, timestamp:Date.now()
             };
             this.brain.state.conversation.lastAnswerContext={...this.lastAnswerContext};
+
+            // v47.5: окремо тримаємо останню ЯВНО НАЗВАНУ поточну діяльність.
+            // Питання про місце/кімнату між «що робиш?» і «чому ти це робиш?»
+            // не повинні переприв’язувати займенник «це» до нової фонової дії симуляції.
+            if(i === "ask_activity" || i === "ask_activity_at_location") {
+                const snap=this.lastAnswerContext.actionSnapshot;
+                this.brain.state.conversation.lastActivityContext={
+                    intent:i,
+                    fact:answer,
+                    actionId:snap?.actionId||null,
+                    actionSnapshot:snap ? {...snap} : null,
+                    location:this.lastAnswerContext.location||null,
+                    room:this.lastAnswerContext.room||null,
+                    timestamp:Date.now()
+                };
+            }
         }
     }
 
@@ -2001,7 +2017,29 @@ class AkiraDialogue {
                     }
                     return "Просто перейшов сюди у своїх справах.";
                 }
-                return "Зараз я вдома, бо нікуди не збирався виходити.";
+                // Якщо переходу щойно не було, пояснюємо саме перебування в кімнаті,
+                // а не випадкову мотивацію action.reason. «Нічим терміновим не зайнятий»
+                // може пояснювати телевізор, але не відповідає на «чому ти ТАМ?».
+                const here=this.brain.state?.dailyLife?.homeRoom;
+                if(a?.homeRoom===here) {
+                    const placeReasons={
+                        idleWatchTV:"Бо зараз тут дивлюся телевізор.",
+                        idleSit:"Бо зараз просто сиджу тут.",
+                        idleLieDown:"Бо зараз тут лежу й відпочиваю.",
+                        idlePhone:"Бо зараз сиджу тут у телефоні.",
+                        idleThink:"Бо зараз тут трохи задумався.",
+                        lookOutWindow:"Бо зараз тут дивлюся у вікно.",
+                        rest:"Бо зараз тут відпочиваю.",
+                        read:"Бо зараз тут читаю.",
+                        listenToMusic:"Бо зараз тут слухаю музику.",
+                        playGame:"Бо зараз тут граю.",
+                        eatMeal:a?.mealName?`Бо зараз тут їм ${a.mealName}.`:"Бо зараз тут їм.",
+                        cookMeal:a?.mealName?`Бо зараз тут готую ${a.mealName}.`:"Бо зараз тут готую їсти.",
+                        drinkSelected:a?.drinkName?`Бо зараз тут п'ю ${a.drinkName}.`:"Бо зараз тут щось п'ю."
+                    };
+                    if(placeReasons[a.actionId]) return placeReasons[a.actionId];
+                }
+                return "Просто зараз я в цій кімнаті.";
             }
             return a?.reason?`Бо ${this.humanizeInternalReason(a.reason)}.`:"Так склалося за поточною справою.";
         }
@@ -2452,13 +2490,27 @@ class AkiraDialogue {
     }
 
     composeActionReasonAnswer(profile) {
-        const action = this.brain.state?.action || null;
-        const actionId = action?.actionId || null;
-        const intentionReason = this.brain.intentions?.getWhy?.();
-        const reason = action?.reason || (typeof intentionReason === "string" && !/(relationships|needs|emotions|supported|підтримано)/iu.test(intentionReason) ? intentionReason : null);
+        const liveAction = this.brain.state?.action || null;
+        const n=String(profile?.analysis?.normalized||profile?.input||"").toLowerCase();
+        const explicitThis=/\bце\b/u.test(n);
+        const activityCtx=this.brain.state?.conversation?.lastActivityContext||null;
+        const activityFresh=activityCtx && Date.now()-Number(activityCtx.timestamp||0)<10*60*1000;
 
-        // Відсутність активної дії не є секретом. Не дозволяємо generic/private
-        // fallback вигадувати таємничу причину для звичайного idle.
+        // v47.5: «чому ти ЦЕ робиш?» посилається на останню діяльність, яку Акіра
+        // сам назвав співрозмовнику. Симуляція могла вже почати пити воду, але це
+        // не перетворює попереднє «дивлюся телевізор» на «бо хочу випити воду».
+        const action = explicitThis && activityFresh && activityCtx.actionSnapshot
+            ? activityCtx.actionSnapshot
+            : liveAction;
+        const actionId = action?.actionId || null;
+
+        // Intention reason дозволено використовувати лише для живої поточної дії.
+        // Для snapshot старої названої дії чужу нову intention не підмішуємо.
+        const canUseLiveIntention = action === liveAction;
+        const intentionReason = canUseLiveIntention ? this.brain.intentions?.getWhy?.() : null;
+        const reason = action?.originReason || action?.reason ||
+            (typeof intentionReason === "string" && !/(relationships|needs|emotions|supported|підтримано)/iu.test(intentionReason) ? intentionReason : null);
+
         if (!action || actionId === "idle") {
             return this.chooseTemplate([
                 "Та просто нічим зараз не зайнятий.",
@@ -2468,19 +2520,28 @@ class AkiraDialogue {
             ]);
         }
 
-        // v47.4: для їжі причина поточного eatMeal живе в originReason.
-        // action.reason тут описує лише технічний перехід «щойно приготував ...» і
-        // не відповідає на людське «чому ти це робиш?». Не губимо причинність.
         if(actionId==="eatMeal") {
             if(action?.originReason) return `Бо ${this.humanizeInternalReason(action.originReason)}.`;
             if(action?.mealName) return `Бо зголоднів і захотів ${action.mealName}.`;
         }
-        if(actionId==="drinkSelected" && action?.originReason) {
-            return `Бо ${this.humanizeInternalReason(action.originReason)}.`;
+        if(actionId==="drinkSelected") {
+            if(action?.originReason) return `Бо ${this.humanizeInternalReason(action.originReason)}.`;
+            return "Бо захотілося пити.";
         }
-        if (reason) {
-            return `Бо ${this.humanizeInternalReason(reason)}.`;
-        }
+
+        // Людські причини для natural idle. Їх reason може бути технічно однаковим,
+        // але відповідь має стосуватися саме названої дії.
+        const naturalReasons={
+            idleWatchTV:"Бо нічим терміновим не зайнятий, от і дивлюся телевізор.",
+            idleSit:"Бо зараз нікуди не поспішаю.",
+            idleLieDown:"Бо захотілося трохи полежати й відпочити.",
+            idlePhone:"Бо нічим терміновим не зайнятий, от і сиджу в телефоні.",
+            idleThink:"Бо була вільна хвилина, от і задумався.",
+            lookOutWindow:"Бо захотілося трохи подивитися у вікно."
+        };
+        if(naturalReasons[actionId]) return naturalReasons[actionId];
+
+        if (reason) return `Бо ${this.humanizeInternalReason(reason)}.`;
 
         return this.chooseTemplate([
             "Та без якоїсь особливої причини. Просто зараз цим займаюся.",
