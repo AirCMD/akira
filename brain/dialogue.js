@@ -1990,13 +1990,30 @@ class AkiraDialogue {
                 if(lastMove?.targetRoom===this.brain.state?.dailyLife?.homeRoom && Date.now()-Number(lastMove.finishedAt||0)<15*60*1000) {
                     const queued=this.brain.state?.dailyLife?.queuedAction;
                     if(queued?.reason) return `Бо ${String(queued.reason).replace(/[.!?]+$/u,"")}.`;
+                    // v47.4: після завершення маршруту queuedAction уже може бути очищена.
+                    // Тоді мету переходу беремо з фактичної дії, яка зараз виконується
+                    // у цій кімнаті, а не відповідаємо беззмістовним «у своїх справах».
+                    if(a?.homeRoom===this.brain.state?.dailyLife?.homeRoom) {
+                        if(a.actionId==="eatMeal" && a.mealName) return `Бо прийшов сюди поїсти ${a.mealName}.`;
+                        if(a.actionId==="cookMeal" && a.mealName) return `Бо прийшов сюди приготувати ${a.mealName}.`;
+                        if(a.actionId==="prepareDrink" || a.actionId==="drinkSelected") return "Бо прийшов сюди щось випити.";
+                        if(a.reason) return `Бо ${this.humanizeInternalReason(a.originReason||a.reason)}.`;
+                    }
                     return "Просто перейшов сюди у своїх справах.";
                 }
                 return "Зараз я вдома, бо нікуди не збирався виходити.";
             }
             return a?.reason?`Бо ${this.humanizeInternalReason(a.reason)}.`:"Так склалося за поточною справою.";
         }
-        if(intent==="ask_fatigue") { const f=Number(this.brain.state?.fatigue??(100-Number(this.brain.state?.energy??70))); return f>=65?"Так, уже добряче втомився.":f>=35?"Трохи втомився, але ще нормально.":"Ні, особливої втоми зараз немає."; }
+        if(intent==="ask_fatigue") {
+            const f=Number(this.brain.state?.fatigue??(100-Number(this.brain.state?.energy??70)));
+            const sleepNeed=Number(this.brain.state?.needs?.sleep ?? 80);
+            const energy=Number(this.brain.state?.energy ?? 70);
+            const sleepy=(sleepNeed<35 || energy<35);
+            if(f>=65) return "Так, уже добряче втомився.";
+            if(f>=35) return sleepy?"Трохи втомився і вже хочеться спати.":"Трохи втомився, але ще нормально.";
+            return sleepy?"Не дуже втомився, але вже сонний.":"Ні, особливої втоми зараз немає.";
+        }
         if(intent==="ask_yani_identity") return "Яні моя дружина. Вона звіролюдина, ближча до котячих. Ми знаємо одне одного близько семи років і п’ять років разом.";
         if(intent==="ask_yani_species") return "Ні. Яні звіролюдина, ближча до котячих.";
         if(intent==="ask_akira_identity_kind") return "Так. Я людина, чоловік.";
@@ -2451,6 +2468,16 @@ class AkiraDialogue {
             ]);
         }
 
+        // v47.4: для їжі причина поточного eatMeal живе в originReason.
+        // action.reason тут описує лише технічний перехід «щойно приготував ...» і
+        // не відповідає на людське «чому ти це робиш?». Не губимо причинність.
+        if(actionId==="eatMeal") {
+            if(action?.originReason) return `Бо ${this.humanizeInternalReason(action.originReason)}.`;
+            if(action?.mealName) return `Бо зголоднів і захотів ${action.mealName}.`;
+        }
+        if(actionId==="drinkSelected" && action?.originReason) {
+            return `Бо ${this.humanizeInternalReason(action.originReason)}.`;
+        }
         if (reason) {
             return `Бо ${this.humanizeInternalReason(reason)}.`;
         }
