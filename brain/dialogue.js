@@ -269,6 +269,7 @@ class AkiraDialogue {
 
             greeting: [
                 "привіт",
+                "гей",
                 "вітаю",
                 "добрий день",
                 "добрий вечір",
@@ -405,6 +406,17 @@ class AkiraDialogue {
         if (/^(акіра)[\s?!.,]*$/iu.test(normalized)) return "name_ping";
         if (/^(акіра[,!\s]*)?(привіт[,!\s]*)?(ти\s+)?спиш[\s?!.,]*$/iu.test(normalized)) return "ask_sleeping";
 
+
+        // v46.5: короткі живі привітання — це саме звернення до Акіри,
+        // а не statement/topic. «Гей!» не повинен падати у випадковий fallback.
+        if (/^(привіт|гей|вітаю)[\s?!.,]*$/iu.test(normalized)) return "greeting";
+
+        // v46.8: «Гей!» як привітання і «ти гей?» як питання про орієнтацію — різні наміри.
+        // Канон: Акіра надає перевагу жінкам, але романтично його цікавить саме Яні.
+        if (/^(а\s+)?ти\s+гей[\s?!.,]*$/iu.test(normalized)) return "ask_orientation_gay";
+        if (/^(яка\s+в\s+тебе\s+орієнтація|яка\s+твоя\s+орієнтація|хто\s+тобі\s+подобається|кого\s+ти\s+кохаєш)[\s?!.,]*$/iu.test(normalized)) return "ask_orientation";
+        if (/^(а\s+)?тобі\s+подобаються\s+(хлопчики|хлопці|чоловіки)(\s+старшого\s+віку)?[\s?!.,]*$/iu.test(normalized)) return "ask_male_romantic_interest";
+        if (/^(як\s+ти\s+(ставишся|відносишся)\s+до|яке\s+в\s+тебе\s+ставлення\s+до)\s+(лгбт|лгбтк|лгбтк\+|lgbt|lgbtq|lgbtq\+)[\s?!.,]*$/iu.test(normalized)) return "ask_lgbt_attitude";
 
         // v45: живі питання про календар/час/місце мають одне джерело істини.
         if (/^добр(ого|ий)\s+ран(ку|ок)[\s?!.,]*$/iu.test(normalized)) return "greet_morning";
@@ -611,13 +623,19 @@ class AkiraDialogue {
         if (/^(а\s+)?що\s+(ти\s+)?там\s+дивишся[\s?!.,]*$/iu.test(normalized)) return "ask_phone_detail";
 
         const askActivityPatterns = [
-            /^що\s+(ти\s+)?(зараз\s+)?робиш[\s?!.,]*$/iu,
-            /^чим\s+(ти\s+)?(зараз\s+)?займаєшся[\s?!.,]*$/iu,
+            /^(а\s+)?що\s+(ти\s+)?(зараз\s+)?робиш[\s?!.,]*$/iu,
+            /^(а\s+)?зараз\s+що\s+(ти\s+)?робиш[\s?!.,]*$/iu,
+            /^(ну\s+)?а\s+зараз\s+що\s+(ти\s+)?робиш[\s?!.,]*$/iu,
+            /^(а\s+)?чим\s+(ти\s+)?(зараз\s+)?займаєшся[\s?!.,]*$/iu,
             /^чим\s+зайнятий[\s?!.,]*$/iu,
             /^ти\s+зараз\s+що\s+робиш[\s?!.,]*$/iu
         ];
 
         if (/^(що|чого)\s+(ти\s+)?(їси|їсиш)[\s?!.,]*$/iu.test(normalized)) return "ask_current_food";
+        // v46.7: коротке "смачно?" є природним follow-up до їжі, а не думкою про абстрактну тему.
+        if (/^(а\s+)?(тобі\s+)?смачно[\s?!.,]*$/iu.test(normalized)
+            || /^(смачна|смачний|смачне|смачні)[\s?!.,]*$/iu.test(normalized)
+            || /^(як\s+(тобі|воно)\s+на\s+смак)[\s?!.,]*$/iu.test(normalized)) return "ask_food_taste";
         if (/^(що|чого)\s+(ти\s+)?(п['’ʼ]?єш|пєш)[\s?!.,]*$/iu.test(normalized)) return "ask_current_drink";
         if (/^(що|чого)\s+(ти\s+)?готуєш[\s?!.,]*$/iu.test(normalized)) return "ask_current_cooking";
         if (/^(і\s+)?(що|чого)\s+(там\s+)?за\s+вікном[\s?!.,]*$/iu.test(normalized) || /^(що\s+видно\s+за\s+вікном|який\s+вид\s+за\s+вікном)[\s?!.,]*$/iu.test(normalized)) return "ask_window_view";
@@ -942,6 +960,7 @@ class AkiraDialogue {
 
         return [
             "привіт",
+            "гей",
             "вітаю",
             "добрий день",
             "добрий вечір",
@@ -1985,6 +2004,21 @@ class AkiraDialogue {
     // СКЛАДАННЯ
     // =========================================================
 
+    composeOrientationAnswer(intent) {
+        switch (intent) {
+            case "ask_orientation_gay":
+                return "Ні. Я надаю перевагу жінкам. Якщо точніше — Яні. Інші мене не цікавлять.";
+            case "ask_male_romantic_interest":
+                return "Ні. Мене романтично не цікавлять хлопці чи чоловіки. Я надаю перевагу жінкам, а якщо точніше — Яні.";
+            case "ask_orientation":
+                return "Я надаю перевагу жінкам. Але якщо точніше — Яні. Інші мене не цікавлять.";
+            case "ask_lgbt_attitude":
+                return this.chooseTemplate(["Нормально.", "Нейтрально."]);
+            default:
+                return null;
+        }
+    }
+
     composeWorkIdentityGuardAnswer(intent, profile) {
         const n = profile?.analysis?.normalized || "";
         const canonical = "Я працюю в TechSmith, або «Техсмітнику», продавцем-консультантом.";
@@ -2274,6 +2308,26 @@ class AkiraDialogue {
         if(!a) return "Не пам’ятаю достатньо деталей попередньої дії.";
         if(a.reason) return `Бо ${String(a.reason).replace(/[.!?]+$/u,"")}.`;
         return "Причина попередньої дії в пам’яті не збереглася.";
+    }
+
+    composeFoodTasteAnswer() {
+        const active=this.brain.state?.action||null;
+        const ctx=this.lastAnswerContext || this.brain.state?.conversation?.lastAnswerContext || null;
+        const snap=ctx?.actionSnapshot||null;
+        const eating=active?.actionId==="eatMeal" ? active : (snap?.actionId==="eatMeal" ? snap : null);
+        if(!eating) return "Що саме? Я зараз нічого не їм.";
+        const meal=String(eating.mealName||"").trim();
+        const variants=meal
+            ? [`Так, смачно. ${this.capitalizeMealForTaste(meal)} мені смакує.`, `Ага, смачно. ${this.capitalizeMealForTaste(meal)} нормально зайшла.`, "Так, цілком смачно."]
+            : ["Так, смачно.", "Ага, цілком смачно."];
+        return this.chooseTemplate(variants) || variants[0];
+    }
+
+    capitalizeMealForTaste(meal) {
+        // Назви страв у food.json зберігаються у знахідному відмінку ("локшину", "суп").
+        // Не намагаємося машинно перетворювати їх на називний: українська морфологія не любить самовпевнений regex.
+        if (/^локшину\s+швидкого\s+приготування$/iu.test(meal)) return "Локшина швидкого приготування";
+        return "Це";
     }
 
     composeFollowupWhyAnswer() {
@@ -2677,6 +2731,7 @@ class AkiraDialogue {
         const intent = profile.analysis.intent;
         if (intent === "name_ping") return [this.composeNamePingAnswer(profile)];
         if (intent === "ask_sleeping") return [this.composeSleepingAnswer(profile)];
+        if (["ask_orientation_gay","ask_male_romantic_interest","ask_orientation","ask_lgbt_attitude"].includes(intent)) return [this.composeOrientationAnswer(intent)];
         if (["check_wrong_occupation","check_workplace_claim"].includes(intent)) return [this.composeWorkIdentityGuardAnswer(intent, profile)];
         if (["greet_morning","ask_current_time","check_day_period","ask_current_month","check_season","check_weekday","check_workday","ask_need_work_today","ask_is_home","ask_why_there","ask_fatigue","ask_yani_identity","ask_yani_species","ask_akira_identity_kind","ask_akira_wife","ask_yani_husband","ask_yani_relation_to_akira","ask_love_yani","ask_love_user","ask_why_with_yani","claim_user_is_wife","claim_identity_contradiction","ask_see_yani","ask_when_met_yani","ask_yani_today_together","ask_last_talk_yani","ask_sleep_desire_reason","ask_why_not_sleeping","ask_when_sleep","ask_sleep_obstacle","ask_can_go_home","ask_why_still_work","ask_previous_time_consistency","claim_user_relationship","ask_lives_with","ask_has_brother","ask_parents","ask_working_now","ask_why_not_at_work","assert_work_time"].includes(intent)) return [this.composeRealityAnswer(intent, profile)];
         if (intent === "ask_current_movie") return [this.composeCurrentMovieAnswer(profile)];
@@ -2687,6 +2742,7 @@ class AkiraDialogue {
         if (intent === "ask_weather") return [this.composeWeatherAnswer(profile)];
         if (intent === "ask_state") return [this.composeStateAnswer(profile)];
         if (intent === "ask_current_food") return [this.composeFoodStateAnswer("food")];
+        if (intent === "ask_food_taste") return [this.composeFoodTasteAnswer()];
         if (intent === "ask_current_drink") return [this.composeFoodStateAnswer("drink")];
         if (intent === "ask_current_cooking") return [this.composeFoodStateAnswer("cooking")];
         if (intent === "ask_activity") return [this.composeActivityAnswer(profile)];
@@ -2851,6 +2907,7 @@ class AkiraDialogue {
         }
 
         if (profile.analysis.intent === "ask_current_food") return [this.composeFoodStateAnswer("food")];
+        if (profile.analysis.intent === "ask_food_taste") return [this.composeFoodTasteAnswer()];
         if (profile.analysis.intent === "ask_current_drink") return [this.composeFoodStateAnswer("drink")];
         if (profile.analysis.intent === "ask_current_cooking") return [this.composeFoodStateAnswer("cooking")];
         if (profile.analysis.intent === "ask_activity") {
@@ -3454,7 +3511,9 @@ class AkiraDialogue {
             "ask_action_next",
             "ask_current_location",
             "ask_current_movie",
-            "ask_contextual_why"
+            "ask_contextual_why",
+            "greeting",
+            "name_ping"
         ].includes(intent);
     }
 

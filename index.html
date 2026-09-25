@@ -555,7 +555,7 @@
 <script src="./brain/emotions.js" defer></script>
 <script src="./brain/needs.js" defer></script>
 <script src="./brain/decision.js?v=20" defer></script>
-<script src="./brain/dialogue.js?v=46.4" defer></script>
+<script src="./brain/dialogue.js?v=46.8" defer></script>
 <script src="./brain/communication.js?v=34" defer></script>
 <script src="./brain/relationships.js" defer></script>
 <script src="./brain/perception.js" defer></script>
@@ -1112,6 +1112,26 @@
 
         try {
 
+          // v46.5: dialogue.js формує кандидат відповіді раніше, ніж communication.js
+          // вирішує, чи Акіра реально її відправить. Якщо він мовчить/не помітив
+          // повідомлення, така невідправлена репліка НЕ повинна ставати контекстом
+          // розмови. Інакше повтор питання виглядає для мозку вже «відповіданим».
+          const dialogue = window.akiraBrain?.dialogue || null;
+          const conversationBeforeReply = window.akiraBrain?.state?.conversation
+            ? JSON.parse(JSON.stringify(window.akiraBrain.state.conversation))
+            : null;
+          const dialogueCommitBeforeReply = dialogue ? {
+            lastIntent: dialogue.lastIntent,
+            lastIntentAt: dialogue.lastIntentAt,
+            lastNormalizedInput: dialogue.lastNormalizedInput,
+            lastSuccessfulIntent: dialogue.lastSuccessfulIntent,
+            lastSuccessfulAt: dialogue.lastSuccessfulAt,
+            lastSuccessfulSemanticKey: dialogue.lastSuccessfulSemanticKey,
+            lastAnswerContext: dialogue.lastAnswerContext ? JSON.parse(JSON.stringify(dialogue.lastAnswerContext)) : null,
+            historyLength: Array.isArray(dialogue.history) ? dialogue.history.length : null,
+            recentResponsesLength: Array.isArray(dialogue.recentResponses) ? dialogue.recentResponses.length : null
+          } : null;
+
           const reply = await getAkiraReply(text);
           const communication = window.AkiraCommunication
             ? new window.AkiraCommunication(window.akiraBrain)
@@ -1126,6 +1146,21 @@
           if (delivery.sent && plan.text && turnId === responseTurnId && committedTurnId !== turnId) {
             committedTurnId = turnId;
             appendMessage(plan.text, "bot");
+          } else if (!delivery.sent && dialogue && dialogueCommitBeforeReply) {
+            // Відкатуємо тільки розмовний commit. Фізичний світ, потреби та час
+            // продовжують жити як жили: мовчання не перемотує всесвіт назад.
+            dialogue.lastIntent = dialogueCommitBeforeReply.lastIntent;
+            dialogue.lastIntentAt = dialogueCommitBeforeReply.lastIntentAt;
+            dialogue.lastNormalizedInput = dialogueCommitBeforeReply.lastNormalizedInput;
+            dialogue.lastSuccessfulIntent = dialogueCommitBeforeReply.lastSuccessfulIntent;
+            dialogue.lastSuccessfulAt = dialogueCommitBeforeReply.lastSuccessfulAt;
+            dialogue.lastSuccessfulSemanticKey = dialogueCommitBeforeReply.lastSuccessfulSemanticKey;
+            dialogue.lastAnswerContext = dialogueCommitBeforeReply.lastAnswerContext;
+            if (Array.isArray(dialogue.history) && dialogueCommitBeforeReply.historyLength !== null)
+              dialogue.history.length = dialogueCommitBeforeReply.historyLength;
+            if (Array.isArray(dialogue.recentResponses) && dialogueCommitBeforeReply.recentResponsesLength !== null)
+              dialogue.recentResponses.length = dialogueCommitBeforeReply.recentResponsesLength;
+            if (conversationBeforeReply) window.akiraBrain.state.conversation = conversationBeforeReply;
           }
 
           setStatus("ready", delivery.sent ? "мозок активний" : "Акіра мовчить");
