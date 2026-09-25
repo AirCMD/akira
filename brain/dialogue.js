@@ -402,6 +402,12 @@ class AkiraDialogue {
         // Інакше «як ти?» бачиться лише як слово «як» + знак питання.
         const normalized = String(text || "").toLowerCase().replace(/[’`ʼ]/g, "'").replace(/^[«»„“”"\s]+/u, "").trim();
 
+        // v47.2: weekday questions are also high-priority reality intents.
+        // Ukrainian weekday names have asymmetric inflections (especially середа/середу
+        // and неділя/неділю), so normalize the whole family instead of relying on one
+        // nominative-only regex hidden later in routing.
+        if (/^сьогодні\s+(понеділок|понеділка|вівторок|вівторка|середа|середу|середи|четвер|четверга|п['’ʼ]?ятниця|п['’ʼ]?ятницю|п['’ʼ]?ятниці|субота|суботу|суботи|неділя|неділю|неділі)[\s?!.,]*$/iu.test(normalized)) return "check_weekday";
+
         // v47.1: daypart questions are a high-priority reality intent.
         // Keep this before spatial/topic/fallback routing so «ніч» cannot be lost
         // in sleep/general semantic handling. One rule covers all four periods.
@@ -1957,7 +1963,21 @@ class AkiraDialogue {
         }
         if(intent==="ask_current_month") return `Зараз ${month}.`;
         if(intent==="check_season") { const claimed=(n.match(/(весна|літо|осінь|зима)/u)||[])[1]; if(claimed===season) return `Так, зараз ${season}.`; return this.chooseTemplate([`Ні, зараз ${season}.`,`Якщо зараз ${claimed}, то ти десь з іншого квадранта. Насправді зараз ${season}.`,`Календар трохи протестує: зараз ${season}, а не ${claimed}.`]); }
-        if(intent==="check_weekday") { const claimed=(n.match(/(понеділок|вівторок|середа|четвер|п['’ʼ]?ятниця|субота|неділя)/u)||[])[1]?.replace("п'ятниця","п’ятниця"); return claimed===day?`Так, сьогодні ${day}.`:`Ні. Сьогодні ${day}.`; }
+        if(intent==="check_weekday") {
+            const raw=(n.match(/(понеділок|понеділка|вівторок|вівторка|середа|середу|середи|четвер|четверга|п['’ʼ]?ятниця|п['’ʼ]?ятницю|п['’ʼ]?ятниці|субота|суботу|суботи|неділя|неділю|неділі)/u)||[])[1]||"";
+            const key=raw.replace(/[’ʼ]/g,"'");
+            const weekdayForms={
+                "понеділок":"понеділок","понеділка":"понеділок",
+                "вівторок":"вівторок","вівторка":"вівторок",
+                "середа":"середа","середу":"середа","середи":"середа",
+                "четвер":"четвер","четверга":"четвер",
+                "п'ятниця":"п’ятниця","п'ятницю":"п’ятниця","п'ятниці":"п’ятниця",
+                "субота":"субота","суботу":"субота","суботи":"субота",
+                "неділя":"неділя","неділю":"неділя","неділі":"неділя"
+            };
+            const claimed=weekdayForms[key]||key;
+            return claimed===day?`Так, сьогодні ${day}.`:`Ні. Сьогодні ${day}.`;
+        }
         if(intent==="check_workday") { const asksWeekend=/вихідний/u.test(n); return asksWeekend?(workday?`Ні. Сьогодні робочий день.`:`Так, сьогодні вихідний.`):(workday?`Так, сьогодні робочий день.`:`Ні, сьогодні вихідний.`); }
         if(intent==="ask_need_work_today") { if(!workday) return "Ні. Сьогодні в мене вихідний."; if(mins>=end) return `Сьогодні робочий день був, але моя зміна закінчилася о ${work.end||"16:00"}.`; if(mins<start) return `Так. Сьогодні працюю з ${work.start||"10:00"} до ${work.end||"16:00"}.`; return `Так. У мене зараз робочий час, до ${work.end||"16:00"}.`; }
         if(intent==="ask_is_home") return loc==="home"?"Так, я зараз удома.":`Ні. ${this.composeCurrentLocationAnswer()}`;
