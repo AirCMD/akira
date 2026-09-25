@@ -45,11 +45,19 @@ class AkiraDailyLife {
     return room ? { id, ...room } : null;
   }
 
-  setHomeRoom(roomId, reason="movement") {
+  setHomeRoom(roomId, reason="movement", meta={}) {
     if (this.location() !== "home" || !this.getRoom(roomId)) return false;
     const state = this.brain.state.dailyLife;
     if (state.homeRoom === roomId) return true;
-    state.roomHistory.push({ from: state.homeRoom || null, to: roomId, reason, at: new Date().toISOString() });
+    state.roomHistory.push({
+      from: state.homeRoom || null,
+      to: roomId,
+      reason,
+      purposeActionId: meta?.purposeActionId || null,
+      purposeReason: meta?.purposeReason || null,
+      finalTargetRoom: meta?.finalTargetRoom || roomId,
+      at: new Date().toISOString()
+    });
     if (state.roomHistory.length > 30) state.roomHistory.shift();
     state.homeRoom = roomId;
     return true;
@@ -85,7 +93,16 @@ class AkiraDailyLife {
   }
 
   makeMoveAction(from,to,finalTarget=to){
-    return {type:"action",actionId:"moveRoom",category:"movement",duration:this.roomTravelMinutes(from,to),reason:`йду з ${this.roomNameGenitive(from)} до ${this.roomDestinationPhrase(finalTarget)}`,fromRoom:from,targetRoom:to,finalTargetRoom:finalTarget,targetRoomName:this.getRoom(to)?.name||to,targetRoomPhrase:this.roomDestinationPhrase(to),score:1100,factors:{spatialMovement:1100}};
+    const route=this.brain.state?.dailyLife?.route;
+    const purpose=(route && route.path?.[route.path.length-1]===finalTarget) ? route.finalAction : null;
+    return {
+      type:"action",actionId:"moveRoom",category:"movement",duration:this.roomTravelMinutes(from,to),
+      reason:`йду з ${this.roomNameGenitive(from)} до ${this.roomDestinationPhrase(finalTarget)}`,
+      fromRoom:from,targetRoom:to,finalTargetRoom:finalTarget,
+      purposeActionId:purpose?.actionId||null,
+      purposeReason:purpose?.originReason||purpose?.reason||null,
+      targetRoomName:this.getRoom(to)?.name||to,targetRoomPhrase:this.roomDestinationPhrase(to),score:1100,factors:{spatialMovement:1100}
+    };
   }
 
   roomNameGenitive(roomId){
@@ -204,7 +221,11 @@ class AkiraDailyLife {
     if (["washFace","shave","changeClothes","takeBath","dressForWork"].includes(id)) routines[id] = now;
 
     if (id === "moveRoom" && action.targetRoom) {
-      this.setHomeRoom(action.targetRoom, action.reason || "movement");
+      this.setHomeRoom(action.targetRoom, action.reason || "movement", {
+        purposeActionId: action.purposeActionId,
+        purposeReason: action.purposeReason,
+        finalTargetRoom: action.finalTargetRoom
+      });
     }
 
     if (id === "commuteToWork") {

@@ -2002,6 +2002,21 @@ class AkiraDialogue {
             if(loc==="techsmith") return this.brain.workLife?.inShift?.()?"Бо зараз моя робоча зміна.":`Власне, уже не повинен тут бути. Зміна закінчилася о ${work.end||"16:00"}, час їхати додому.`;
             if(a?.actionId==="commuteToWork") return "Бо їду на роботу.";
             if(loc==="home") {
+                const here=this.brain.state?.dailyLife?.homeRoom;
+                const roomMoves=Array.isArray(this.brain.state?.dailyLife?.roomHistory)?this.brain.state.dailyLife.roomHistory:[];
+                const lastRoomMove=[...roomMoves].reverse().find(m=>m?.to===here);
+                if(lastRoomMove && Date.now()-Date.parse(lastRoomMove.at||0)<15*60*1000){
+                    const pid=lastRoomMove.purposeActionId;
+                    if(pid==="eatMeal") return "Бо прийшов сюди поїсти.";
+                    if(pid==="cookMeal") return "Бо прийшов сюди приготувати їжу.";
+                    if(pid==="prepareDrink"||pid==="drinkSelected") return "Бо прийшов сюди щось випити.";
+                    if(pid==="rest"||pid==="idleLieDown") return "Бо прийшов сюди відпочити.";
+                    if(pid==="read") return "Бо прийшов сюди почитати.";
+                    if(pid==="playGame") return "Бо прийшов сюди пограти.";
+                    if(pid==="listenToMusic") return "Бо прийшов сюди послухати музику.";
+                    if(pid==="idleWatchTV"||pid==="watchStreamer") return "Бо прийшов сюди щось подивитися.";
+                    if(lastRoomMove.purposeReason) return `Бо ${this.humanizeInternalReason(lastRoomMove.purposeReason)}.`;
+                }
                 const lastMove=[...(this.brain.actionHistory||[])].reverse().find(x=>x?.actionId==="moveRoom");
                 if(lastMove?.targetRoom===this.brain.state?.dailyLife?.homeRoom && Date.now()-Number(lastMove.finishedAt||0)<15*60*1000) {
                     const queued=this.brain.state?.dailyLife?.queuedAction;
@@ -2020,7 +2035,6 @@ class AkiraDialogue {
                 // Якщо переходу щойно не було, пояснюємо саме перебування в кімнаті,
                 // а не випадкову мотивацію action.reason. «Нічим терміновим не зайнятий»
                 // може пояснювати телевізор, але не відповідає на «чому ти ТАМ?».
-                const here=this.brain.state?.dailyLife?.homeRoom;
                 if(a?.homeRoom===here) {
                     const placeReasons={
                         idleWatchTV:"Бо зараз тут дивлюся телевізор.",
@@ -2681,7 +2695,7 @@ class AkiraDialogue {
             prepareDrink: action.drinkName ? `готував ${action.drinkName}` : "готував напій",
             drinkSelected: action.drinkName ? `пив ${action.drinkName}` : "щось пив",
             travelToLeisure: action.destinationName ? `їхав у ${action.destinationName}` : "їхав у місто",
-            moveRoom: action.fromRoom && action.targetRoom ? `виходив з ${this.brain.dailyLife?.roomNameGenitive?.(action.fromRoom)||"кімнати"} до ${this.brain.dailyLife?.roomDestinationPhrase?.(action.targetRoom)||"іншої кімнати"}` : "переходив через квартиру"
+            moveRoom: action.fromRoom && action.targetRoom ? (()=>{ const dest=this.brain.dailyLife?.roomDestinationPhrase?.(action.targetRoom)||"іншу кімнату"; return `переходив з ${this.brain.dailyLife?.roomNameGenitive?.(action.fromRoom)||"кімнати"} ${String(dest).startsWith("на ")?dest:`у ${dest}`}`; })() : "переходив через квартиру"
         };
         if (dynamic[id]) return dynamic[id];
         const labels = {
@@ -2739,7 +2753,19 @@ class AkiraDialogue {
 
     composeRecentActivityAnswer() {
         const history = Array.isArray(this.brain.actionHistory) ? this.brain.actionHistory : [];
+        const roomHistory = Array.isArray(this.brain.state?.dailyLife?.roomHistory) ? this.brain.state.dailyLife.roomHistory : [];
+        const currentRoom=this.brain.state?.dailyLife?.homeRoom;
+        const lastRoomMove=[...roomHistory].reverse().find(m=>m?.to===currentRoom);
         const last = [...history].reverse().find(a => this.actionHistoryLabel(a));
+        // v47.6: якщо поточна кімната була досягнута пізніше, ніж остання
+        // змістовна actionHistory-подія, не розповідаємо про застарілий сегмент маршруту.
+        const moveAt=lastRoomMove?.at ? Date.parse(lastRoomMove.at) : 0;
+        const actionAt=Number(last?.finishedAt||0);
+        if(lastRoomMove && moveAt>=actionAt){
+            const pseudo={actionId:"moveRoom",fromRoom:lastRoomMove.from,targetRoom:lastRoomMove.to};
+            const label=this.actionHistoryLabel(pseudo);
+            if(label) return `Перед цим ${label}.`;
+        }
         if (!last) return "Не пригадую, що робив безпосередньо перед цим.";
         return `Перед цим ${this.actionHistoryLabel(last)}.`;
     }
