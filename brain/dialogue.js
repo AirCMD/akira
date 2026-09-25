@@ -421,7 +421,7 @@ class AkiraDialogue {
         // v45: живі питання про календар/час/місце мають одне джерело істини.
         if (/^добр(ого|ий)\s+ран(ку|ок)[\s?!.,]*$/iu.test(normalized)) return "greet_morning";
         if (/^(який|котра|скільки)\s+(зараз\s+)?(час|година)|^котра\s+година/iu.test(normalized)) return "ask_current_time";
-        if (/^зараз\s+(ранок|день|вечір|ніч|полудень|світанок|сутінки)[\s?!.,]*$/iu.test(normalized)) return "check_day_period";
+        if (/^(?:(?:зараз|вже|ще)\s+|зараз\s+(?:ще|вже)\s+|ще\s+не\s+)(ранок|день|вечір|ніч)[\s?!.,]*$/iu.test(normalized)) return "check_day_period";
         if (/^(який\s+зараз\s+місяць|який\s+місяць\s+зараз)[\s?!.,]*$/iu.test(normalized)) return "ask_current_month";
         if (/^(зараз|надворі\s+зараз)\s+(весна|літо|осінь|зима)[\s?!.,]*$/iu.test(normalized)) return "check_season";
         if (/^сьогодні\s+(понеділок|вівторок|середа|четвер|п['’ʼ]?ятниця|субота|неділя)[\s?!.,]*$/iu.test(normalized)) return "check_weekday";
@@ -1560,7 +1560,7 @@ class AkiraDialogue {
         const asksCycle = /(велосипед|покат|катат)/u.test(text);
         const asksWalk = /(гулят|прогулян)/u.test(text);
         const hour = Number(this.brain.getKyivHour?.());
-        const isNight = Number.isFinite(hour) ? (hour >= 22 || hour < 6) : Boolean(this.brain.isNightInKyiv?.());
+        const isNight = Number.isFinite(hour) ? (hour >= 21 || hour < 5) : Boolean(this.brain.isNightInKyiv?.());
         const weather = this.brain.state?.world?.weather || {};
         const condition = String(weather.condition || "");
         const energy = Number(this.brain.state?.needs?.energy ?? this.brain.state?.energy ?? 50);
@@ -1888,7 +1888,7 @@ class AkiraDialogue {
         const time=`${String(realNow.getHours()).padStart(2,"0")}:${String(realNow.getMinutes()).padStart(2,"0")}`;
         const mins=realNow.getHours()*60+realNow.getMinutes();
         const hour=Math.floor(mins/60);
-        const period = mins>=5*60 && mins<7*60 ? "світанок" : mins>=7*60 && mins<12*60 ? "ранок" : mins>=12*60 && mins<13*60 ? "полудень" : mins>=13*60 && mins<18*60 ? "день" : mins>=18*60 && mins<21*60 ? "вечір" : mins>=21*60 && mins<22*60 ? "сутінки" : "ніч";
+        const period = this.brain.calendar?.dayPeriod?.(realNow) || (mins>=5*60 && mins<12*60 ? "ранок" : mins>=12*60 && mins<16*60 ? "день" : mins>=16*60 && mins<21*60 ? "вечір" : "ніч");
         const n=String(profile?.analysis?.normalized||"");
         const dayMap={monday:"понеділок",tuesday:"вівторок",wednesday:"середа",thursday:"четвер",friday:"п’ятниця",saturday:"субота",sunday:"неділя"};
         const realDay=realNow.toLocaleDateString("en-US",{weekday:"long"}).toLowerCase();
@@ -1904,7 +1904,13 @@ class AkiraDialogue {
             return this.chooseTemplate([`Доброго ранку? Зараз ${time}. Ти дійсно думаєш, що це ранок?`,`Ранку? Зараз ${time}. Якщо це ранок, то ти точно з іншої країни чи планети.`,`Доброго ранку о ${time}? У твого ранку дуже дивний графік.`]);
         }
         if(intent==="ask_current_time") return `Зараз ${time}.`;
-        if(intent==="check_day_period") { const claimed=(n.match(/зараз\s+(ранок|день|вечір|ніч|полудень|світанок|сутінки)/u)||[])[1]; if(claimed===period) return `Так. Зараз ${period}, ${time}.`; return `Ні. Зараз ${time}, це ${period}.`; }
+        if(intent==="check_day_period") {
+            const claimed=(n.match(/(ранок|день|вечір|ніч)/u)||[])[1];
+            const negated=/ще\s+не\s+/u.test(n);
+            const propositionTrue=negated ? claimed!==period : claimed===period;
+            if(propositionTrue) return negated ? `Так. Зараз ${period}, ще не ${claimed}.` : `Так. Зараз ${period}, ${time}.`;
+            return negated ? `Ні. Зараз уже ${period}.` : `Ні. Зараз ${time}, це ${period}.`;
+        }
         if(intent==="ask_current_month") return `Зараз ${month}.`;
         if(intent==="check_season") { const claimed=(n.match(/(весна|літо|осінь|зима)/u)||[])[1]; if(claimed===season) return `Так, зараз ${season}.`; return this.chooseTemplate([`Ні, зараз ${season}.`,`Якщо зараз ${claimed}, то ти десь з іншого квадранта. Насправді зараз ${season}.`,`Календар трохи протестує: зараз ${season}, а не ${claimed}.`]); }
         if(intent==="check_weekday") { const claimed=(n.match(/(понеділок|вівторок|середа|четвер|п['’ʼ]?ятниця|субота|неділя)/u)||[])[1]?.replace("п'ятниця","п’ятниця"); return claimed===day?`Так, сьогодні ${day}.`:`Ні. Сьогодні ${day}.`; }

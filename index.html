@@ -554,14 +554,14 @@
 <script src="./brain/memory.js?v=39" defer></script>
 <script src="./brain/emotions.js" defer></script>
 <script src="./brain/needs.js" defer></script>
-<script src="./brain/decision.js?v=20" defer></script>
-<script src="./brain/dialogue.js?v=46.8" defer></script>
+<script src="./brain/decision.js?v=46.9" defer></script>
+<script src="./brain/dialogue.js?v=46.9" defer></script>
 <script src="./brain/communication.js?v=34" defer></script>
 <script src="./brain/relationships.js" defer></script>
 <script src="./brain/perception.js" defer></script>
 <script src="./brain/activities.js" defer></script>
 <script src="./brain/social.js?v=45.6" defer></script>
-<script src="./brain/calendar.js" defer></script>
+<script src="./brain/calendar.js?v=46.9" defer></script>
 <script src="./brain/weather.js" defer></script>
 <script src="./brain/opinions.js?v=14" defer></script>
 <script src="./brain/appearance.js?v=14" defer></script>
@@ -585,12 +585,12 @@
 <script src="./brain/dreams.js?v=45.2" defer></script>
 <script src="./brain/temporal_context.js?v=42" defer></script>
 <script src="./brain/internal_stream.js?v=41" defer></script>
-<script src="./brain/emotional_expression.js?v=46.0" defer></script>
+<script src="./brain/emotional_expression.js?v=46.9" defer></script>
 <script src="./brain/brain_coordinator.js?v=45.9" defer></script>
 <script src="./brain/world_geography.js?v=46.0" defer></script>
 <script src="./brain/natural_life.js?v=46.1" defer></script>
 <script src="./brain/home_spatial.js?v=46.3" defer></script>
-<script src="./brain/brain.js?v=46.3" defer></script>
+<script src="./brain/brain.js?v=46.9" defer></script>
 </head>
 
 <body>
@@ -913,7 +913,7 @@
        * ОЧІКУВАННЯ МОЗКУ
        * ----------------------------------------------------------
        *
-       * brain.js сам створює window.akiraBrain і запускає init().
+       * brain.js?v=46.9 сам створює window.akiraBrain і запускає init().
        *
        * Тут ми просто чекаємо, доки завантаження завершиться.
        */
@@ -1112,7 +1112,7 @@
 
         try {
 
-          // v46.5: dialogue.js формує кандидат відповіді раніше, ніж communication.js
+          // v46.5: dialogue.js?v=46.9 формує кандидат відповіді раніше, ніж communication.js
           // вирішує, чи Акіра реально її відправить. Якщо він мовчить/не помітив
           // повідомлення, така невідправлена репліка НЕ повинна ставати контекстом
           // розмови. Інакше повтор питання виглядає для мозку вже «відповіданим».
