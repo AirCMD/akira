@@ -93,6 +93,12 @@ class AkiraTemporalContext {
   answerLocation(tense, roomLabelFn){
     if(tense==="present") return null; // dialogue має багатший current-location formatter
     if(tense==="past"){
+      const rh=this.brain.state?.dailyLife?.roomHistory||[];
+      const lastMove=rh[rh.length-1];
+      if(this.brain.state?.world?.location==="home" && lastMove?.from){
+        const forms={kitchen:"кухні",hallway:"коридорі",bathroom:"ванній",toilet:"туалеті",glassBedroom:"скляній спальні",cozyRoom:"затишній другій кімнаті",spaceRoom:"кімнаті в космічному стилі",seaRoom:"кімнаті в морському стилі",balcony:"балконі"};
+        return `Перед цим був у ${forms[lastMove.from]||lastMove.from}.`.replace("був у кухні","був на кухні");
+      }
       const h=Array.isArray(this.brain.actionHistory)?this.brain.actionHistory:[];
       const a=[...h].reverse().find(x=>x?.worldFinished?.location);
       if(!a) return "Не пам'ятаю, де саме був перед цим.";

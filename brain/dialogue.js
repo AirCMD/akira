@@ -28,6 +28,7 @@ class AkiraDialogue {
         this.lastSuccessfulAt = 0;
         this.lastSuccessfulSemanticKey = null;
         this.lastAnswerContext = null;
+        this.repeatState = { key:null, count:0, at:0 };
 
         this.settings = {
             randomness: 18,
@@ -400,6 +401,43 @@ class AkiraDialogue {
         // Питання про самого Акіру мають пріоритет над загальним question.
         // Інакше «як ти?» бачиться лише як слово «як» + знак питання.
         const normalized = String(text || "").toLowerCase().replace(/[’`ʼ]/g, "'").replace(/^[«»„“”"\s]+/u, "").trim();
+
+        // v47: простір квартири, робоча хронологія та команди мають пріоритет
+        // над загальними topics на кшталт «космос» або випадковим fallback.
+        if (/^(що\s+зараз\s+поруч\s+із\s+тобою|що\s+поруч\s+із\s+тобою)[\s?!.,]*$/iu.test(normalized)) return "ask_nearby_current";
+        if (/^(де\s+(тут\s+)?вікно|де\s+вікна)[\s?!.,]*$/iu.test(normalized)) return "ask_window_location";
+        if (/^(а\s+)?що\s+(зараз\s+)?надворі[\s?!.,]*$/iu.test(normalized)) return "ask_window_view";
+        if (/^(можеш\s+)?(ти\s+)?(побачити|бачиш|видно)\s+кухн(ю|ю\s+звідси)|^звідси\s+видно\s+кухню/iu.test(normalized)) return "ask_can_see_kitchen";
+        if (/^де\s+кухня[\s?!.,]*$/iu.test(normalized)) return "ask_kitchen_location";
+        if (/^(як\s+(звідси\s+)?(дійти|пройти)\s+до\s+кухні|як\s+потрапити\s+на\s+кухню)[\s?!.,]*$/iu.test(normalized)) return "ask_route_kitchen";
+        if (/^що\s+(знаходиться|є)\s+між\s+скляною\s+спальнею\s+(і|та)\s+затишною\s+кімнатою[\s?!.,]*$/iu.test(normalized)) return "ask_between_bedroom_cozy";
+        if (/^що\s+є\s+(у|в)\s+скляній\s+спальні[\s?!.,]*$/iu.test(normalized)) return "ask_glass_bedroom_contents";
+        if (/^чому\s+(вона|скляна\s+спальня)\s+називається\s+скляною[\s?!.,]*$/iu.test(normalized)) return "ask_glass_bedroom_why";
+        if (/^скляні\s+стіни\s+там\s+справжні[\s?!.,]*$/iu.test(normalized)) return "ask_glass_walls_real";
+        if (/^на\s+склі\s+є\s+(тріщини|подряпини|сколи)[\s?!.,]*$/iu.test(normalized)) return "ask_glass_damage";
+        if (/^де\s+балкон[\s?!.,]*$/iu.test(normalized)) return "ask_balcony_location";
+        if (/^звідки\s+можна\s+вийти\s+на\s+балкон[\s?!.,]*$/iu.test(normalized)) return "ask_balcony_access";
+        if (/^яка\s+кімната\s+подобається\s+яні[\s?!.,]*$/iu.test(normalized)) return "ask_yani_favorite_room";
+        if (/^що\s+є\s+(у|в)\s+космічній\s+кімнаті[\s?!.,]*$/iu.test(normalized)) return "ask_space_room_contents";
+        if (/^де\s+там\s+(стоять|лежать|зберігаються)\s+тамагочі[\s?!.,]*$/iu.test(normalized)) return "ask_tamagotchi_location";
+        if (/^що\s+таке\s+(pegboard|пегборд)\s+(у|в)\s+космічній\s+кімнаті[\s?!.,]*$/iu.test(normalized)) return "ask_space_pegboard";
+        if (/^яке\s+там\s+зараз\s+увімкнене\s+світло[\s?!.,]*$/iu.test(normalized)) return "ask_space_lights";
+        if (/^можеш\s+зараз\s+вимкнути\s+світло\s+(у|в)\s+космічній\s+кімнаті[\s?!.,]*$/iu.test(normalized)) return "command_space_light_off";
+        if (/^що\s+ти\s+бачиш\s+(у|в)\s+космічній\s+кімнаті\s+зараз[\s?!.,]*$/iu.test(normalized)) return "ask_see_space_room_now";
+        if (/^можеш\s+звідси\s+побачити\s+космічну\s+кімнату[\s?!.,]*$/iu.test(normalized)) return "ask_can_see_space_room";
+        if (/^(піди|йди)\s+на\s+кухню[\s?!.,]*$/iu.test(normalized)) return "command_go_kitchen";
+        if (/^повернися\s+(у|в)\s+затишну\s+(другу\s+)?кімнату[\s?!.,]*$/iu.test(normalized)) return "command_go_cozy";
+        if (/^як\s+ти\s+сюди\s+(прийшов|потрапив)[\s?!.,]*$/iu.test(normalized)) return "ask_how_got_here";
+        if (/^сьогодні\s+ти\s+був\s+на\s+роботі[\s?!.,]*$/iu.test(normalized)) return "ask_work_today_presence";
+        if (/^коли\s+ти\s+прийшов\s+на\s+роботу[\s?!.,]*$/iu.test(normalized)) return "ask_work_arrival_today";
+        if (/^з\s+ким\s+ти\s+сьогодні\s+(говорив|розмовляв|спілкувався)\s+на\s+роботі[\s?!.,]*$/iu.test(normalized)) return "ask_work_people_today";
+        if (/^хто\s+твій\s+керівник[\s?!.,]*$/iu.test(normalized)) return "ask_manager";
+        if (/^що\s+ти\s+робив\s+на\s+роботі\s+сьогодні[\s?!.,]*$/iu.test(normalized)) return "ask_work_actions_today";
+        if (/^коли\s+ти\s+пішов\s+з\s+роботи[\s?!.,]*$/iu.test(normalized)) return "ask_work_departure_today";
+        if (/^як\s+ти\s+повернувся\s+додому[\s?!.,]*$/iu.test(normalized)) return "ask_commute_home_today";
+        if (/^можеш\s+зараз\s+піти\s+на\s+роботу[\s?!.,]*$/iu.test(normalized)) return "ask_can_go_work_now";
+        if (/^що\s+(ти\s+)?будеш\s+робити\s+завтра[\s?!.,]*$/iu.test(normalized)) return "ask_tomorrow_plan";
+
 
         // Коротке звертання на ім'я і питання, чи Акіра спить,
         // повинні читати живий стан, а не провалюватися в greeting/topic fallback.
@@ -1625,17 +1663,19 @@ class AkiraDialogue {
     }
 
     composeRepeatQuestionAnswer(profile) {
-        const intent = profile?.analysis?.intent || null;
-        if (!intent || !intent.startsWith("ask_")) return null;
-        if (["ask_sleeping", "ask_state", "ask_activity", "ask_current_location", "ask_contextual_knowledge", "ask_contextual_why", "ask_self_feeling", "ask_self_want", "ask_self_want_why", "ask_self_thought", "ask_self_model", "ask_self_conflict", "ask_dream_topic"].includes(intent)) return null;
-        const key=this.semanticQuestionKey(profile);
-        if (this.lastSuccessfulIntent !== intent || this.lastSuccessfulSemanticKey !== key || Date.now() - this.lastSuccessfulAt > 90000) return null;
-        return this.chooseTemplate([
-            "Навіщо ти знову це питаєш?",
-            "Я ж щойно на це відповів.",
-            "Ти вирішила перевірити, чи моя відповідь змінилася за хвилину?",
-            "Знову те саме питання? 🙂"
-        ]);
+        const intent=profile?.analysis?.intent||null;
+        if(!intent || !intent.startsWith("ask_")) { this.repeatState={key:null,count:0,at:0}; return null; }
+        if (["ask_sleeping","ask_state","ask_activity","ask_current_location","ask_contextual_knowledge","ask_contextual_why","ask_self_feeling","ask_self_want","ask_self_want_why","ask_self_thought","ask_self_model","ask_self_conflict","ask_dream_topic"].includes(intent)) return null;
+        const key=this.semanticQuestionKey(profile), now=Date.now();
+        const same=this.lastSuccessfulSemanticKey===key && now-this.lastSuccessfulAt<=90000;
+        if(!same){ this.repeatState={key,count:0,at:now}; return null; }
+        if(this.repeatState?.key!==key || now-(this.repeatState?.at||0)>90000) this.repeatState={key,count:0,at:now};
+        this.repeatState.count+=1; this.repeatState.at=now;
+        // Друге формулювання питання ще не є настирливістю. Реакція починається з третього запиту.
+        if(this.repeatState.count<2) return null;
+        if(this.repeatState.count===2) return "Я ж наче вже казав. Але гаразд.";
+        if(this.repeatState.count===3) return "Ти мене перевіряєш? Я вже кілька разів на це відповів.";
+        return this.chooseTemplate(["Я вже відповідав на це кілька разів.","Знову те саме? Я відповідь не змінив."]);
     }
 
     roomNameLocative(room) {
@@ -1945,8 +1985,8 @@ class AkiraDialogue {
         if(intent==="claim_identity_contradiction") { if(/ти\s+звіролюдина/u.test(n)) return "Ні. Я людина, чоловік."; return "Ні. Яні звіролюдина, жінка."; }
         if(intent==="ask_see_yani") { const k=this.brain.yaniLife?.knownLocationForAkira?.(); return k?.known&&k?.current?"Так, я зараз її бачу.":"Ні, зараз я її не бачу."; }
         if(intent==="ask_when_met_yani") return "Ми познайомилися близько семи років тому. Точної дати я не називав.";
-        if(intent==="ask_yani_today_together") { const h=this.brain.state?.yaniInteractions?.history||[]; const today=String(this.brain.state?.calendar?.date||world.date||""); const xs=h.filter(x=>String(x.date||"")===today); if(!xs.length) return "Сьогодні в пам’яті немає збереженої спільної події з Яні."; const labels={proposal:"щось планували разом",accepted:"проводили час разом",refusal:"не домовилися про спільну справу",conflict:"трохи посварилися",reconcile:"помирилися"}; const last=xs[xs.length-1]; return `Останнє, що збереглося за сьогодні: ${labels[last.type]||"ми проводили час разом"}.`; }
-        if(intent==="ask_last_talk_yani") { const h=Array.isArray(this.brain.actionHistory)?this.brain.actionHistory:[]; const a=[...h].reverse().find(x=>x?.actionId==="talkToYani"||x?.targetPerson==="Yani_Bakeneko"); if(!a) return "Не пам’ятаю сьогодні збереженої розмови з Яні."; return `Востаннє збережена розмова з Яні була ${a.time?`о ${a.time}`:"нещодавно"}.`; }
+        if(intent==="ask_yani_today_together") { const h=this.brain.state?.yaniInteractions?.history||[]; const today=String(this.brain.state?.calendar?.date||world.date||""); const xs=h.filter(x=>String(x.date||"")===today); if(!xs.length) return "Щось не пригадую, щоб ми сьогодні з Яні чимось разом займалися."; const labels={proposal:"щось планували разом",accepted:"проводили час разом",refusal:"не домовилися про спільну справу",conflict:"трохи посварилися",reconcile:"помирилися"}; const last=xs[xs.length-1]; return `Останнє, що збереглося за сьогодні: ${labels[last.type]||"ми проводили час разом"}.`; }
+        if(intent==="ask_last_talk_yani") { const h=Array.isArray(this.brain.actionHistory)?this.brain.actionHistory:[]; const a=[...h].reverse().find(x=>x?.actionId==="talkToYani"||x?.targetPerson==="Yani_Bakeneko"); if(!a) return "Щось не пригадую, щоб сьогодні ми з Яні розмовляли."; return `Востаннє збережена розмова з Яні була ${a.time?`о ${a.time}`:"нещодавно"}.`; }
         if(intent==="claim_user_relationship") return "Ні. Моя дружина і кохана — Яні. Не буду вигадувати між нами інші стосунки.";
         if(intent==="ask_lives_with") return "Живу з Яні, моєю дружиною.";
         if(intent==="ask_has_brother") return "Так. У мене є старший брат.";
@@ -2124,7 +2164,7 @@ class AkiraDialogue {
             case "ask_family":
                 return "У мене є батьки й старший брат. Батьки живуть у сусідньому місті. Ми рідко телефонуємо одне одному, переважно на свята. Пам’ятаю, як ми з татом і братом ходили на рибалку о шостій ранку.";
             case "ask_education":
-                return "У мене повна вища освіта, я ІТ-фахівець. Ще проходив курси масажу та малювання картин.";
+                return "У школі №ʯθ закінчив μ класів. Потім здобув повну вищу освіту за ІТ-напрямом. Ще проходив курси масажу та малювання картин.";
             case "ask_home":
                 return "У нас із Яні чотирикімнатна квартира в Теріяківському районі. Є широкий балкон, кімнати в космічному й морському стилях. Найбільше люблю другу кімнату — вона затишна.";
             case "ask_home_room": {
@@ -2594,7 +2634,7 @@ class AkiraDialogue {
 
     composeSalientMemoryAnswer() {
         const memories = this.brain.memory?.getMostSalient?.(6) || [];
-        const memory = memories.find(m => this.brain.memory?.formatMemory?.(m));
+        const memory = memories.find(m => !["moveRoom","commuteToWork","commuteHome"].includes(m?.actionId) && Number(m?.emotionalIntensity ?? m?.importance ?? 0) > 0 && this.brain.memory?.formatMemory?.(m));
         if (!memory) return "Зараз нічого конкретного не пригадується.";
         let text = this.brain.memory.formatMemory(memory);
         const machine={moveRoom:"переходив через квартиру",checkSocialNetwork:"перевіряв соцмережі",writePost:"писав допис",talkToYani:"розмовляв з Яні",rest:"відпочивав",sleep:"спав"};
@@ -2676,7 +2716,7 @@ class AkiraDialogue {
         const h=Array.isArray(this.brain.actionHistory)?this.brain.actionHistory:[];
         const today=new Date().toISOString().slice(0,10); const names=[];
         for(const a of h){ const d=String(a?.finishedAt?new Date(a.finishedAt).toISOString().slice(0,10):a?.worldFinished?.date||""); if(d!==today) continue; const id=a?.targetPerson||(a?.actionId==="talkToYani"?"Yani_Bakeneko":null); if(id) names.push(({Yani_Bakeneko:"Яні",Kent_White:"Кент",Taras:"Тарас"})[id]||id); }
-        const u=[...new Set(names)]; return u.length?`Сьогодні розмовляв з ${u.join(", ")}.`:"Не пам’ятаю збережених розмов з кимось сьогодні.";
+        const u=[...new Set(names)]; return u.length?`Сьогодні розмовляв з ${u.join(", ")}.`:"Щось не пригадую, щоб сьогодні з кимось розмовляв.";
     }
     composeFoodTodayAnswer(){
         const xs=this.brain.state?.food?.mealHistory||[]; const today=new Date().toISOString().slice(0,10);
@@ -2690,6 +2730,8 @@ class AkiraDialogue {
         if(i.includes("work")||i.includes("occupation")||i.includes("workplace")||i.includes("commute")) return "Щойно ми говорили про мою роботу.";
         if(i.includes("food")||i.includes("hungry")) return "Щойно ми говорили про їжу.";
         if(i.includes("dream")) return "Щойно ми говорили про сни.";
+        if(i==="ask_recent_good"||i==="ask_salient_memory") return "Щойно ми говорили про те, що хорошого сталося зі мною останнім часом.";
+        if(i.includes("room")||i.includes("kitchen")||i.includes("balcony")||i.includes("space_")||i.includes("glass_")) return "Щойно ми говорили про квартиру й кімнати.";
         if(i.includes("family")||i.includes("brother")||i.includes("parents")) return "Щойно ми говорили про мою сім’ю.";
         if(i.includes("yani")) return "Щойно ми говорили про Яні.";
         if(i.includes("money")||i.includes("purchase")||i.includes("inventory")) return "Щойно ми говорили про гроші й речі.";
@@ -2731,10 +2773,78 @@ class AkiraDialogue {
         return null;
     }
 
+    v47RoomIdFromIntent(intent){ return ({command_go_kitchen:"kitchen",command_go_cozy:"cozyRoom"})[intent]||null; }
+
+    v47StartRoomMove(target){
+        if(this.brain.state?.world?.location!=="home") return "Я зараз не вдома.";
+        const from=this.brain.state?.dailyLife?.homeRoom;
+        if(from===target) return target==="kitchen"?"Я вже на кухні.":"Я вже у затишній другій кімнаті.";
+        const path=this.brain.homeSpatial?.path?.(from,target)||[];
+        if(path.length<2) return "Звідси не бачу нормального шляху туди.";
+        this.brain.state.dailyLife.route={path,index:0,finalAction:null,startedAt:Date.now(),requestedByUser:true};
+        const a=this.brain.dailyLife?.makeMoveAction?.(path[0],path[1],target);
+        if(a) this.brain.executeAction?.(a);
+        return target==="kitchen"?"Йду на кухню.":"Повертаюся в затишну кімнату.";
+    }
+
+    v47HistoryToday(){
+        const today=this.localDateKey?.(0)||new Date().toISOString().slice(0,10);
+        return (Array.isArray(this.brain.actionHistory)?this.brain.actionHistory:[]).filter(a=>String(a?.worldStarted?.date||a?.date||"")===today);
+    }
+
+    v47WorkAnswer(intent){
+        const h=this.v47HistoryToday();
+        const atWork=a=>a?.worldStarted?.location==="techsmith"||a?.worldFinished?.location==="techsmith";
+        const commuteIn=h.find(a=>a?.actionId==="commuteToWork"), commuteOut=[...h].reverse().find(a=>a?.actionId==="commuteHome");
+        const workEvents=h.filter(atWork);
+        const tm=x=>x?.worldFinished?.time||x?.worldStarted?.time||x?.time||null;
+        if(intent==="ask_work_today_presence") return (commuteIn||workEvents.length)?"Так, сьогодні був на роботі.":"Не пригадую, щоб сьогодні був на роботі.";
+        if(intent==="ask_work_arrival_today") return commuteIn?(tm(commuteIn)?`Сьогодні прийшов на роботу приблизно о ${tm(commuteIn)}.`:"Сьогодні був на роботі, але точний час приходу не пригадаю."):"Не пам’ятаю сьогоднішнього приходу на роботу, тож час вигадувати не буду.";
+        if(intent==="ask_work_departure_today") return commuteOut?(tm(commuteOut)?`З роботи пішов приблизно о ${tm(commuteOut)}.`:"Сьогодні пішов з роботи, але точний час не пригадаю."):"Не пам’ятаю сьогоднішнього виходу з роботи, тож точний час не назву.";
+        if(intent==="ask_commute_home_today") return commuteOut?"Повертався звичним маршрутом: 25-й тролейбус, потім метро до «Сутінків» і далі додому.":"Не пригадую сьогоднішньої дороги з роботи додому.";
+        if(intent==="ask_work_people_today") { const xs=workEvents.filter(a=>a?.targetPerson).map(a=>this.brain.temporalContext?.personName?.(a.targetPerson)).filter(Boolean); const u=[...new Set(xs)]; return u.length?`Сьогодні на роботі говорив з ${u.join(", ")}.`:"Щось не пригадую сьогодні конкретної розмови на роботі."; }
+        if(intent==="ask_work_actions_today") { const labels=workEvents.map(a=>this.actionHistoryLabel(a)).filter(Boolean).filter(x=>!/^переходив/iu.test(x)); const u=[...new Set(labels)].slice(-5); return u.length?`Сьогодні на роботі ${u.join(", ")}.`:"Працював, але конкретних подій за сьогодні зараз не пригадаю."; }
+        if(intent==="ask_manager") return "Мій керівник — Михайленко. Зараз він за кордоном.";
+        if(intent==="ask_can_go_work_now") { const c=this.brain.calendar?.getContext?.()||{}; const mins=(new Date()).getHours()*60+(new Date()).getMinutes(); return mins>=16*60?"Фізично можу, але моя зміна вже закінчилася о 16:00.":"Можу, якщо справді треба, але орієнтуюся на свій робочий графік."; }
+        if(intent==="ask_tomorrow_plan") { const d=new Date(); d.setDate(d.getDate()+1); const weekend=[0,6].includes(d.getDay()); const p=this.brain.temporalContext?.futurePlan?.(); if(p) return `На завтра в мене є план: ${p.title||p.goal||"зайнятися запланованою справою"}.`; return weekend?"Завтра вихідний. Конкретних планів поки немає.":"Завтра робочий день. Після роботи конкретних планів поки немає."; }
+        return null;
+    }
+
+    v47SpatialAnswer(intent,profile){
+        const hs=this.brain.homeSpatial, room=this.brain.state?.dailyLife?.homeRoom;
+        if(intent==="ask_nearby_current") return hs?.describeNearby?.()||"Зараз нічого конкретного поруч не розглядаю.";
+        if(intent==="ask_window_location") return hs?.describeNearObject?.("вікно")||"Звідси вікна не бачу.";
+        if(intent==="ask_can_see_kitchen") return room==="hallway"?"Так, із коридору видно, де кухня.":"Ні, звідси кухню нормально не бачу.";
+        if(intent==="ask_kitchen_location") return "Кухня праворуч від центрального коридору, далі від ванної й туалету.";
+        if(intent==="ask_route_kitchen") { const path=hs?.path?.(room,"kitchen")||[]; return path.length>1?"Треба вийти в коридор і звідти зайти на кухню.":"Я вже на кухні."; }
+        if(intent==="ask_between_bedroom_cozy") return "Між скляною спальнею і затишною кімнатою є вузький проміжок із шафою для речей. Це не окрема кімната.";
+        if(intent==="ask_glass_bedroom_contents") return hs?.describeRoomNatural?.("glassBedroom")||hs?.describeRoom?.("glassBedroom");
+        if(intent==="ask_glass_bedroom_why") return "Бо дві її стіни скляні: одна з боку коридору зі скляними дверима, друга з боку затишної кімнати.";
+        if(intent==="ask_glass_walls_real") return "Так. Це справжні скляні стіни, для цієї квартири це звичайна частина спальні.";
+        if(intent==="ask_glass_damage") return "Ні. На склі немає тріщин, сколів чи подряпин.";
+        if(intent==="ask_balcony_location") return "Балкон уздовж зовнішнього боку скляної спальні та затишної кімнати.";
+        if(intent==="ask_balcony_access") return "На широкий балкон можна вийти зі скляної спальні або із затишної кімнати.";
+        if(intent==="ask_yani_favorite_room") return "Яні особливо подобається скляна спальня. Ще вона любить космічну кімнату й балкон.";
+        if(intent==="ask_space_room_contents") return hs?.describeRoomNatural?.("spaceRoom")||hs?.describeRoom?.("spaceRoom");
+        if(intent==="ask_tamagotchi_location") return "Яні зберігає тамагочі на поличках і тримачах великого пегборда в космічній кімнаті.";
+        if(intent==="ask_space_pegboard") return "Це велика перфорована настінна панель Яні з поличками, гачками й тримачами. На ній вона зберігає тамагочі, фігурки та інші дрібні колекційні речі.";
+        if(intent==="ask_space_lights") return hs?.describeLightsNatural?.("spaceRoom")||"Не знаю, яке там зараз світло.";
+        if(intent==="command_space_light_off") { if(room!=="spaceRoom") return "Звідси не можу його вимкнути. Треба спочатку зайти в космічну кімнату."; const ls=hs?.lights?.("spaceRoom")||[]; ls.filter(x=>x.on).forEach(x=>hs.setLight("spaceRoom",x.id,false,"Akira")); return "Вимкнув світло в космічній кімнаті."; }
+        if(intent==="ask_see_space_room_now"||intent==="ask_can_see_space_room") return room==="spaceRoom"?(intent==="ask_can_see_space_room"?"Так, я зараз у ній.":hs.describeRoomNatural("spaceRoom")):"Ні, звідси космічну кімнату нормально не бачу.";
+        if(intent==="ask_how_got_here") { const rh=this.brain.state?.dailyLife?.roomHistory||[]; const x=rh[rh.length-1]; return x?`Прийшов сюди з ${this.brain.dailyLife?.roomNameGenitive?.(x.from)||"іншої частини квартири"} через коридор.`:"Не пригадую останнього переходу сюди."; }
+        return null;
+    }
+
     composeStructuredResponse(profile) {
         // Запити, що читають живий стан, не повинні залежати від випадкового
         // dialogue action. Те саме стосується економічних подій/opinions.
         const intent = profile.analysis.intent;
+        const spatialIntents=new Set(["ask_nearby_current","ask_window_location","ask_can_see_kitchen","ask_kitchen_location","ask_route_kitchen","ask_between_bedroom_cozy","ask_glass_bedroom_contents","ask_glass_bedroom_why","ask_glass_walls_real","ask_glass_damage","ask_balcony_location","ask_balcony_access","ask_yani_favorite_room","ask_space_room_contents","ask_tamagotchi_location","ask_space_pegboard","ask_space_lights","command_space_light_off","ask_see_space_room_now","ask_can_see_space_room","ask_how_got_here"]);
+        if(spatialIntents.has(intent)) return [this.v47SpatialAnswer(intent,profile)];
+        if(intent==="command_go_kitchen"||intent==="command_go_cozy") return [this.v47StartRoomMove(this.v47RoomIdFromIntent(intent))];
+        const workTemporal=new Set(["ask_work_today_presence","ask_work_arrival_today","ask_work_people_today","ask_manager","ask_work_actions_today","ask_work_departure_today","ask_commute_home_today","ask_can_go_work_now","ask_tomorrow_plan"]);
+        if(workTemporal.has(intent)) return [this.v47WorkAnswer(intent)];
+
         if (intent === "name_ping") return [this.composeNamePingAnswer(profile)];
         if (intent === "ask_sleeping") return [this.composeSleepingAnswer(profile)];
         if (["ask_orientation_gay","ask_male_romantic_interest","ask_orientation","ask_lgbt_attitude"].includes(intent)) return [this.composeOrientationAnswer(intent)];
@@ -2784,7 +2894,11 @@ class AkiraDialogue {
         if (intent === "ask_nightmare_wording") return [`Може, все ж жахи? ${this.brain.dreams?.answerTopic?.("nightmare") || "Жахи іноді можливі."}`];
         if (intent === "ask_last_dream") return [this.brain.dreams?.answerLastDream?.() || "Не пам\'ятаю, що мені снилося."];
         if (intent === "ask_dreaming_general") return [this.brain.dreams?.answerDreamingGenerally?.() || "Сни іноді бувають."];
-        if (intent === "ask_dream_topic") return [this.brain.dreams?.answerTopic?.(this.pendingDreamTopic || this.brain.state.dreams?.lastTopic || "general") || "Про сон можна багато говорити."];
+        if (intent === "ask_dream_topic") {
+            const topic=this.pendingDreamTopic || this.brain.state.dreams?.lastTopic || "general";
+            if(topic==="paralysis") return ["Не пригадую, щоб у мене колись був сонний параліч. Взагалі це моторошна штука через відчуття безпорадності."];
+            return [this.brain.dreams?.answerTopic?.(topic) || "Про сон можна багато говорити."];
+        }
         if (intent === "ask_mood") return [this.composeMoodAnswer()];
         if (intent === "ask_hungry") return [this.composeHungryAnswer()];
         if (intent === "ask_food_likes") return [this.composeFoodPreferenceAnswer("like")];
@@ -3541,7 +3655,7 @@ class AkiraDialogue {
         // Внутрішні назви модулів та action-id ніколи не є людською реплікою.
         if(/(?:підтримано|supported)\s*:\s*[^.!?]+/iu.test(out))
             out=out.replace(/(?:підтримано|supported)\s*:\s*[^.!?]+/giu,"зараз це здавалося найдоречнішим");
-        const leaks=["moveRoom","relationships","goalsPlanning","internalStream","work_life","daily_life","decision","factors","source:","module:"];
+        const leaks=["moveRoom","relationships","goalsPlanning","internalStream","work_life","daily_life","decision","factors","source:","module:","збережених розмов","збереженої розмови","збережена подія","збереженої спільної події","в пам’яті немає збереженої","в пам\'яті немає збереженої"];
         if(leaks.some(x=>out.toLowerCase().includes(x.toLowerCase()))) {
             if(/^бо\b/iu.test(out)) out="Бо зараз це здавалося найдоречнішим.";
             else out=out.replace(/moveRoom/giu,"перехід в іншу кімнату");
@@ -3568,7 +3682,8 @@ class AkiraDialogue {
 
         // v41.1: фактичний зміст уже сформовано. Тепер емоційний шар
         // може змінити форму, довжину й теплоту репліки, не вигадуючи фактів.
-        text = this.brain.emotionalExpression?.apply?.(text, profile) || text;
+        const noEmotionTail = new Set(["ask_surname","ask_name","ask_full_name","ask_age","ask_birthday","ask_current_time","check_day_period","ask_current_month","check_season","check_weekday","check_workday","ask_current_location","ask_home_room","ask_past_location","ask_people_today","ask_recent_conversation","ask_recent_good","ask_dream_today","ask_dream_yani","ask_nightmare_wording","ask_dream_topic","ask_room_surroundings","ask_room_contents","ask_visible_ahead","ask_object_near","ask_window_view","ask_nearby_current","ask_window_location","ask_can_see_kitchen","ask_kitchen_location","ask_route_kitchen","ask_between_bedroom_cozy","ask_glass_bedroom_contents","ask_glass_bedroom_why","ask_glass_walls_real","ask_glass_damage","ask_balcony_location","ask_balcony_access","ask_space_room_contents","ask_tamagotchi_location","ask_space_pegboard","ask_space_lights","ask_see_space_room_now","ask_can_see_space_room","ask_work_today_presence","ask_work_arrival_today","ask_work_people_today","ask_manager","ask_work_actions_today","ask_work_departure_today","ask_commute_home_today","ask_can_go_work_now","ask_tomorrow_plan"]);
+        if(!noEmotionTail.has(profile?.analysis?.intent)) text = this.brain.emotionalExpression?.apply?.(text, profile) || text;
         text = this.sanitizeInternalSpeech(text);
 
         text =

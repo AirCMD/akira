@@ -73,6 +73,26 @@ class AkiraHomeSpatial {
     if(!obj)return 'Не бачу тут такого предмета.';
     return `${obj.name.charAt(0).toUpperCase()+obj.name.slice(1)} ${obj.position||'тут у кімнаті'}.`;
   }
+  describeRoomNatural(id=this.brain.state?.dailyLife?.homeRoom){
+    const r=this.room(id); if(!r)return 'Не можу нормально описати цю кімнату.';
+    const names=(r.objects||[]).map(x=>x.name);
+    if(!names.length)return r.summary||'Тут нічого особливого.';
+    const list=names.length===1?names[0]:`${names.slice(0,-1).join(', ')} і ${names[names.length-1]}`;
+    return `Тут є ${list}.${this.describeLights(id)}`.trim();
+  }
+  describeNearby(){
+    if(this.brain.state?.world?.location!=='home')return 'Я зараз не вдома.';
+    const id=this.brain.state?.dailyLife?.homeRoom, r=this.room(id), objs=r?.objects||[];
+    if(!objs.length)return 'Зараз нічого конкретного поруч не розглядаю.';
+    const a=this.brain.state?.action;
+    if(a?.actionId==='lookOutWindow')return 'Поруч вікно, біля якого я зараз стою.';
+    const x=objs[0]; return `Поруч ${x.name}.`;
+  }
+  describeLightsNatural(roomId=this.brain.state?.dailyLife?.homeRoom){
+    const ls=this.lights(roomId), on=ls.filter(x=>x.on).map(x=>x.name);
+    if(!ls.length)return 'У цій кімнаті немає окремо описаного освітлення.';
+    return on.length?`Зараз увімкнено: ${on.join(', ')}.`:'Зараз там усе світло вимкнене.';
+  }
   describeAhead(){
     const a=this.brain.state?.action, room=this.brain.state?.dailyLife?.homeRoom;
     if(a?.actionId==='lookOutWindow')return this.brain.naturalLife?.describeWindow?.()||'Дивлюся у вікно.';
