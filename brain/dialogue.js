@@ -2543,7 +2543,7 @@ class AkiraDialogue {
         // до старої діяльності або вперед до нової фонової дії симуляції.
         // Якщо щойно відповіли, що наступної дії ще не вирішено, референта немає.
         const prevCtx=this.lastAnswerContext || this.brain.state?.conversation?.lastAnswerContext || null;
-        if(explicitThis && prevCtx?.intent === "ask_action_next") {
+        if(explicitThis && ["ask_action_next","ask_future_general_activity"].includes(prevCtx?.intent)) {
             const prevFact=String(prevCtx.fact||"");
             if(/поки\s+(не\s+знаю|не\s+вирішив)|не\s+вирішив.*що\s+робитиму|не\s+знаю.*що\s+робитиму/iu.test(prevFact)) {
                 return "Що саме? Я ж сказав, що поки не знаю, що робитиму далі.";
@@ -2803,7 +2803,18 @@ class AkiraDialogue {
         const roomHistory = Array.isArray(this.brain.state?.dailyLife?.roomHistory) ? this.brain.state.dailyLife.roomHistory : [];
         const currentRoom=this.brain.state?.dailyLife?.homeRoom;
         const lastRoomMove=[...roomHistory].reverse().find(m=>m?.to===currentRoom);
-        const last = [...history].reverse().find(a => this.actionHistoryLabel(a));
+        const activeId=active?.actionId||null;
+        const activeStarted=Number(active?.startedAt||this.brain.state?.actionStartedAt||0);
+        const last = [...history].reverse().find(a => {
+            if(!this.actionHistoryLabel(a)) return false;
+            // Якщо та сама дія щойно завершилася і одразу продовжилася новим циклом,
+            // для людини це одна безперервна справа, а не "перед цим робив те саме".
+            if(activeId && a?.actionId===activeId){
+                const finished=Number(a?.finishedAt||0);
+                if(!activeStarted || !finished || activeStarted-finished < 2*60*1000) return false;
+            }
+            return true;
+        });
         // v47.6: якщо поточна кімната була досягнута пізніше, ніж остання
         // змістовна actionHistory-подія, не розповідаємо про застарілий сегмент маршруту.
         const moveAt=lastRoomMove?.at ? Date.parse(lastRoomMove.at) : 0;
@@ -3064,7 +3075,13 @@ class AkiraDialogue {
         if (intent === "ask_recent_good") return [this.composeSalientMemoryAnswer() || "Не пригадую зараз нічого конкретного хорошого за останній час."];
         if (intent === "ask_past_people") return [this.brain.temporalContext?.answerPeople?.("past") || this.composePastPeopleAnswer()];
         if (intent === "ask_future_people") return [this.brain.temporalContext?.answerPeople?.("future") || "Не знаю. Я ж не планую наперед кожну розмову."];
-        if (intent === "ask_future_general_activity") return [this.brain.temporalContext?.answerActivity?.("future", a=>this.actionHistoryLabel(a)) || "Поки не знаю, що робитиму далі."];
+        if (intent === "ask_future_general_activity") {
+            const answer=this.brain.temporalContext?.answerActivity?.("future", a=>this.actionHistoryLabel(a)) || "Поки не знаю, що робитиму далі.";
+            this.brain.state.conversation ||= {};
+            const unknown=/поки\s+не\s+(знаю|вирішив)|не\s+знаю.*далі/iu.test(String(answer));
+            this.brain.state.conversation.futureReferent={known:!unknown,at:Date.now(),answer};
+            return [answer];
+        }
         if (intent === "ask_past_location") return [this.brain.temporalContext?.answerLocation?.("past", r=>this.roomNameLocative(r)) || "Не пам'ятаю, де саме був перед цим."];
         if (intent === "ask_future_location") return [this.brain.temporalContext?.answerLocation?.("future", r=>this.roomNameLocative(r)) || "Поки не планував, куди піду далі."];
         if (intent === "ask_recent_activity") return [this.composeRecentActivityAnswer()];

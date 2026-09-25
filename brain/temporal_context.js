@@ -64,7 +64,18 @@ class AkiraTemporalContext {
   currentAction(){ return this.brain.state?.action || null; }
   pastAction(){
     const h=Array.isArray(this.brain.actionHistory)?this.brain.actionHistory:[];
-    return h.length?h[h.length-1]:null;
+    const active=this.brain.state?.action||null;
+    const activeStarted=Number(active?.startedAt||this.brain.state?.actionStartedAt||0);
+    for(let i=h.length-1;i>=0;i--){
+      const a=h[i];
+      if(!a) continue;
+      if(active?.actionId && a.actionId===active.actionId){
+        const finished=Number(a.finishedAt||0);
+        if(!activeStarted || !finished || activeStarted-finished<2*60*1000) continue;
+      }
+      return a;
+    }
+    return null;
   }
   futurePlan(){ return this.brain.goalsPlanning?.nextGoal?.() || this.brain.intentions?.getNextPlan?.() || null; }
 
