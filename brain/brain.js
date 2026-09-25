@@ -1090,6 +1090,7 @@ finishAction() {
     this.coordinator?.onActionFinished?.(action);
     this.worldGeography?.completeAction?.(action);
     this.naturalLife?.completeAction?.(action);
+    this.homeSpatial?.completeAction?.(action);
 
     // Використовуємо тільки тригери, які прямо описані в emotions.json.
     if (action.actionId === "rest") {
