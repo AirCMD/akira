@@ -11,11 +11,11 @@ class AkiraWorldGeography {
   completeAction(action){const s=this.brain.state,travel=s.worldGeography?.travel;if(!travel||travel.actionId!==action?.actionId)return;if(s.world.location==='transit'&&travel.destination)s.world.location=travel.destination;if(travel.destination==='home'&&s.dailyLife)s.dailyLife.homeRoom='hallway';s.worldGeography.lastTravel={...travel,finishedAt:Date.now()};s.worldGeography.travel=null;}
   transitStage(t){
     if(!t)return null; const total=Math.max(1,Number(t.endsAt||Date.now())-Number(t.startedAt||Date.now())); const p=Math.max(0,Math.min(1,(Date.now()-Number(t.startedAt||Date.now()))/total));
-    if(t.actionId==='travelToMassmarket') return p<0.12?'Виходжу з квартири в коридор будинку.':p<0.24?'Спускаюся сходами до виходу.':p<0.72?'Іду вулицею до масмаркету.':p<0.9?'Підходжу до масмаркету.':'Заходжу в масмаркет.';
-    if(t.actionId==='returnHomeGroceries') return p<0.12?'Виходжу з масмаркету з продуктами.':p<0.62?'Іду вулицею додому з продуктами.':p<0.76?'Підходжу до будинку.':p<0.9?'Заходжу в будинок і піднімаюся сходами.':'Підходжу до квартири.';
+    if(t.actionId==='travelToMassmarket') return p<0.12?'Виходжу з квартири в коридор будинку.':p<0.24?'Спускаюся сходами до виходу.':p<0.72?'Йду вулицею до масмаркету.':p<0.9?'Підходжу до масмаркету.':'Заходжу в масмаркет.';
+    if(t.actionId==='returnHomeGroceries') return p<0.12?'Виходжу з масмаркету з продуктами.':p<0.62?'Йду вулицею додому з продуктами.':p<0.76?'Підходжу до будинку.':p<0.9?'Заходжу в будинок і піднімаюся сходами.':'Підходжу до квартири.';
     if(t.actionId==='commuteToWork') return p<0.12?'Вийшов з дому, йду вулицею до метро «Сутінки».':p<0.55?'Я зараз у метро «Сутінки», їду на роботу.':p<0.9?'Їду тролейбусом №25. Мені три зупинки.':'Вийшов із тролейбуса, йду вулицею до TechSmith.';
     if(t.actionId==='commuteHome') return p<0.18?'Вийшов із TechSmith, іду вулицею до зупинки.':p<0.48?'Їду тролейбусом №25.':p<0.88?'Я зараз у метро «Сутінки», їду додому.':'Вийшов із метро, йду вулицею до дому.';
-    if(t.mode==='walk') return t.destination==='massmarket'?'Іду вулицею до масмаркету.':'Іду вулицею додому.';
+    if(t.mode==='walk') return t.destination==='massmarket'?'Йду вулицею до масмаркету.':'Йду вулицею додому.';
     return t.phrase?`Я зараз ${t.phrase}.`:'Я зараз у дорозі.';
   }
   describeCurrent(){const s=this.brain.state;if(s.world?.location==='transit')return this.transitStage(s.worldGeography?.travel);if(s.world?.location==='home')return null;const p=this.get(s.world?.location);return p?.phrase?`Я зараз ${p.phrase}.`:null;}

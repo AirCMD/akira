@@ -1729,9 +1729,23 @@ class AkiraDialogue {
         return id==="kitchen" ? `на ${name}` : `у ${name}`;
     }
 
+    composeLiveRoomMovementAnswer(short=false) {
+        const a=this.brain.state?.action;
+        if(a?.actionId!=="moveRoom") return null;
+        const here=this.brain.state?.dailyLife?.homeRoom;
+        const finalRoom=a.finalTargetRoom||a.targetRoom;
+        const herePhrase=this.roomLocationPhrase(this.brain.dailyLife?.getRoom?.(here)?{id:here,...this.brain.dailyLife.getRoom(here)}:null);
+        const dest=this.brain.dailyLife?.roomDestinationPhrase?.(finalRoom)||"іншу кімнату";
+        const to=String(dest).startsWith("на ")?dest:`на ${dest}`;
+        if(short) return herePhrase ? `Я зараз ${herePhrase}, йду ${to}.` : `Я зараз у дорозі між кімнатами, йду ${to}.`;
+        return herePhrase ? `Я вдома, зараз ${herePhrase}, йду ${to}.` : `Я вдома, йду ${to}.`;
+    }
+
     composeCurrentLocationAnswer() {
         const loc = this.brain.state?.world?.location || "home";
         if (loc === "home") {
+            const moving=this.composeLiveRoomMovementAnswer(false);
+            if(moving) return moving;
             const room = this.brain.dailyLife?.currentRoom?.();
             const phrase = this.roomLocationPhrase(room);
             return phrase ? `Я вдома, зараз ${phrase}.` : "Я зараз удома.";
@@ -1857,10 +1871,11 @@ class AkiraDialogue {
         const id = action?.actionId || "";
 
         if (id === "moveRoom") {
-            const destination = action?.targetRoomPhrase || "іншу кімнату";
-            const prefix = String(destination).startsWith("на ") ? "" : "в ";
-            const from=action?.fromRoom;
-            if(from) return `Виходжу з ${this.brain.dailyLife?.roomNameGenitive?.(from)||"кімнати"}, йду ${prefix}${destination}.`;
+            const finalRoom=action?.finalTargetRoom||action?.targetRoom;
+            const destination=this.brain.dailyLife?.roomDestinationPhrase?.(finalRoom)||action?.targetRoomPhrase||"іншу кімнату";
+            const prefix=String(destination).startsWith("на ")?"":"на ";
+            const here=this.brain.state?.dailyLife?.homeRoom;
+            if(here==="hallway") return `Йду через коридор ${prefix}${destination}.`;
             return `Йду ${prefix}${destination}.`;
         }
 
@@ -2004,6 +2019,15 @@ class AkiraDialogue {
             if(a?.actionId==="commuteToWork") return "Бо їду на роботу.";
             if(loc==="home") {
                 const here=this.brain.state?.dailyLife?.homeRoom;
+                if(a?.actionId==="moveRoom") {
+                    const finalRoom=a.finalTargetRoom||a.targetRoom;
+                    const dest=this.brain.dailyLife?.roomDestinationPhrase?.(finalRoom)||"іншу кімнату";
+                    const prefix=String(dest).startsWith("на ")?"":"на ";
+                    const purpose=a.purposeActionId;
+                    const purposeText={cookMeal:"хочу приготувати їжу",eatMeal:"хочу поїсти",prepareDrink:"хочу щось випити",drinkSelected:"хочу щось випити",rest:"хочу відпочити",idleLieDown:"хочу відпочити",read:"хочу почитати",playGame:"хочу пограти",listenToMusic:"хочу послухати музику",idleWatchTV:"хочу щось подивитися",watchStreamer:"хочу щось подивитися"}[purpose];
+                    const route=here==="hallway"?`Йду через коридор ${prefix}${dest}`:`Йду ${prefix}${dest}`;
+                    return `${route}${purposeText?`, ${purposeText}`:""}.`;
+                }
                 const roomMoves=Array.isArray(this.brain.state?.dailyLife?.roomHistory)?this.brain.state.dailyLife.roomHistory:[];
                 const lastRoomMove=[...roomMoves].reverse().find(m=>m?.to===here);
                 if(lastRoomMove && Date.now()-Date.parse(lastRoomMove.at||0)<15*60*1000){
@@ -2267,6 +2291,8 @@ class AkiraDialogue {
                     "Я зараз не вдома 🙂",
                     "У жодній. Я ж зараз не вдома 🙂"
                 ]);
+                const moving=this.composeLiveRoomMovementAnswer(true);
+                if(moving) return moving;
                 const room = this.brain.dailyLife?.currentRoom?.();
                 const roomPhrase = this.roomLocationPhrase(room);
                 return roomPhrase ? `Я зараз ${roomPhrase}.` : "Я вдома, але конкретну кімнату зараз не відмітив.";
@@ -2769,6 +2795,11 @@ class AkiraDialogue {
 
     composeRecentActivityAnswer() {
         const history = Array.isArray(this.brain.actionHistory) ? this.brain.actionHistory : [];
+        const active=this.brain.state?.action;
+        if(active?.actionId==="moveRoom") {
+            const previous=[...history].reverse().find(a=>a?.actionId!=="moveRoom" && this.actionHistoryLabel(a));
+            return previous ? `Перед цим ${this.actionHistoryLabel(previous)}.` : "Не пригадую, що робив безпосередньо перед переходом.";
+        }
         const roomHistory = Array.isArray(this.brain.state?.dailyLife?.roomHistory) ? this.brain.state.dailyLife.roomHistory : [];
         const currentRoom=this.brain.state?.dailyLife?.homeRoom;
         const lastRoomMove=[...roomHistory].reverse().find(m=>m?.to===currentRoom);
